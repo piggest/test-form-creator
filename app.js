@@ -1241,10 +1241,10 @@ function renderPreviewContent() {
 
 // 国語モード：ページ分割を考慮してレンダリング
 function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
-    // 全セルを収集
-    let globalIdx = 1;
+    // 全セルを収集（大問ごとに番号をリセット）
     const allCells = [];
     state.sections.forEach((section, sIndex) => {
+        let sectionIdx = 1; // 大問ごとにリセット
         section.questions.forEach((question) => {
             question.subQuestions.forEach((subQ) => {
                 const isFirstInSection = allCells.filter(c => c.sectionNum === sIndex + 1).length === 0;
@@ -1252,23 +1252,34 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
                     subQ,
                     sectionNum: sIndex + 1,
                     isFirstInSection,
-                    globalIdx: globalIdx++
+                    sectionIdx: sectionIdx++ // 大問内の番号
                 });
             });
         });
     });
 
-    // セルをグループ化（短いセルは積み重ね）
+    // セルをグループ化（短いセルは積み重ね、大問マーカーは独立列）
     const cellGroups = [];
     let i = 0;
+    let isFirstSection = true;
     while (i < allCells.length) {
         const cell = allCells[i];
 
+        // 大問の開始時は空白列と大問マーカー列を追加
+        if (cell.isFirstInSection) {
+            // 最初の大問以外は空白列を挟む
+            if (!isFirstSection) {
+                cellGroups.push({ type: 'spacer' });
+            }
+            cellGroups.push({ type: 'sectionMarker', sectionNum: cell.sectionNum });
+            isFirstSection = false;
+        }
+
         if (isShortCell(cell.subQ)) {
-            // 連続する短いセルを全て収集（renderStackedCellsで高さに基づいて分割）
+            // 連続する短いセルを収集（大問が変わったら終了、最大4つまで）
             const shortCells = [cell];
             let j = i + 1;
-            while (j < allCells.length && isShortCell(allCells[j].subQ)) {
+            while (j < allCells.length && isShortCell(allCells[j].subQ) && !allCells[j].isFirstInSection && shortCells.length < 4) {
                 shortCells.push(allCells[j]);
                 j++;
             }
@@ -1286,14 +1297,18 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
     html += '<div class="preview-questions-flow">';
 
     cellGroups.forEach(group => {
-        if (group.type === 'stacked') {
+        if (group.type === 'spacer') {
+            html += `<div class="vertical-spacer-column"></div>`;
+        } else if (group.type === 'sectionMarker') {
+            html += `<div class="vertical-section-column"><div class="vertical-section-marker">${group.sectionNum}</div></div>`;
+        } else if (group.type === 'stacked') {
             html += renderStackedCells(group.cells);
         } else {
             html += renderVerticalGridCellFlat(
                 group.cell.subQ,
-                group.cell.globalIdx,
+                group.cell.sectionIdx,
                 group.cell.sectionNum,
-                group.cell.isFirstInSection
+                false // 大問マーカーは独立列で表示するのでここではfalse
             );
         }
     });
@@ -1373,14 +1388,18 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
         html += '<div class="preview-questions-flow">';
 
         pageGroups.forEach(group => {
-            if (group.type === 'stacked') {
+            if (group.type === 'spacer') {
+                html += `<div class="vertical-spacer-column"></div>`;
+            } else if (group.type === 'sectionMarker') {
+                html += `<div class="vertical-section-column"><div class="vertical-section-marker">${group.sectionNum}</div></div>`;
+            } else if (group.type === 'stacked') {
                 html += renderStackedCells(group.cells);
             } else {
                 html += renderVerticalGridCellFlat(
                     group.cell.subQ,
-                    group.cell.globalIdx,
+                    group.cell.sectionIdx,
                     group.cell.sectionNum,
-                    group.cell.isFirstInSection
+                    false
                 );
             }
         });
@@ -1599,8 +1618,8 @@ function renderStackedCells(cells) {
             currentHeight = 0;
         }
 
-        // 高さが超える場合も新しい列
-        if (currentHeight + cellHeight > maxColumnHeight && currentColumn.length > 0) {
+        // 高さが超える場合、または4つを超える場合は新しい列
+        if ((currentHeight + cellHeight > maxColumnHeight || currentColumn.length >= 4) && currentColumn.length > 0) {
             columns.push(currentColumn);
             currentColumn = [];
             currentHeight = 0;
@@ -1616,21 +1635,12 @@ function renderStackedCells(cells) {
 
     let html = '';
     for (const columnCells of columns) {
-
-        // この列の最初のセルに大問マーカーが必要かチェック
         const firstCell = columnCells[0];
-        const hasMarker = firstCell.isFirstInSection;
-        const markerSection = hasMarker ? firstCell.sectionNum : null;
 
-        html += `<div class="vertical-stacked-column${hasMarker ? ' has-section-marker' : ''}">`;
-
-        // 大問マーカー（最初のセルが大問の最初の場合のみ）
-        if (hasMarker) {
-            html += `<div class="vertical-section-marker">${markerSection}</div>`;
-        }
+        html += `<div class="vertical-stacked-column">`;
 
         // 最初のセルのラベル（固定位置）
-        html += `<div class="stacked-first-label">(${firstCell.globalIdx})</div>`;
+        html += `<div class="stacked-first-label">(${firstCell.sectionIdx})</div>`;
 
         // セル群
         html += `<div class="stacked-cells-container">`;
@@ -1641,13 +1651,9 @@ function renderStackedCells(cells) {
 
             // 2番目以降のセルには上にラベルを表示
             if (idx > 0) {
-                const showInlineMarker = cell.isFirstInSection;
                 html += `<div class="stacked-later-item">`;
                 html += `<div class="stacked-later-label">`;
-                if (showInlineMarker) {
-                    html += `<span class="stacked-section-marker">${cell.sectionNum}</span>`;
-                }
-                html += `<span>(${cell.globalIdx})</span>`;
+                html += `<span>(${cell.sectionIdx})</span>`;
                 html += `</div>`;
             }
 
