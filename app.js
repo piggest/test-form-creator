@@ -1407,13 +1407,11 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
     let currentPage = [];
     let currentWidth = 0;
     let currentMaxHeight = 0;
-    let isFirstPage = true;
 
     sectionGroups.forEach((section) => {
-        const widthForThisPage = isFirstPage ? availableWidth : pageWidth;
-
+        // すべてのページでヘッダー分を差し引いた幅を使用
         // 大問が収まらない場合は次のページへ（幅または高さがオーバー）
-        const widthOverflow = currentWidth + section.totalWidth > widthForThisPage;
+        const widthOverflow = currentWidth + section.totalWidth > availableWidth;
         const heightOverflow = section.maxHeight > pageHeight;
 
         if ((widthOverflow || heightOverflow) && currentPage.length > 0) {
@@ -1421,7 +1419,6 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
             currentPage = [];
             currentWidth = 0;
             currentMaxHeight = 0;
-            isFirstPage = false;
         }
         // 大問のグループを全て追加
         section.groups.forEach(g => currentPage.push(g.group));
