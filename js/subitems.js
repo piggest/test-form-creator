@@ -25,7 +25,7 @@ function openSubItemModal(sectionId, questionId, parentId, editId = null) {
     elements.subItemTextWidth.value = '3';
     elements.subItemTextRows.value = '1';
     elements.subItemSuffixText.value = '';
-    elements.subItemGridChars.value = '50';
+    elements.subItemGridChars.value = '5';
     elements.subItemGridSuffixText.value = '';
     elements.subItemAnswerCount.value = '1';
     elements.subItemUnit.value = '';
@@ -52,7 +52,7 @@ function openSubItemModal(sectionId, questionId, parentId, editId = null) {
             elements.subItemSuffixText.value = subItem.suffixText || '';
 
             // 原稿用紙形式
-            elements.subItemGridChars.value = subItem.gridChars || '50';
+            elements.subItemGridChars.value = subItem.gridChars || '5';
             elements.subItemGridSuffixText.value = subItem.suffixText || '';
 
             // 回答欄数
@@ -112,7 +112,7 @@ function saveSubItem(e) {
 
     // 原稿用紙形式
     if (type === 'grid') {
-        subItem.gridChars = parseInt(elements.subItemGridChars.value) || 50;
+        subItem.gridChars = parseInt(elements.subItemGridChars.value) || 5;
         const suffixText = elements.subItemGridSuffixText.value.trim();
         if (suffixText) subItem.suffixText = suffixText;
     }
