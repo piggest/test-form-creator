@@ -1765,8 +1765,9 @@ function renderStackedCells(cells) {
                         }
                         html += `</div>`;
                     } else {
-                        // 通常のセル
-                        html += `<div class="grid-cell-item vertical-multiple-cell">`;
+                        // 通常のセル（タイプ別クラス）
+                        const subCellClass = (si.type === 'symbol' || si.type === 'choice' || si.type === 'truefalse' || si.type === 'number') ? ' cell-symbol-sub' : '';
+                        html += `<div class="grid-cell-item vertical-multiple-cell${subCellClass}">`;
                         if (si.unit) {
                             html += `<span class="cell-unit-bottom">${escapeHtml(si.unit)}</span>`;
                         }
@@ -1864,8 +1865,9 @@ function renderVerticalGridCellFlat(subQ, num, sectionNum, isFirstInSection) {
                 }
                 html += `</div>`;
             } else {
-                // 通常のセル
-                html += `<div class="grid-cell-item vertical-multiple-cell">`;
+                // 通常のセル（タイプ別クラス）
+                const subCellClass = (si.type === 'symbol' || si.type === 'choice' || si.type === 'truefalse' || si.type === 'number') ? ' cell-symbol-sub' : '';
+                html += `<div class="grid-cell-item vertical-multiple-cell${subCellClass}">`;
                 if (si.unit) {
                     html += `<span class="cell-unit-bottom">${escapeHtml(si.unit)}</span>`;
                 }
@@ -1970,8 +1972,9 @@ function renderVerticalGridCell(subQ, num) {
                 }
                 html += `</div>`;
             } else {
-                // 通常のセル
-                html += `<div class="grid-cell-item vertical-multiple-cell">`;
+                // 通常のセル（タイプ別クラス）
+                const subCellClass = (si.type === 'symbol' || si.type === 'choice' || si.type === 'truefalse' || si.type === 'number') ? ' cell-symbol-sub' : '';
+                html += `<div class="grid-cell-item vertical-multiple-cell${subCellClass}">`;
                 if (si.unit) {
                     html += `<span class="cell-unit-bottom">${escapeHtml(si.unit)}</span>`;
                 }

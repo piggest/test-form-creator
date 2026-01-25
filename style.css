@@ -1438,6 +1438,11 @@ body {
     min-height: calc(180px * var(--scale)); /* 語句: 5文字分 */
 }
 
+/* 複数回答欄内の記号回答式: 1文字分 */
+.preview-content.vertical-mode .vertical-multiple-cell.cell-symbol-sub {
+    min-height: calc(36px * var(--scale));
+}
+
 .preview-content.vertical-mode .vertical-multiple-cell.vertical-grid-paper {
     border: none;
 }
