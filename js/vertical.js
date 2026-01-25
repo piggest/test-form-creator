@@ -252,12 +252,12 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
 
 function isShortCell(subQ) {
     const type = subQ.type;
-    // 記号、選択、〇×、語句、数値は短いセル
+    // 記号、語句、数値は短いセル
     if (type === 'symbol' || type === 'word' || type === 'number') {
         return true;
     }
-    // 記述式でも文字数制限が少ない場合は短いセル扱い
-    if ((type === 'short' || type === 'long') && subQ.maxChars && subQ.maxChars <= 10) {
+    // 原稿用紙形式で文字数が少ない場合は短いセル扱い
+    if (type === 'grid' && subQ.gridChars && subQ.gridChars <= 10) {
         return true;
     }
     // 複数回答欄は高さを計算して判定
@@ -266,8 +266,8 @@ function isShortCell(subQ) {
         if (subItems.length === 0) return true;
         // 子要素の合計高さを計算
         const totalHeight = subItems.reduce((sum, si) => {
-            if ((si.type === 'short' || si.type === 'long') && si.maxChars) {
-                return sum + si.maxChars * 36 + 25; // 文字数 × セルサイズ + ラベル
+            if (si.type === 'grid' && si.gridChars) {
+                return sum + si.gridChars * 36 + 25; // 文字数 × セルサイズ + ラベル
             }
             return sum + 55; // 通常の子要素
         }, 20); // 親ラベル分
@@ -288,22 +288,22 @@ function renderStackedCells(cells) {
         const type = subQ.type;
         if (type === 'word') return 193;          // 語句: 180px (5文字分) + ラベル13px
         if (type === 'number') return 55;         // 数値: 42px + ラベル13px
-        if (type === 'short' && subQ.maxChars && subQ.maxChars <= 10) {
-            return 373;  // 短い記述: 360px (10文字分) + ラベル13px
+        if (type === 'grid' && subQ.gridChars && subQ.gridChars <= 10) {
+            return 373;  // 短い原稿用紙: 360px (10文字分) + ラベル13px
         }
         // 複数回答欄の高さを計算
         if (type === 'multiple') {
             const subItems = subQ.subItems || [];
             if (subItems.length === 0) return 60;
             const totalHeight = subItems.reduce((sum, si) => {
-                if ((si.type === 'short' || si.type === 'long') && si.maxChars) {
-                    return sum + si.maxChars * 36 + 25; // 記述式: 文字数 × セルサイズ + ラベル
+                if (si.type === 'grid' && si.gridChars) {
+                    return sum + si.gridChars * 36 + 25; // 原稿用紙: 文字数 × セルサイズ + ラベル
                 }
                 return sum + 205; // 語句: 180px (5文字分) + ラベル25px
             }, 13); // 親ラベル分
             return totalHeight;
         }
-        return 49;  // 記号、選択、〇×: 36px + ラベル13px（正方形）
+        return 49;  // 記号: 36px + ラベル13px（正方形）
     }
 
     // セルを列にグループ化
@@ -369,9 +369,9 @@ function renderStackedCells(cells) {
                     html += `<div class="vertical-multiple-item">`;
                     html += `<div class="vertical-multiple-item-label">${label}</div>`;
 
-                    if ((si.type === 'short' || si.type === 'long') && si.maxChars) {
+                    if (si.type === 'grid' && si.gridChars) {
                         // 原稿用紙形式
-                        const charCount = si.maxChars;
+                        const charCount = si.gridChars;
                         html += `<div class="vertical-grid-paper vertical-multiple-cell">`;
                         for (let i = 0; i < charCount; i++) {
                             const showMarker = (i + 1) % 5 === 0 && i < charCount - 1;
@@ -394,9 +394,9 @@ function renderStackedCells(cells) {
                     html += `</div>`;
                 });
                 html += `</div>`;
-            } else if ((type === 'short' || type === 'long') && subQ.maxChars) {
-                // 記述式（文字数制限あり）は原稿用紙形式
-                const charCount = subQ.maxChars;
+            } else if (type === 'grid' && subQ.gridChars) {
+                // 原稿用紙形式
+                const charCount = subQ.gridChars;
                 html += `<div class="stacked-grid-paper${idx === 0 ? ' first-cell' : ''}">`;
                 for (let c = 0; c < charCount; c++) {
                     const showMarker = (c + 1) % 5 === 0 && c < charCount - 1;
@@ -469,9 +469,9 @@ function renderVerticalGridCellFlat(subQ, num, sectionNum, isFirstInSection) {
             html += `<div class="vertical-multiple-item">`;
             html += `<div class="vertical-multiple-item-label">${label}</div>`;
 
-            // 記述式で文字数制限がある場合は原稿用紙形式
-            if ((si.type === 'short' || si.type === 'long') && si.maxChars) {
-                const charCount = si.maxChars;
+            // 原稿用紙形式
+            if (si.type === 'grid' && si.gridChars) {
+                const charCount = si.gridChars;
                 html += `<div class="vertical-grid-paper vertical-multiple-cell">`;
                 for (let i = 0; i < charCount; i++) {
                     const showMarker = (i + 1) % 5 === 0 && i < charCount - 1;
@@ -504,9 +504,9 @@ function renderVerticalGridCellFlat(subQ, num, sectionNum, isFirstInSection) {
         return html;
     }
 
-    // 記述式で文字数制限がある場合は原稿用紙形式
-    if ((type === 'short' || type === 'long') && subQ.maxChars) {
-        const charCount = subQ.maxChars;
+    // 原稿用紙形式
+    if (type === 'grid' && subQ.gridChars) {
+        const charCount = subQ.gridChars;
         let html = `<div class="vertical-cell-group${hasMarkerClass}">`;
         html += sectionLabel;
         html += `<div class="vertical-cell-label">(${num})</div>`;
@@ -534,9 +534,9 @@ function renderVerticalGridCellFlat(subQ, num, sectionNum, isFirstInSection) {
         heightClass = 'cell-symbol';
     } else if (type === 'word') {
         heightClass = 'cell-wide';
-    } else if (type === 'short' && !subQ.maxChars) {
+    } else if (type === 'short') {
         heightClass = 'cell-short-text';
-    } else if (type === 'long' || type === 'short') {
+    } else if (type === 'long') {
         heightClass = 'cell-wide';
     }
 
@@ -591,9 +591,9 @@ function renderVerticalGridCell(subQ, num) {
             html += `<div class="vertical-multiple-item">`;
             html += `<div class="vertical-multiple-item-label">${label}</div>`;
 
-            // 記述式で文字数制限がある場合は原稿用紙形式
-            if ((si.type === 'short' || si.type === 'long') && si.maxChars) {
-                const charCount = si.maxChars;
+            // 原稿用紙形式
+            if (si.type === 'grid' && si.gridChars) {
+                const charCount = si.gridChars;
                 html += `<div class="vertical-grid-paper vertical-multiple-cell">`;
                 for (let i = 0; i < charCount; i++) {
                     const showMarker = (i + 1) % 5 === 0 && i < charCount - 1;
@@ -621,9 +621,9 @@ function renderVerticalGridCell(subQ, num) {
         return html;
     }
 
-    // 記述式で文字数制限がある場合は原稿用紙形式
-    if ((type === 'short' || type === 'long') && subQ.maxChars) {
-        const charCount = subQ.maxChars;
+    // 原稿用紙形式
+    if (type === 'grid' && subQ.gridChars) {
+        const charCount = subQ.gridChars;
         let html = `<div class="vertical-cell-group">`;
         html += `<div class="vertical-cell-label">(${num})</div>`;
         html += `<div class="vertical-grid-paper">`;
@@ -646,10 +646,10 @@ function renderVerticalGridCell(subQ, num) {
         heightClass = 'cell-symbol';
     } else if (type === 'word') {
         heightClass = 'cell-wide';
-    } else if (type === 'short' && !subQ.maxChars) {
-        // 記述式1行（文字数制限なし）は10文字分のスペース
+    } else if (type === 'short') {
+        // 記述式1行は10文字分のスペース
         heightClass = 'cell-short-text';
-    } else if (type === 'long' || type === 'short') {
+    } else if (type === 'long') {
         heightClass = 'cell-wide';
     }
 

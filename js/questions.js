@@ -108,8 +108,6 @@ function addSubQuestionWithType(sectionId, questionId, template) {
     };
 
     // タイプ別のプロパティをコピー
-    if (template.minChars) newSubQ.minChars = template.minChars;
-    if (template.maxChars) newSubQ.maxChars = template.maxChars;
     if (template.rows) newSubQ.rows = template.rows;
     if (template.suffixText) newSubQ.suffixText = template.suffixText;
     if (template.answerCount) newSubQ.answerCount = template.answerCount;
@@ -117,6 +115,7 @@ function addSubQuestionWithType(sectionId, questionId, template) {
     if (template.numberFormat) newSubQ.numberFormat = template.numberFormat;
     if (template.unit) newSubQ.unit = template.unit;
     if (template.ratioCount) newSubQ.ratioCount = template.ratioCount;
+    if (template.gridChars) newSubQ.gridChars = template.gridChars;
 
     question.subQuestions.push(newSubQ);
     renderSections();
@@ -143,11 +142,12 @@ function openSubQuestionModal(sectionId, questionId, type, editId = null) {
 
         if (subQ) {
             elements.subQuestionText.value = subQ.text || '';
-            elements.minChars.value = subQ.minChars || '';
-            elements.maxChars.value = subQ.maxChars || '';
             elements.textRows.value = subQ.rows || '5';
             elements.suffixText.value = subQ.suffixText || '';
             elements.answerCount.value = subQ.answerCount || '1';
+            // 原稿用紙形式
+            elements.gridChars.value = subQ.gridChars || '20';
+            elements.gridSuffixText.value = subQ.suffixText || '';
             // 単位の設定
             const unit = subQ.unit || '';
             const unitOptions = Array.from(elements.numberUnit.options).map(o => o.value);
@@ -176,6 +176,7 @@ function openSubQuestionModal(sectionId, questionId, type, editId = null) {
 function updateSubQuestionOptions(type) {
     elements.textOptions.style.display = (type === 'short' || type === 'long') ? 'block' : 'none';
     elements.rowsOption.style.display = type === 'long' ? 'block' : 'none';
+    elements.gridOptions.style.display = type === 'grid' ? 'block' : 'none';
     elements.answerCountOptions.style.display = (type === 'symbol' || type === 'word') ? 'block' : 'none';
     elements.multipleOptions.style.display = type === 'multiple' ? 'block' : 'none';
     elements.numberOptions.style.display = type === 'number' ? 'block' : 'none';
@@ -184,10 +185,10 @@ function updateSubQuestionOptions(type) {
 // 回答欄フォームリセット
 function resetSubQuestionForm(type) {
     elements.subQuestionText.value = '';
-    elements.minChars.value = '';
-    elements.maxChars.value = '';
     elements.textRows.value = '5';
     elements.suffixText.value = '';
+    elements.gridChars.value = '20';
+    elements.gridSuffixText.value = '';
     elements.answerCount.value = '1';
     elements.numberUnit.value = '';
     elements.numberUnitCustom.value = '';
@@ -218,14 +219,17 @@ function saveSubQuestion(e) {
 
     // 記述式
     if (type === 'short' || type === 'long') {
-        const minChars = parseInt(elements.minChars.value) || 0;
-        const maxChars = parseInt(elements.maxChars.value) || 0;
-        if (minChars > 0) subQuestion.minChars = minChars;
-        if (maxChars > 0) subQuestion.maxChars = maxChars;
         if (type === 'long') {
             subQuestion.rows = parseInt(elements.textRows.value) || 5;
         }
         const suffixText = elements.suffixText.value.trim();
+        if (suffixText) subQuestion.suffixText = suffixText;
+    }
+
+    // 原稿用紙形式
+    if (type === 'grid') {
+        subQuestion.gridChars = parseInt(elements.gridChars.value) || 20;
+        const suffixText = elements.gridSuffixText.value.trim();
         if (suffixText) subQuestion.suffixText = suffixText;
     }
 

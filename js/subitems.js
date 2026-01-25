@@ -8,6 +8,7 @@ function addSubItem(sectionId, questionId, parentId) {
 function updateSubItemOptions(type) {
     elements.subItemTextOptions.style.display = (type === 'short' || type === 'long') ? 'block' : 'none';
     elements.subItemRowsOption.style.display = type === 'long' ? 'block' : 'none';
+    elements.subItemGridOptions.style.display = type === 'grid' ? 'block' : 'none';
     elements.subItemAnswerCountOptions.style.display = (type === 'symbol' || type === 'word') ? 'block' : 'none';
     elements.subItemNumberOptions.style.display = type === 'number' ? 'block' : 'none';
 }
@@ -22,11 +23,10 @@ function openSubItemModal(sectionId, questionId, parentId, editId = null) {
 
     // リセット
     elements.subItemType.value = 'symbol';
-    elements.subItemChoicesContainer.innerHTML = '';
-    elements.subItemMinChars.value = '';
-    elements.subItemMaxChars.value = '';
     elements.subItemTextRows.value = '5';
     elements.subItemSuffixText.value = '';
+    elements.subItemGridChars.value = '20';
+    elements.subItemGridSuffixText.value = '';
     elements.subItemAnswerCount.value = '1';
     elements.subItemUnit.value = '';
     elements.subItemUnitCustom.value = '';
@@ -47,10 +47,12 @@ function openSubItemModal(sectionId, questionId, parentId, editId = null) {
             updateSubItemOptions(subItem.type);
 
             // 記述式
-            elements.subItemMinChars.value = subItem.minChars || '';
-            elements.subItemMaxChars.value = subItem.maxChars || '';
             elements.subItemTextRows.value = subItem.rows || '5';
             elements.subItemSuffixText.value = subItem.suffixText || '';
+
+            // 原稿用紙形式
+            elements.subItemGridChars.value = subItem.gridChars || '20';
+            elements.subItemGridSuffixText.value = subItem.suffixText || '';
 
             // 回答欄数
             elements.subItemAnswerCount.value = subItem.answerCount || '1';
@@ -101,14 +103,17 @@ function saveSubItem(e) {
 
     // 記述式
     if (type === 'short' || type === 'long') {
-        const minChars = parseInt(elements.subItemMinChars.value) || 0;
-        const maxChars = parseInt(elements.subItemMaxChars.value) || 0;
-        if (minChars > 0) subItem.minChars = minChars;
-        if (maxChars > 0) subItem.maxChars = maxChars;
         if (type === 'long') {
             subItem.rows = parseInt(elements.subItemTextRows.value) || 5;
         }
         const suffixText = elements.subItemSuffixText.value.trim();
+        if (suffixText) subItem.suffixText = suffixText;
+    }
+
+    // 原稿用紙形式
+    if (type === 'grid') {
+        subItem.gridChars = parseInt(elements.subItemGridChars.value) || 20;
+        const suffixText = elements.subItemGridSuffixText.value.trim();
         if (suffixText) subItem.suffixText = suffixText;
     }
 
