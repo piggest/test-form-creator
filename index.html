@@ -131,6 +131,7 @@
                         <option value="number">数値記述式</option>
                         <option value="short">記述式（1行）</option>
                         <option value="long">記述式（複数行）</option>
+                        <option value="grid">原稿用紙形式</option>
                         <option value="multiple">複数回答欄（①②③...）</option>
                     </select>
                 </div>
@@ -142,20 +143,26 @@
 
                 <!-- 記述式オプション -->
                 <div id="textOptions" class="form-group" style="display: none;">
-                    <label>文字数制限</label>
-                    <div class="char-limit-inputs">
-                        <input type="number" id="minChars" placeholder="最小" min="0">
-                        <span>〜</span>
-                        <input type="number" id="maxChars" placeholder="最大" min="0">
-                        <span>文字</span>
-                    </div>
                     <div id="rowsOption" style="display: none;">
                         <label for="textRows">行数</label>
                         <input type="number" id="textRows" value="5" min="2" max="20">
                     </div>
-                    <div class="suffix-input" style="margin-top: 12px;">
+                    <div class="suffix-input">
                         <label for="suffixText">解答欄の後ろのテキスト（任意）</label>
                         <input type="text" id="suffixText" placeholder="例: と考える。">
+                    </div>
+                </div>
+
+                <!-- 原稿用紙形式オプション -->
+                <div id="gridOptions" class="form-group" style="display: none;">
+                    <label>文字数</label>
+                    <div class="char-limit-inputs">
+                        <input type="number" id="gridChars" placeholder="文字数" min="1" value="20">
+                        <span>文字</span>
+                    </div>
+                    <div class="suffix-input" style="margin-top: 12px;">
+                        <label for="gridSuffixText">解答欄の後ろのテキスト（任意）</label>
+                        <input type="text" id="gridSuffixText" placeholder="例: と考える。">
                     </div>
                 </div>
 
@@ -237,6 +244,7 @@
                 <button class="type-btn" data-type="number">数値記述式</button>
                 <button class="type-btn" data-type="short">記述式（1行）</button>
                 <button class="type-btn" data-type="long">記述式（複数行）</button>
+                <button class="type-btn" data-type="grid">原稿用紙形式</button>
                 <button class="type-btn" data-type="multiple">複数回答欄</button>
             </div>
             <div class="modal-buttons">
@@ -263,25 +271,32 @@
                         <option value="number">数値記述式</option>
                         <option value="short">記述式（1行）</option>
                         <option value="long">記述式（複数行）</option>
+                        <option value="grid">原稿用紙形式</option>
                     </select>
                 </div>
 
                 <!-- 記述式オプション（子回答欄用） -->
                 <div id="subItemTextOptions" class="form-group" style="display: none;">
-                    <label>文字数制限</label>
-                    <div class="char-limit-inputs">
-                        <input type="number" id="subItemMinChars" placeholder="最小" min="0">
-                        <span>〜</span>
-                        <input type="number" id="subItemMaxChars" placeholder="最大" min="0">
-                        <span>文字</span>
-                    </div>
-                    <div id="subItemRowsOption" style="display: none; margin-top: 12px;">
+                    <div id="subItemRowsOption" style="display: none;">
                         <label for="subItemTextRows">行数</label>
                         <input type="number" id="subItemTextRows" value="5" min="2" max="20">
                     </div>
-                    <div class="suffix-input" style="margin-top: 12px;">
+                    <div class="suffix-input">
                         <label for="subItemSuffixText">解答欄の後ろのテキスト（任意）</label>
                         <input type="text" id="subItemSuffixText" placeholder="例: と考える。">
+                    </div>
+                </div>
+
+                <!-- 原稿用紙形式オプション（子回答欄用） -->
+                <div id="subItemGridOptions" class="form-group" style="display: none;">
+                    <label>文字数</label>
+                    <div class="char-limit-inputs">
+                        <input type="number" id="subItemGridChars" placeholder="文字数" min="1" value="20">
+                        <span>文字</span>
+                    </div>
+                    <div class="suffix-input" style="margin-top: 12px;">
+                        <label for="subItemGridSuffixText">解答欄の後ろのテキスト（任意）</label>
+                        <input type="text" id="subItemGridSuffixText" placeholder="例: と考える。">
                     </div>
                 </div>
 
