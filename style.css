@@ -579,31 +579,6 @@ body {
     color: #fff;
 }
 
-/* 選択肢入力 */
-#choicesContainer {
-    margin-bottom: 10px;
-}
-
-.choice-input {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 8px;
-    align-items: center;
-}
-
-.choice-input input {
-    flex: 1;
-}
-
-.choice-input .remove-choice {
-    background: #e74c3c;
-    color: #fff;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 3px;
-    cursor: pointer;
-}
-
 .small-btn {
     padding: 5px 15px;
     background: #3498db;
@@ -1584,45 +1559,6 @@ body {
 .preview-answer-area {
     display: flex;
     align-items: center;
-}
-
-/* 選択肢スタイル */
-.preview-choices {
-    display: flex;
-    flex-direction: column;
-    gap: calc(8px * var(--scale));
-}
-
-.preview-choice {
-    display: flex;
-    align-items: center;
-    gap: calc(10px * var(--scale));
-}
-
-.preview-choice .choice-box {
-    width: calc(var(--small-box-size) * var(--scale));
-    height: calc(var(--small-box-size) * var(--scale));
-    border: 1px solid #333;
-    border-radius: 2px;
-}
-
-/* 〇×スタイル */
-.preview-truefalse {
-    display: flex;
-    gap: calc(30px * var(--scale));
-}
-
-.preview-truefalse .tf-option {
-    display: flex;
-    align-items: center;
-    gap: calc(10px * var(--scale));
-}
-
-.preview-truefalse .tf-circle {
-    width: calc(var(--small-box-size) * var(--scale) * 1.15);
-    height: calc(var(--small-box-size) * var(--scale) * 1.15);
-    border: 1px solid #333;
-    border-radius: 50%;
 }
 
 /* 記述欄スタイル */

@@ -253,7 +253,7 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
 function isShortCell(subQ) {
     const type = subQ.type;
     // 記号、選択、〇×、語句、数値は短いセル
-    if (type === 'symbol' || type === 'choice' || type === 'truefalse' || type === 'word' || type === 'number') {
+    if (type === 'symbol' || type === 'word' || type === 'number') {
         return true;
     }
     // 記述式でも文字数制限が少ない場合は短いセル扱い
@@ -384,7 +384,7 @@ function renderStackedCells(cells) {
                         html += `</div>`;
                     } else {
                         // 通常のセル（タイプ別クラス）
-                        const subCellClass = (si.type === 'symbol' || si.type === 'choice' || si.type === 'truefalse' || si.type === 'number') ? ' cell-symbol-sub' : '';
+                        const subCellClass = (si.type === 'symbol' || si.type === 'number') ? ' cell-symbol-sub' : '';
                         html += `<div class="grid-cell-item vertical-multiple-cell${subCellClass}">`;
                         if (si.unit) {
                             html += `<span class="cell-unit-bottom">${escapeHtml(si.unit)}</span>`;
@@ -484,7 +484,7 @@ function renderVerticalGridCellFlat(subQ, num, sectionNum, isFirstInSection) {
                 html += `</div>`;
             } else {
                 // 通常のセル（タイプ別クラス）
-                const subCellClass = (si.type === 'symbol' || si.type === 'choice' || si.type === 'truefalse' || si.type === 'number') ? ' cell-symbol-sub' : '';
+                const subCellClass = (si.type === 'symbol' || si.type === 'number') ? ' cell-symbol-sub' : '';
                 html += `<div class="grid-cell-item vertical-multiple-cell${subCellClass}">`;
                 if (si.unit) {
                     html += `<span class="cell-unit-bottom">${escapeHtml(si.unit)}</span>`;
@@ -530,7 +530,7 @@ function renderVerticalGridCellFlat(subQ, num, sectionNum, isFirstInSection) {
 
     // セルの高さクラスを決定
     let heightClass = 'cell-normal';
-    if (type === 'symbol' || type === 'choice' || type === 'truefalse') {
+    if (type === 'symbol') {
         heightClass = 'cell-symbol';
     } else if (type === 'word') {
         heightClass = 'cell-wide';
@@ -606,7 +606,7 @@ function renderVerticalGridCell(subQ, num) {
                 html += `</div>`;
             } else {
                 // 通常のセル（タイプ別クラス）
-                const subCellClass = (si.type === 'symbol' || si.type === 'choice' || si.type === 'truefalse' || si.type === 'number') ? ' cell-symbol-sub' : '';
+                const subCellClass = (si.type === 'symbol' || si.type === 'number') ? ' cell-symbol-sub' : '';
                 html += `<div class="grid-cell-item vertical-multiple-cell${subCellClass}">`;
                 if (si.unit) {
                     html += `<span class="cell-unit-bottom">${escapeHtml(si.unit)}</span>`;
@@ -641,8 +641,8 @@ function renderVerticalGridCell(subQ, num) {
 
     // セルの高さクラスを決定
     let heightClass = 'cell-normal';
-    if (type === 'symbol' || type === 'choice' || type === 'truefalse') {
-        // 記号・選択は1文字分
+    if (type === 'symbol') {
+        // 記号は1文字分
         heightClass = 'cell-symbol';
     } else if (type === 'word') {
         heightClass = 'cell-wide';

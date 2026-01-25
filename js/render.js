@@ -420,7 +420,7 @@ function renderGridCell(subQ, num, isVertical = false) {
             const label = getCircledNumber(index + 1);
             let boxClass = 'cell-multi-symbol';
             if (si.type === 'word' || si.type === 'short' || si.type === 'long') boxClass = 'cell-multi-word';
-            else if (si.type === 'choice' || si.type === 'truefalse') boxClass = 'cell-multi-symbol';
+            else if (false) boxClass = 'cell-multi-symbol';
 
             let unitHtml = si.unit ? `<span class="cell-multi-unit">${escapeHtml(si.unit)}</span>` : '';
             innerHtml += `<div class="cell-multi-item"><span class="cell-multi-label">${label}</span><div class="${boxClass}"></div>${unitHtml}</div>`;
@@ -475,7 +475,7 @@ function renderGridCell(subQ, num, isVertical = false) {
 function isShortCell(subQ) {
     const type = subQ.type;
     // 記号、選択、〇×、語句、数値は短いセル
-    if (type === 'symbol' || type === 'choice' || type === 'truefalse' || type === 'word' || type === 'number') {
+    if (type === 'symbol' || type === 'word' || type === 'number') {
         return true;
     }
     // 記述式でも文字数制限が少ない場合は短いセル扱い
@@ -606,7 +606,7 @@ function renderStackedCells(cells) {
                         html += `</div>`;
                     } else {
                         // 通常のセル（タイプ別クラス）
-                        const subCellClass = (si.type === 'symbol' || si.type === 'choice' || si.type === 'truefalse' || si.type === 'number') ? ' cell-symbol-sub' : '';
+                        const subCellClass = (si.type === 'symbol' || false || si.type === 'number') ? ' cell-symbol-sub' : '';
                         html += `<div class="grid-cell-item vertical-multiple-cell${subCellClass}">`;
                         if (si.unit) {
                             html += `<span class="cell-unit-bottom">${escapeHtml(si.unit)}</span>`;
@@ -706,7 +706,7 @@ function renderVerticalGridCellFlat(subQ, num, sectionNum, isFirstInSection) {
                 html += `</div>`;
             } else {
                 // 通常のセル（タイプ別クラス）
-                const subCellClass = (si.type === 'symbol' || si.type === 'choice' || si.type === 'truefalse' || si.type === 'number') ? ' cell-symbol-sub' : '';
+                const subCellClass = (si.type === 'symbol' || false || si.type === 'number') ? ' cell-symbol-sub' : '';
                 html += `<div class="grid-cell-item vertical-multiple-cell${subCellClass}">`;
                 if (si.unit) {
                     html += `<span class="cell-unit-bottom">${escapeHtml(si.unit)}</span>`;
@@ -752,7 +752,7 @@ function renderVerticalGridCellFlat(subQ, num, sectionNum, isFirstInSection) {
 
     // セルの高さクラスを決定
     let heightClass = 'cell-normal';
-    if (type === 'symbol' || type === 'choice' || type === 'truefalse') {
+    if (type === 'symbol') {
         heightClass = 'cell-symbol';
     } else if (type === 'word') {
         heightClass = 'cell-wide';
@@ -828,7 +828,7 @@ function renderVerticalGridCell(subQ, num) {
                 html += `</div>`;
             } else {
                 // 通常のセル（タイプ別クラス）
-                const subCellClass = (si.type === 'symbol' || si.type === 'choice' || si.type === 'truefalse' || si.type === 'number') ? ' cell-symbol-sub' : '';
+                const subCellClass = (si.type === 'symbol' || false || si.type === 'number') ? ' cell-symbol-sub' : '';
                 html += `<div class="grid-cell-item vertical-multiple-cell${subCellClass}">`;
                 if (si.unit) {
                     html += `<span class="cell-unit-bottom">${escapeHtml(si.unit)}</span>`;
@@ -863,7 +863,7 @@ function renderVerticalGridCell(subQ, num) {
 
     // セルの高さクラスを決定
     let heightClass = 'cell-normal';
-    if (type === 'symbol' || type === 'choice' || type === 'truefalse') {
+    if (type === 'symbol') {
         // 記号・選択は1文字分
         heightClass = 'cell-symbol';
     } else if (type === 'word') {
@@ -894,32 +894,6 @@ function renderVerticalGridCell(subQ, num) {
 
 function renderAnswerArea(subQ) {
     switch (subQ.type) {
-        case 'choice':
-            return `
-                <div class="preview-choices">
-                    ${subQ.choices.map(choice => `
-                        <div class="preview-choice">
-                            <div class="choice-box"></div>
-                            <span>${escapeHtml(choice)}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-
-        case 'truefalse':
-            return `
-                <div class="preview-truefalse">
-                    <div class="tf-option">
-                        <div class="tf-circle"></div>
-                        <span>〇</span>
-                    </div>
-                    <div class="tf-option">
-                        <div class="tf-circle"></div>
-                        <span>×</span>
-                    </div>
-                </div>
-            `;
-
         case 'symbol':
             return renderAnswerBoxes(subQ.answerCount || 1, 'symbol');
 
@@ -1015,32 +989,6 @@ function renderMultipleAnswers(subQ) {
 // 子回答欄の回答エリアを描画
 function renderSubItemAnswerArea(si) {
     switch (si.type) {
-        case 'choice':
-            return `
-                <div class="preview-choices">
-                    ${(si.choices || []).map(choice => `
-                        <div class="preview-choice">
-                            <div class="choice-box"></div>
-                            <span>${escapeHtml(choice)}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-
-        case 'truefalse':
-            return `
-                <div class="preview-truefalse">
-                    <div class="tf-option">
-                        <div class="tf-circle"></div>
-                        <span>〇</span>
-                    </div>
-                    <div class="tf-option">
-                        <div class="tf-circle"></div>
-                        <span>×</span>
-                    </div>
-                </div>
-            `;
-
         case 'symbol':
             return renderAnswerBoxes(si.answerCount || 1, 'symbol');
 
@@ -1139,13 +1087,6 @@ function renderCharLimitInfo(subQ) {
 // 編集モード用ミニプレビュー
 function renderMiniPreview(subQ) {
     switch (subQ.type) {
-        case 'choice':
-            const choiceCount = subQ.choices ? Math.min(subQ.choices.length, 4) : 2;
-            return Array(choiceCount).fill('<div class="mini-box"></div>').join('');
-
-        case 'truefalse':
-            return '<div class="mini-circle"></div><span class="mini-label">〇</span><div class="mini-circle"></div><span class="mini-label">×</span>';
-
         case 'symbol':
             const symCount = Math.min(subQ.answerCount || 1, 5);
             return Array(symCount).fill('<div class="mini-box"></div>').join('');
@@ -1164,7 +1105,7 @@ function renderMiniPreview(subQ) {
             for (let i = 0; i < displayCount; i++) {
                 const si = subItems[i];
                 const label = getCircledNumber(i + 1);
-                if (si.type === 'symbol' || si.type === 'number' || si.type === 'choice' || si.type === 'truefalse') {
+                if (si.type === 'symbol' || si.type === 'number') {
                     multiHtml += `<span class="mini-label">${label}</span><div class="mini-box"></div>`;
                 } else if (si.type === 'word') {
                     multiHtml += `<span class="mini-label">${label}</span><div class="mini-word-box"></div>`;

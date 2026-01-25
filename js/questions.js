@@ -108,7 +108,6 @@ function addSubQuestionWithType(sectionId, questionId, template) {
     };
 
     // タイプ別のプロパティをコピー
-    if (template.choices) newSubQ.choices = [...template.choices];
     if (template.minChars) newSubQ.minChars = template.minChars;
     if (template.maxChars) newSubQ.maxChars = template.maxChars;
     if (template.rows) newSubQ.rows = template.rows;
@@ -167,14 +166,6 @@ function openSubQuestionModal(sectionId, questionId, type, editId = null) {
             const format = subQ.numberFormat || 'simple';
             document.querySelector(`input[name="numberFormat"][value="${format}"]`).checked = true;
             elements.ratioCountOption.style.display = format === 'ratio' ? 'block' : 'none';
-
-            elements.choicesContainer.innerHTML = '';
-            if (subQ.choices) {
-                subQ.choices.forEach(choice => addChoiceInput(choice));
-            } else if (type === 'choice') {
-                addChoiceInput();
-                addChoiceInput();
-            }
         }
     } else {
         resetSubQuestionForm(type);
@@ -183,7 +174,6 @@ function openSubQuestionModal(sectionId, questionId, type, editId = null) {
 
 // 回答欄オプション表示切り替え
 function updateSubQuestionOptions(type) {
-    elements.choiceOptions.style.display = type === 'choice' ? 'block' : 'none';
     elements.textOptions.style.display = (type === 'short' || type === 'long') ? 'block' : 'none';
     elements.rowsOption.style.display = type === 'long' ? 'block' : 'none';
     elements.answerCountOptions.style.display = (type === 'symbol' || type === 'word') ? 'block' : 'none';
@@ -205,12 +195,6 @@ function resetSubQuestionForm(type) {
     elements.ratioCount.value = '2';
     elements.ratioCountOption.style.display = 'none';
     document.querySelector('input[name="numberFormat"][value="simple"]').checked = true;
-    elements.choicesContainer.innerHTML = '';
-
-    if (type === 'choice') {
-        addChoiceInput();
-        addChoiceInput();
-    }
 }
 
 function saveSubQuestion(e) {
@@ -231,18 +215,6 @@ function saveSubQuestion(e) {
         type: type,
         text: text
     };
-
-    // 選択式
-    if (type === 'choice') {
-        const choices = Array.from(elements.choicesContainer.querySelectorAll('.choice-text'))
-            .map(input => input.value.trim())
-            .filter(v => v);
-        if (choices.length < 2) {
-            alert('選択肢を2つ以上入力してください');
-            return;
-        }
-        subQuestion.choices = choices;
-    }
 
     // 記述式
     if (type === 'short' || type === 'long') {
@@ -308,21 +280,4 @@ function deleteSubQuestion(sectionId, questionId, subQuestionId) {
         renderSections();
         saveToStorage();
     }
-}
-
-// 選択肢入力欄を追加
-function addChoiceInput(value = '') {
-    const container = elements.choicesContainer;
-    const index = container.querySelectorAll('.choice-item').length;
-    const labels = ['ア', 'イ', 'ウ', 'エ', 'オ', 'カ', 'キ', 'ク'];
-    const label = labels[index] || `${index + 1}`;
-
-    const item = document.createElement('div');
-    item.className = 'choice-item';
-    item.innerHTML = `
-        <span class="choice-label">${label}</span>
-        <input type="text" class="choice-text" value="${escapeHtml(value)}" placeholder="選択肢を入力">
-        <button type="button" class="remove-choice" onclick="this.parentElement.remove()">×</button>
-    `;
-    container.appendChild(item);
 }

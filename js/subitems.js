@@ -6,29 +6,10 @@ function addSubItem(sectionId, questionId, parentId) {
 
 // 子回答欄オプション表示切り替え
 function updateSubItemOptions(type) {
-    elements.subItemChoiceOptions.style.display = type === 'choice' ? 'block' : 'none';
     elements.subItemTextOptions.style.display = (type === 'short' || type === 'long') ? 'block' : 'none';
     elements.subItemRowsOption.style.display = type === 'long' ? 'block' : 'none';
     elements.subItemAnswerCountOptions.style.display = (type === 'symbol' || type === 'word') ? 'block' : 'none';
     elements.subItemNumberOptions.style.display = type === 'number' ? 'block' : 'none';
-}
-
-// 子回答欄の選択肢追加
-function addSubItemChoice(value = '') {
-    const div = document.createElement('div');
-    div.className = 'choice-input';
-    div.innerHTML = `
-        <input type="text" class="sub-item-choice-text" value="${escapeHtml(value)}" placeholder="選択肢を入力">
-        <button type="button" class="remove-choice">×</button>
-    `;
-    div.querySelector('.remove-choice').addEventListener('click', () => {
-        if (elements.subItemChoicesContainer.children.length > 2) {
-            div.remove();
-        } else {
-            alert('選択肢は最低2つ必要です');
-        }
-    });
-    elements.subItemChoicesContainer.appendChild(div);
 }
 
 function openSubItemModal(sectionId, questionId, parentId, editId = null) {
@@ -65,11 +46,6 @@ function openSubItemModal(sectionId, questionId, parentId, editId = null) {
             elements.subItemType.value = subItem.type || 'symbol';
             updateSubItemOptions(subItem.type);
 
-            // 選択式
-            if (subItem.choices) {
-                subItem.choices.forEach(choice => addSubItemChoice(choice));
-            }
-
             // 記述式
             elements.subItemMinChars.value = subItem.minChars || '';
             elements.subItemMaxChars.value = subItem.maxChars || '';
@@ -97,12 +73,6 @@ function openSubItemModal(sectionId, questionId, parentId, editId = null) {
                 }
             }
         }
-    } else {
-        // 新規追加時、選択式なら選択肢を2つ追加
-        if (elements.subItemType.value === 'choice') {
-            addSubItemChoice();
-            addSubItemChoice();
-        }
     }
 }
 
@@ -128,18 +98,6 @@ function saveSubItem(e) {
         id: editId ? parseInt(editId) : state.nextSubQuestionId++,
         type: type
     };
-
-    // 選択式
-    if (type === 'choice') {
-        const choices = Array.from(elements.subItemChoicesContainer.querySelectorAll('.sub-item-choice-text'))
-            .map(input => input.value.trim())
-            .filter(v => v);
-        if (choices.length < 2) {
-            alert('選択肢を2つ以上入力してください');
-            return;
-        }
-        subItem.choices = choices;
-    }
 
     // 記述式
     if (type === 'short' || type === 'long') {

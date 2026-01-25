@@ -31,12 +31,6 @@ function init() {
         });
     });
 
-    // 子回答欄の選択肢追加
-    document.getElementById('addSubItemChoiceBtn').addEventListener('click', () => addSubItemChoice());
-
-    // 選択肢追加
-    elements.addChoiceBtn.addEventListener('click', () => addChoiceInput());
-
     // キャンセルボタン
     document.querySelectorAll('.cancel-btn').forEach(btn => {
         btn.addEventListener('click', () => {

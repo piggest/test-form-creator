@@ -126,8 +126,6 @@
                 <div class="form-group">
                     <label for="subQuestionType">回答欄タイプ</label>
                     <select id="subQuestionType">
-                        <option value="choice">選択式</option>
-                        <option value="truefalse">〇×式</option>
                         <option value="symbol">記号回答式</option>
                         <option value="word">語句回答式</option>
                         <option value="number">数値記述式</option>
@@ -140,13 +138,6 @@
                 <div class="form-group">
                     <label for="subQuestionText">小問テキスト（任意）</label>
                     <textarea id="subQuestionText" rows="2" placeholder="小問のテキスト"></textarea>
-                </div>
-
-                <!-- 選択式オプション -->
-                <div id="choiceOptions" class="form-group" style="display: none;">
-                    <label>選択肢</label>
-                    <div id="choicesContainer"></div>
-                    <button type="button" id="addChoiceBtn" class="small-btn">選択肢を追加</button>
                 </div>
 
                 <!-- 記述式オプション -->
@@ -241,8 +232,6 @@
             <input type="hidden" id="typeSelectSectionId">
             <input type="hidden" id="typeSelectQuestionId">
             <div class="type-select-buttons">
-                <button class="type-btn" data-type="choice">選択式</button>
-                <button class="type-btn" data-type="truefalse">〇×式</button>
                 <button class="type-btn" data-type="symbol">記号回答式</button>
                 <button class="type-btn" data-type="word">語句回答式</button>
                 <button class="type-btn" data-type="number">数値記述式</button>
@@ -269,21 +258,12 @@
                 <div class="form-group">
                     <label for="subItemType">回答欄タイプ</label>
                     <select id="subItemType">
-                        <option value="choice">選択式</option>
-                        <option value="truefalse">〇×式</option>
                         <option value="symbol">記号回答式</option>
                         <option value="word">語句回答式</option>
                         <option value="number">数値記述式</option>
                         <option value="short">記述式（1行）</option>
                         <option value="long">記述式（複数行）</option>
                     </select>
-                </div>
-
-                <!-- 選択式オプション（子回答欄用） -->
-                <div id="subItemChoiceOptions" class="form-group" style="display: none;">
-                    <label>選択肢</label>
-                    <div id="subItemChoicesContainer"></div>
-                    <button type="button" id="addSubItemChoiceBtn" class="small-btn">選択肢を追加</button>
                 </div>
 
                 <!-- 記述式オプション（子回答欄用） -->
