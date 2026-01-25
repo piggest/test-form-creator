@@ -56,12 +56,14 @@ function renderTreeItem(paragraph, index, depth, parentLabelFormat, startNumber)
                 const innerNum = paragraph.showInnerLabel ? formatNumberEdit(itemNumber, childLabelFormat) : '';
                 const typeLabel = getAnswerFieldTypeLabel(item.type);
                 const unitLabel = item.unit ? ` (${item.unit})` : '';
+                const miniPreview = renderMiniPreview(item);
 
                 html += `
                     <li class="tree-item tree-field">
                         <div class="tree-row">
                             <span class="tree-field-label">${innerNum}</span>
                             <span class="tree-field-type">${typeLabel}${unitLabel}</span>
+                            <span class="tree-field-preview">${miniPreview}</span>
                             <span class="tree-actions">
                                 <button class="tree-btn" onclick="moveAnswerFieldUp(${paragraph.id}, ${item.id})" title="上へ">↑</button>
                                 <button class="tree-btn" onclick="moveAnswerFieldDown(${paragraph.id}, ${item.id})" title="下へ">↓</button>
@@ -79,8 +81,8 @@ function renderTreeItem(paragraph, index, depth, parentLabelFormat, startNumber)
         // 追加ボタン
         html += `
             <li class="tree-item tree-add-item">
-                <button class="tree-add-btn" onclick="addAnswerField(${paragraph.id})">＋ 回答欄</button>
-                <button class="tree-add-btn" onclick="addParagraph(${paragraph.id})">＋ 子段落</button>
+                <button class="tree-add-btn tree-add-btn-field" onclick="addAnswerField(${paragraph.id})">＋ 回答欄</button>
+                <button class="tree-add-btn tree-add-btn-child" onclick="addParagraph(${paragraph.id})">＋ 子段落</button>
             </li>
         `;
 
