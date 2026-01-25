@@ -127,10 +127,8 @@
                     <label for="subQuestionType">回答欄タイプ</label>
                     <select id="subQuestionType">
                         <option value="symbol">記号回答式</option>
-                        <option value="word">語句回答式</option>
+                        <option value="text">記述式</option>
                         <option value="number">数値記述式</option>
-                        <option value="short">記述式（1行）</option>
-                        <option value="long">記述式（複数行）</option>
                         <option value="grid">原稿用紙形式</option>
                         <option value="multiple">複数回答欄（①②③...）</option>
                     </select>
@@ -143,11 +141,17 @@
 
                 <!-- 記述式オプション -->
                 <div id="textOptions" class="form-group" style="display: none;">
-                    <div id="rowsOption" style="display: none;">
-                        <label for="textRows">行数</label>
-                        <input type="number" id="textRows" value="5" min="2" max="20">
+                    <div class="text-size-inputs">
+                        <div>
+                            <label for="textWidth">文字数幅</label>
+                            <input type="number" id="textWidth" value="3" min="1" max="20">
+                        </div>
+                        <div>
+                            <label for="textRows">行数</label>
+                            <input type="number" id="textRows" value="1" min="1" max="20">
+                        </div>
                     </div>
-                    <div class="suffix-input">
+                    <div class="suffix-input" style="margin-top: 12px;">
                         <label for="suffixText">解答欄の後ろのテキスト（任意）</label>
                         <input type="text" id="suffixText" placeholder="例: と考える。">
                     </div>
@@ -157,7 +161,7 @@
                 <div id="gridOptions" class="form-group" style="display: none;">
                     <label>文字数</label>
                     <div class="char-limit-inputs">
-                        <input type="number" id="gridChars" placeholder="文字数" min="1" value="20">
+                        <input type="number" id="gridChars" placeholder="文字数" min="1" value="50">
                         <span>文字</span>
                     </div>
                     <div class="suffix-input" style="margin-top: 12px;">
@@ -240,10 +244,8 @@
             <input type="hidden" id="typeSelectQuestionId">
             <div class="type-select-buttons">
                 <button class="type-btn" data-type="symbol">記号回答式</button>
-                <button class="type-btn" data-type="word">語句回答式</button>
+                <button class="type-btn" data-type="text">記述式</button>
                 <button class="type-btn" data-type="number">数値記述式</button>
-                <button class="type-btn" data-type="short">記述式（1行）</button>
-                <button class="type-btn" data-type="long">記述式（複数行）</button>
                 <button class="type-btn" data-type="grid">原稿用紙形式</button>
                 <button class="type-btn" data-type="multiple">複数回答欄</button>
             </div>
@@ -267,21 +269,25 @@
                     <label for="subItemType">回答欄タイプ</label>
                     <select id="subItemType">
                         <option value="symbol">記号回答式</option>
-                        <option value="word">語句回答式</option>
+                        <option value="text">記述式</option>
                         <option value="number">数値記述式</option>
-                        <option value="short">記述式（1行）</option>
-                        <option value="long">記述式（複数行）</option>
                         <option value="grid">原稿用紙形式</option>
                     </select>
                 </div>
 
                 <!-- 記述式オプション（子回答欄用） -->
                 <div id="subItemTextOptions" class="form-group" style="display: none;">
-                    <div id="subItemRowsOption" style="display: none;">
-                        <label for="subItemTextRows">行数</label>
-                        <input type="number" id="subItemTextRows" value="5" min="2" max="20">
+                    <div class="text-size-inputs">
+                        <div>
+                            <label for="subItemTextWidth">文字数幅</label>
+                            <input type="number" id="subItemTextWidth" value="3" min="1" max="20">
+                        </div>
+                        <div>
+                            <label for="subItemTextRows">行数</label>
+                            <input type="number" id="subItemTextRows" value="1" min="1" max="20">
+                        </div>
                     </div>
-                    <div class="suffix-input">
+                    <div class="suffix-input" style="margin-top: 12px;">
                         <label for="subItemSuffixText">解答欄の後ろのテキスト（任意）</label>
                         <input type="text" id="subItemSuffixText" placeholder="例: と考える。">
                     </div>
@@ -291,7 +297,7 @@
                 <div id="subItemGridOptions" class="form-group" style="display: none;">
                     <label>文字数</label>
                     <div class="char-limit-inputs">
-                        <input type="number" id="subItemGridChars" placeholder="文字数" min="1" value="20">
+                        <input type="number" id="subItemGridChars" placeholder="文字数" min="1" value="50">
                         <span>文字</span>
                     </div>
                     <div class="suffix-input" style="margin-top: 12px;">

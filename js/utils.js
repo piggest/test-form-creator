@@ -21,10 +21,8 @@ function getCircledNumber(num) {
 function getSubItemTypeLabel(type) {
     const labels = {
         'symbol': '記号回答式',
-        'word': '語句回答式',
+        'text': '記述式',
         'number': '数値記述式',
-        'short': '記述式（1行）',
-        'long': '記述式（複数行）',
         'grid': '原稿用紙形式'
     };
     return labels[type] || type;

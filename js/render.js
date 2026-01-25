@@ -403,7 +403,7 @@ function renderGridCell(subQ, num, isVertical = false) {
 
     // セルの幅クラスを決定
     let widthClass = 'cell-normal';
-    if (type === 'word' || type === 'long' || type === 'short') {
+    if (type === 'text') {
         widthClass = 'cell-wide';
     }
 
@@ -419,8 +419,7 @@ function renderGridCell(subQ, num, isVertical = false) {
         subItems.forEach((si, index) => {
             const label = getCircledNumber(index + 1);
             let boxClass = 'cell-multi-symbol';
-            if (si.type === 'word' || si.type === 'short' || si.type === 'long') boxClass = 'cell-multi-word';
-            else if (false) boxClass = 'cell-multi-symbol';
+            if (si.type === 'text') boxClass = 'cell-multi-word';
 
             let unitHtml = si.unit ? `<span class="cell-multi-unit">${escapeHtml(si.unit)}</span>` : '';
             innerHtml += `<div class="cell-multi-item"><span class="cell-multi-label">${label}</span><div class="${boxClass}"></div>${unitHtml}</div>`;
@@ -474,11 +473,15 @@ function renderGridCell(subQ, num, isVertical = false) {
 // セルが短い（積み重ね可能）かどうかを判定
 function isShortCell(subQ) {
     const type = subQ.type;
-    // 記号、語句、数値は短いセル
-    if (type === 'symbol' || type === 'word' || type === 'number') {
+    // 記号、数値は短いセル
+    if (type === 'symbol' || type === 'number') {
         return true;
     }
-    // 原稿用紙形式で文字数が少ない場合は短いセル扱い
+    // 記述式で行数が少ない場合は短いセル扱い
+    if (type === 'text' && subQ.textRows && subQ.textRows <= 2) {
+        return true;
+    }
+    // 原稿用紙形式で行数が少ない場合は短いセル扱い
     if (type === 'grid' && subQ.gridChars && subQ.gridChars <= 10) {
         return true;
     }
@@ -508,10 +511,13 @@ function renderStackedCells(cells) {
     // セルタイプごとの高さ（ラベル含む）
     function getCellHeight(subQ) {
         const type = subQ.type;
-        if (type === 'word') return 193;          // 語句: 180px (5文字分) + ラベル13px
+        if (type === 'text') {
+            const rows = subQ.textRows || 1;
+            return rows * 36 + 13; // 行数 × セルサイズ + ラベル
+        }
         if (type === 'number') return 55;         // 数値: 42px + ラベル13px
         if (type === 'grid' && subQ.gridChars && subQ.gridChars <= 10) {
-            return 373;  // 短い原稿用紙: 360px (10文字分) + ラベル13px
+            return subQ.gridChars * 36 + 13;  // 文字数 × セルサイズ + ラベル
         }
         // 複数回答欄の高さを計算
         if (type === 'multiple') {
@@ -521,7 +527,10 @@ function renderStackedCells(cells) {
                 if (si.type === 'grid' && si.gridChars) {
                     return sum + si.gridChars * 36 + 25; // 原稿用紙: 文字数 × セルサイズ + ラベル
                 }
-                return sum + 205; // 語句: 180px (5文字分) + ラベル25px
+                if (si.type === 'text') {
+                    return sum + (si.textRows || 1) * 36 + 25;
+                }
+                return sum + 55; // 記号など
             }, 13); // 親ラベル分
             return totalHeight;
         }
@@ -592,7 +601,7 @@ function renderStackedCells(cells) {
                     html += `<div class="vertical-multiple-item-label">${label}</div>`;
 
                     if (si.type === 'grid' && si.gridChars) {
-                        // 原稿用紙形式
+                        // 原稿用紙形式（1行5文字）
                         const charCount = si.gridChars;
                         html += `<div class="vertical-grid-paper vertical-multiple-cell">`;
                         for (let i = 0; i < charCount; i++) {
@@ -606,7 +615,7 @@ function renderStackedCells(cells) {
                         html += `</div>`;
                     } else {
                         // 通常のセル（タイプ別クラス）
-                        const subCellClass = (si.type === 'symbol' || false || si.type === 'number') ? ' cell-symbol-sub' : '';
+                        const subCellClass = (si.type === 'symbol' || si.type === 'number') ? ' cell-symbol-sub' : '';
                         html += `<div class="grid-cell-item vertical-multiple-cell${subCellClass}">`;
                         if (si.unit) {
                             html += `<span class="cell-unit-bottom">${escapeHtml(si.unit)}</span>`;
@@ -617,7 +626,7 @@ function renderStackedCells(cells) {
                 });
                 html += `</div>`;
             } else if (type === 'grid' && subQ.gridChars) {
-                // 原稿用紙形式
+                // 原稿用紙形式（1行5文字）
                 const charCount = subQ.gridChars;
                 html += `<div class="stacked-grid-paper${idx === 0 ? ' first-cell' : ''}">`;
                 for (let c = 0; c < charCount; c++) {
@@ -630,10 +639,10 @@ function renderStackedCells(cells) {
                 }
                 html += `</div>`;
             } else {
-                // 通常のセル（記号、語句、数値など）
+                // 通常のセル（記号、記述式、数値など）
                 let heightClass = 'cell-symbol';
-                if (type === 'word') {
-                    heightClass = 'cell-word-stacked';
+                if (type === 'text') {
+                    heightClass = 'cell-text-stacked';
                 } else if (type === 'number') {
                     heightClass = 'cell-number-stacked';
                 }
@@ -706,7 +715,7 @@ function renderVerticalGridCellFlat(subQ, num, sectionNum, isFirstInSection) {
                 html += `</div>`;
             } else {
                 // 通常のセル（タイプ別クラス）
-                const subCellClass = (si.type === 'symbol' || false || si.type === 'number') ? ' cell-symbol-sub' : '';
+                const subCellClass = (si.type === 'symbol' || si.type === 'number') ? ' cell-symbol-sub' : '';
                 html += `<div class="grid-cell-item vertical-multiple-cell${subCellClass}">`;
                 if (si.unit) {
                     html += `<span class="cell-unit-bottom">${escapeHtml(si.unit)}</span>`;
@@ -754,12 +763,8 @@ function renderVerticalGridCellFlat(subQ, num, sectionNum, isFirstInSection) {
     let heightClass = 'cell-normal';
     if (type === 'symbol') {
         heightClass = 'cell-symbol';
-    } else if (type === 'word') {
-        heightClass = 'cell-wide';
-    } else if (type === 'short') {
-        heightClass = 'cell-short-text';
-    } else if (type === 'long') {
-        heightClass = 'cell-wide';
+    } else if (type === 'text') {
+        heightClass = 'cell-text';
     }
 
     // 縦書き用のセルグループ
@@ -828,7 +833,7 @@ function renderVerticalGridCell(subQ, num) {
                 html += `</div>`;
             } else {
                 // 通常のセル（タイプ別クラス）
-                const subCellClass = (si.type === 'symbol' || false || si.type === 'number') ? ' cell-symbol-sub' : '';
+                const subCellClass = (si.type === 'symbol' || si.type === 'number') ? ' cell-symbol-sub' : '';
                 html += `<div class="grid-cell-item vertical-multiple-cell${subCellClass}">`;
                 if (si.unit) {
                     html += `<span class="cell-unit-bottom">${escapeHtml(si.unit)}</span>`;
@@ -864,15 +869,9 @@ function renderVerticalGridCell(subQ, num) {
     // セルの高さクラスを決定
     let heightClass = 'cell-normal';
     if (type === 'symbol') {
-        // 記号は1文字分
         heightClass = 'cell-symbol';
-    } else if (type === 'word') {
-        heightClass = 'cell-wide';
-    } else if (type === 'short') {
-        // 記述式1行は10文字分のスペース
-        heightClass = 'cell-short-text';
-    } else if (type === 'long') {
-        heightClass = 'cell-wide';
+    } else if (type === 'text') {
+        heightClass = 'cell-text';
     }
 
     // 縦書き用のセルグループ
@@ -897,35 +896,24 @@ function renderAnswerArea(subQ) {
         case 'symbol':
             return renderAnswerBoxes(subQ.answerCount || 1, 'symbol');
 
-        case 'word':
-            return renderAnswerBoxes(subQ.answerCount || 1, 'word');
-
         case 'multiple':
             return renderMultipleAnswers(subQ);
 
         case 'number':
             return renderNumberAnswer(subQ);
 
-        case 'short':
+        case 'text':
+            const textWidth = subQ.textWidth || 3;
+            const textRows = subQ.textRows || 1;
             return `
-                <div class="preview-textarea preview-textarea-short"></div>
-                ${renderSuffixText(subQ)}
-            `;
-
-        case 'long':
-            const rows = subQ.rows || 5;
-            // CSS変数を使った高さ計算（36px * rows * scale）
-            return `
-                <div class="preview-textarea multi-line" style="height: calc(36px * var(--scale) * ${rows});">
-                    <div class="lines">
-                        ${Array(rows).fill('<div class="line"></div>').join('')}
-                    </div>
+                <div class="preview-textarea" style="width: calc(36px * var(--scale) * ${textWidth}); height: calc(36px * var(--scale) * ${textRows});">
+                    ${textRows > 1 ? `<div class="lines">${Array(textRows).fill('<div class="line"></div>').join('')}</div>` : ''}
                 </div>
                 ${renderSuffixText(subQ)}
             `;
 
         case 'grid':
-            return renderGridPaper(subQ.gridChars || 20) + renderSuffixText(subQ);
+            return renderGridPaper(subQ.gridChars || 50) + renderSuffixText(subQ);
 
         default:
             return '';
@@ -933,14 +921,19 @@ function renderAnswerArea(subQ) {
 }
 
 function renderGridPaper(charCount) {
-    const charsPerRow = 20;
-    const cells = [];
-    for (let i = 0; i < charCount; i++) {
-        cells.push('<div class="grid-cell"></div>');
+    const charsPerGroup = 5; // 5文字ごとにグループ化
+    const groups = [];
+
+    for (let i = 0; i < charCount; i += charsPerGroup) {
+        const groupSize = Math.min(charsPerGroup, charCount - i);
+        const cells = [];
+        for (let j = 0; j < groupSize; j++) {
+            cells.push('<div class="grid-cell"></div>');
+        }
+        groups.push(`<div class="grid-row">${cells.join('')}</div>`);
     }
-    // CSS変数を使って幅を計算（grid-cell-size * scale * 文字数）
-    const cellCount = Math.min(charCount, charsPerRow);
-    return `<div class="grid-paper" data-cells="${cellCount}">${cells.join('')}</div>`;
+
+    return `<div class="grid-paper" data-chars="${charCount}">${groups.join('')}</div>`;
 }
 
 function renderAnswerBoxes(count, type) {
@@ -987,31 +980,21 @@ function renderSubItemAnswerArea(si) {
         case 'symbol':
             return renderAnswerBoxes(si.answerCount || 1, 'symbol');
 
-        case 'word':
-            return renderAnswerBoxes(si.answerCount || 1, 'word');
-
         case 'number':
             return renderNumberAnswer(si);
 
-        case 'short':
+        case 'text':
+            const textWidth = si.textWidth || 3;
+            const textRows = si.textRows || 1;
             return `
-                <div class="preview-textarea preview-textarea-short"></div>
-                ${renderSuffixText(si)}
-            `;
-
-        case 'long':
-            const rows = si.rows || 5;
-            return `
-                <div class="preview-textarea multi-line" style="height: calc(36px * var(--scale) * ${rows});">
-                    <div class="lines">
-                        ${Array(rows).fill('<div class="line"></div>').join('')}
-                    </div>
+                <div class="preview-textarea" style="width: calc(36px * var(--scale) * ${textWidth}); height: calc(36px * var(--scale) * ${textRows});">
+                    ${textRows > 1 ? `<div class="lines">${Array(textRows).fill('<div class="line"></div>').join('')}</div>` : ''}
                 </div>
                 ${renderSuffixText(si)}
             `;
 
         case 'grid':
-            return renderGridPaper(si.gridChars || 20) + renderSuffixText(si);
+            return renderGridPaper(si.gridChars || 50) + renderSuffixText(si);
 
         default:
             return '';
@@ -1081,10 +1064,6 @@ function renderMiniPreview(subQ) {
             const symCount = Math.min(subQ.answerCount || 1, 5);
             return Array(symCount).fill('<div class="mini-box"></div>').join('');
 
-        case 'word':
-            const wordCount = Math.min(subQ.answerCount || 1, 3);
-            return Array(wordCount).fill('<div class="mini-word-box"></div>').join('');
-
         case 'multiple':
             const subItems = subQ.subItems || [];
             if (subItems.length === 0) {
@@ -1097,8 +1076,8 @@ function renderMiniPreview(subQ) {
                 const label = getCircledNumber(i + 1);
                 if (si.type === 'symbol' || si.type === 'number') {
                     multiHtml += `<span class="mini-label">${label}</span><div class="mini-box"></div>`;
-                } else if (si.type === 'word') {
-                    multiHtml += `<span class="mini-label">${label}</span><div class="mini-word-box"></div>`;
+                } else if (si.type === 'text') {
+                    multiHtml += `<span class="mini-label">${label}</span><div class="mini-textarea" style="width:60px;"></div>`;
                 } else {
                     multiHtml += `<span class="mini-label">${label}</span><div class="mini-textarea" style="width:60px;"></div>`;
                 }
@@ -1111,15 +1090,17 @@ function renderMiniPreview(subQ) {
         case 'number':
             return renderMiniNumberPreview(subQ);
 
-        case 'short':
-            return `<div class="mini-textarea"></div>${subQ.suffixText ? `<span class="mini-label">${escapeHtml(subQ.suffixText)}</span>` : ''}`;
-
-        case 'long':
-            return `<div class="mini-textarea" style="width:150px;"></div>${subQ.suffixText ? `<span class="mini-label">${escapeHtml(subQ.suffixText)}</span>` : ''}`;
+        case 'text':
+            const textWidth = subQ.textWidth || 3;
+            const textRows = subQ.textRows || 1;
+            const miniWidth = Math.min(textWidth * 20, 150);
+            return `<div class="mini-textarea" style="width:${miniWidth}px;"></div>${subQ.suffixText ? `<span class="mini-label">${escapeHtml(subQ.suffixText)}</span>` : ''}`;
 
         case 'grid':
-            const gridCount = Math.min(subQ.gridChars || 20, 6);
-            return `<div class="mini-grid">${Array(gridCount).fill('<div class="mini-grid-cell"></div>').join('')}</div>${(subQ.gridChars || 20) > 6 ? '<span class="mini-label">...</span>' : ''}${subQ.suffixText ? `<span class="mini-label">${escapeHtml(subQ.suffixText)}</span>` : ''}`;
+            const gridChars = subQ.gridChars || 50;
+            const totalChars = gridChars;
+            const gridCount = Math.min(totalChars, 6);
+            return `<div class="mini-grid">${Array(gridCount).fill('<div class="mini-grid-cell"></div>').join('')}</div>${totalChars > 6 ? '<span class="mini-label">...</span>' : ''}${subQ.suffixText ? `<span class="mini-label">${escapeHtml(subQ.suffixText)}</span>` : ''}`;
 
         default:
             return '';

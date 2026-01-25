@@ -604,6 +604,30 @@ body {
     width: 80px;
 }
 
+/* 記述式サイズ入力 */
+.text-size-inputs {
+    display: flex;
+    gap: 20px;
+}
+
+.text-size-inputs > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.text-size-inputs label {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.text-size-inputs input {
+    width: 80px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
 /* モーダルボタン */
 .modal-buttons {
     display: flex;
@@ -1128,16 +1152,13 @@ body {
     min-height: calc(36px * var(--scale));
 }
 
-.preview-content.vertical-mode .vertical-stacked-column .stacked-cell.cell-word-stacked {
-    min-height: calc(180px * var(--scale)); /* 5文字分: 36px × 5 */
+.preview-content.vertical-mode .vertical-stacked-column .stacked-cell.cell-text-stacked {
+    min-height: calc(108px * var(--scale)); /* デフォルト3文字分: 36px × 3 */
 }
 
 .preview-content.vertical-mode .vertical-stacked-column .stacked-cell.cell-number-stacked {
     min-height: calc(42px * var(--scale));
 }
-
-.preview-content.vertical-mode .vertical-stacked-column .stacked-cell.cell-short-stacked {
-    min-height: calc(360px * var(--scale)); /* 10文字分: 36px × 10 */
 }
 
 /* 積み重ね列内の原稿用紙形式（記述式） */
@@ -1302,9 +1323,9 @@ body {
     min-height: calc(200px * var(--scale));
 }
 
-/* 記述式1行用（10文字分） */
-.preview-content.vertical-mode .vertical-cell-group .grid-cell-item.cell-short-text {
-    min-height: calc(360px * var(--scale)); /* 10文字分: 36px × 10 */
+/* 記述式用 */
+.preview-content.vertical-mode .vertical-cell-group .grid-cell-item.cell-text {
+    min-height: calc(108px * var(--scale)); /* デフォルト3文字分: 36px × 3 */
 }
 
 .preview-content.vertical-mode .vertical-cell-group .cell-unit-bottom {
@@ -1320,32 +1341,48 @@ body {
 .preview-content.vertical-mode .vertical-grid-paper {
     display: flex;
     flex-direction: column;
-    border: 1px solid #333;
+    flex-wrap: wrap-reverse;
+    align-content: flex-start;
+    border-top: 1px solid #333;
+    /* 高さを制限して折り返す（3グループ = 15文字分） */
+    max-height: calc((36px * 5 + 1px) * var(--scale) * 3);
+}
+
+.preview-content.vertical-mode .vertical-grid-row {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border-left: 1px solid #333;
+    border-right: 1px solid #333;
+    margin-right: -1px;
 }
 
 .preview-content.vertical-mode .vertical-grid-cell {
     width: calc(36px * var(--scale));
     height: calc(36px * var(--scale));
     border-bottom: 1px dashed #999;
-    position: relative;
     box-sizing: border-box;
+    position: relative;
 }
 
-.preview-content.vertical-mode .vertical-grid-cell.with-marker {
-    border-bottom: 1px solid #333;
-}
-
-.preview-content.vertical-mode .vertical-grid-cell:last-child {
-    border-bottom: none;
-}
-
-.preview-content.vertical-mode .vertical-grid-marker {
+.preview-content.vertical-mode .vertical-grid-cell .vertical-grid-marker {
     position: absolute;
+    bottom: calc(2px * var(--scale));
     right: calc(2px * var(--scale));
-    bottom: calc(1px * var(--scale));
-    font-size: calc(0.45rem * var(--scale));
-    color: #666;
+    font-size: calc(10px * var(--scale));
+    color: #999;
+    line-height: 1;
     writing-mode: horizontal-tb;
+}
+
+/* 5文字グループの最後のセルは実線 */
+.preview-content.vertical-mode .vertical-grid-row .vertical-grid-cell:last-of-type {
+    border-bottom: 1px solid #333 !important;
+}
+
+/* 折り返しの境界も実線（太め） */
+.preview-content.vertical-mode .vertical-grid-row.column-break .vertical-grid-cell:last-of-type {
+    border-bottom: 2px solid #333 !important;
 }
 
 /* 国語モード：複数回答欄コンテナ */
@@ -1606,20 +1643,36 @@ body {
 /* 方眼スタイル */
 .grid-paper {
     display: flex;
+    flex-direction: column;
     flex-wrap: wrap;
-    border: 1px solid #333;
-    border-right: none;
-    border-bottom: none;
-    /* 20文字分の幅（1行あたり最大20セル） */
-    max-width: calc(var(--grid-cell-size) * var(--scale) * 20 + 1px);
+    align-content: flex-start;
+    gap: 0;
+    /* 高さを制限して、超えたら5文字グループ単位で次の列に折り返す */
+    /* A4の回答欄領域に収まる高さ（約10文字分） */
+    max-height: calc(var(--grid-cell-size) * var(--scale) * 10 + 10px);
+}
+
+.grid-row {
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid #333;
+}
+
+.grid-row:first-child {
+    border-left: none;
 }
 
 .grid-cell {
     width: calc(var(--grid-cell-size) * var(--scale));
     height: calc(var(--grid-cell-size) * var(--scale));
-    border-right: 1px solid #333;
-    border-bottom: 1px solid #333;
+    border: 1px solid #333;
+    border-left: none;
+    margin-top: -1px;
     box-sizing: border-box;
+}
+
+.grid-row .grid-cell:first-child {
+    margin-top: 0;
 }
 
 /* 記号・語句回答欄スタイル */
