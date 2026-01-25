@@ -839,7 +839,7 @@ body {
 }
 
 .grid-cell-item.cell-number-cell {
-    min-width: calc(30px * var(--scale));
+    min-width: calc(36px * var(--scale));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1056,7 +1056,7 @@ body {
 /* 最初のセル */
 .preview-content.vertical-mode .vertical-stacked-column .stacked-cell.first-cell {
     border: 1px solid #333;
-    min-width: calc(30px * var(--scale));
+    min-width: calc(36px * var(--scale));
     position: relative;
 }
 
@@ -1079,25 +1079,41 @@ body {
 
 .preview-content.vertical-mode .vertical-stacked-column .stacked-later-item .stacked-cell {
     border: 1px solid #333;
-    min-width: calc(30px * var(--scale));
+    min-width: calc(36px * var(--scale));
     margin-top: calc(-1px);
     position: relative;
 }
 
 .preview-content.vertical-mode .vertical-stacked-column .stacked-cell.cell-symbol {
-    min-height: calc(32px * var(--scale));
+    min-height: calc(36px * var(--scale));
 }
 
 .preview-content.vertical-mode .vertical-stacked-column .stacked-cell.cell-word-stacked {
-    min-height: calc(60px * var(--scale));
+    min-height: calc(75px * var(--scale));
 }
 
 .preview-content.vertical-mode .vertical-stacked-column .stacked-cell.cell-number-stacked {
-    min-height: calc(35px * var(--scale));
+    min-height: calc(42px * var(--scale));
 }
 
 .preview-content.vertical-mode .vertical-stacked-column .stacked-cell.cell-short-stacked {
-    min-height: calc(80px * var(--scale));
+    min-height: calc(100px * var(--scale));
+}
+
+/* 積み重ね列内の複数回答欄（縦並び） */
+.preview-content.vertical-mode .vertical-stacked-column .vertical-multiple-cells.stacked {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #333;
+}
+
+.preview-content.vertical-mode .vertical-stacked-column .vertical-multiple-cells.stacked .vertical-multiple-item {
+    border-left: none;
+    border-bottom: 1px solid #333;
+}
+
+.preview-content.vertical-mode .vertical-stacked-column .vertical-multiple-cells.stacked .vertical-multiple-item:last-child {
+    border-bottom: none;
 }
 
 /* 大問区切りマーカー */
@@ -1192,7 +1208,7 @@ body {
 
 .preview-content.vertical-mode .vertical-cell-group .grid-cell-item {
     border: 1px solid #333;
-    min-width: calc(30px * var(--scale));
+    min-width: calc(36px * var(--scale));
     position: relative;
     writing-mode: vertical-rl;
 }
@@ -1203,7 +1219,7 @@ body {
 
 /* 記号用（1文字分） */
 .preview-content.vertical-mode .vertical-cell-group .grid-cell-item.cell-symbol {
-    min-height: calc(32px * var(--scale));
+    min-height: calc(36px * var(--scale));
 }
 
 .preview-content.vertical-mode .vertical-cell-group .grid-cell-item.cell-wide {
@@ -1236,8 +1252,8 @@ body {
 }
 
 .preview-content.vertical-mode .vertical-grid-cell {
-    width: calc(28px * var(--scale));
-    height: calc(28px * var(--scale));
+    width: calc(36px * var(--scale));
+    height: calc(36px * var(--scale));
     border-bottom: 1px dashed #999;
     position: relative;
     box-sizing: border-box;
@@ -1304,7 +1320,7 @@ body {
     flex-direction: column;
     align-items: center;
     align-self: stretch;
-    min-width: calc(30px * var(--scale));
+    min-width: calc(36px * var(--scale));
     border-left: 1px solid #333;
 }
 
@@ -1325,7 +1341,7 @@ body {
 
 .preview-content.vertical-mode .vertical-multiple-cell {
     flex: 1;
-    min-width: calc(30px * var(--scale));
+    min-width: calc(36px * var(--scale));
 }
 
 .preview-content.vertical-mode .vertical-multiple-cell.grid-cell-item {

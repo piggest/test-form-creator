@@ -1538,6 +1538,20 @@ function isShortCell(subQ) {
     if ((type === 'short' || type === 'long') && subQ.maxChars && subQ.maxChars <= 10) {
         return true;
     }
+    // 複数回答欄は高さを計算して判定
+    if (type === 'multiple') {
+        const subItems = subQ.subItems || [];
+        if (subItems.length === 0) return true;
+        // 子要素の合計高さを計算
+        const totalHeight = subItems.reduce((sum, si) => {
+            if ((si.type === 'short' || si.type === 'long') && si.maxChars) {
+                return sum + si.maxChars * 36 + 25; // 文字数 × セルサイズ + ラベル
+            }
+            return sum + 55; // 通常の子要素
+        }, 20); // 親ラベル分
+        // 列の高さ制限（550px）の半分以下なら短いセル扱い
+        return totalHeight <= 275;
+    }
     return false;
 }
 
@@ -1550,12 +1564,24 @@ function renderStackedCells(cells) {
     // セルタイプごとの高さ（ラベル含む）
     function getCellHeight(subQ) {
         const type = subQ.type;
-        if (type === 'word') return 70;           // 語句: 60px + ラベル10px
-        if (type === 'number') return 45;         // 数値: 35px + ラベル10px
+        if (type === 'word') return 88;           // 語句: 75px + ラベル13px
+        if (type === 'number') return 55;         // 数値: 42px + ラベル13px
         if (type === 'short' && subQ.maxChars && subQ.maxChars <= 10) {
-            return 30 + subQ.maxChars * 28 / 10;  // 短い記述
+            return 40 + subQ.maxChars * 28 / 10;  // 短い記述
         }
-        return 42;  // 記号、選択、〇×: 32px + ラベル10px
+        // 複数回答欄の高さを計算
+        if (type === 'multiple') {
+            const subItems = subQ.subItems || [];
+            if (subItems.length === 0) return 60;
+            const totalHeight = subItems.reduce((sum, si) => {
+                if ((si.type === 'short' || si.type === 'long') && si.maxChars) {
+                    return sum + si.maxChars * 36 + 25; // 文字数 × セルサイズ + ラベル
+                }
+                return sum + 55; // 通常の子要素（セル + ラベル）
+            }, 13); // 親ラベル分
+            return totalHeight;
+        }
+        return 49;  // 記号、選択、〇×: 36px + ラベル13px（正方形）
     }
 
     // セルを列にグループ化
@@ -1613,19 +1639,8 @@ function renderStackedCells(cells) {
             const unit = subQ.unit || '';
             const type = subQ.type;
 
-            // セルの高さクラス
-            let heightClass = 'cell-symbol';
-            if (type === 'word') {
-                heightClass = 'cell-word-stacked';
-            } else if (type === 'number') {
-                heightClass = 'cell-number-stacked';
-            } else if ((type === 'short' || type === 'long') && subQ.maxChars) {
-                heightClass = 'cell-short-stacked';
-            }
-
             // 2番目以降のセルには上にラベルを表示
             if (idx > 0) {
-                // 大問の区切りマーカー
                 const showInlineMarker = cell.isFirstInSection;
                 html += `<div class="stacked-later-item">`;
                 html += `<div class="stacked-later-label">`;
@@ -1634,15 +1649,58 @@ function renderStackedCells(cells) {
                 }
                 html += `<span>(${cell.globalIdx})</span>`;
                 html += `</div>`;
-                html += `<div class="stacked-cell ${heightClass}">`;
-            } else {
-                html += `<div class="stacked-cell first-cell ${heightClass}">`;
             }
 
-            if (unit) {
-                html += `<span class="cell-unit-bottom">${escapeHtml(unit)}</span>`;
+            // 複数回答欄の場合は特別な処理
+            if (type === 'multiple') {
+                const subItems = subQ.subItems || [];
+                html += `<div class="vertical-multiple-cells stacked${idx === 0 ? ' first-cell' : ''}">`;
+                subItems.forEach((si, siIdx) => {
+                    const label = getCircledNumber(siIdx + 1);
+                    html += `<div class="vertical-multiple-item">`;
+                    html += `<div class="vertical-multiple-item-label">${label}</div>`;
+
+                    if ((si.type === 'short' || si.type === 'long') && si.maxChars) {
+                        // 原稿用紙形式
+                        const charCount = si.maxChars;
+                        html += `<div class="vertical-grid-paper vertical-multiple-cell">`;
+                        for (let i = 0; i < charCount; i++) {
+                            const showMarker = (i + 1) % 5 === 0 && i < charCount - 1;
+                            html += `<div class="vertical-grid-cell${showMarker ? ' with-marker' : ''}">`;
+                            if (showMarker) {
+                                html += `<span class="vertical-grid-marker">${i + 1}</span>`;
+                            }
+                            html += `</div>`;
+                        }
+                        html += `</div>`;
+                    } else {
+                        // 通常のセル
+                        html += `<div class="grid-cell-item vertical-multiple-cell">`;
+                        if (si.unit) {
+                            html += `<span class="cell-unit-bottom">${escapeHtml(si.unit)}</span>`;
+                        }
+                        html += `</div>`;
+                    }
+                    html += `</div>`;
+                });
+                html += `</div>`;
+            } else {
+                // 通常のセル
+                let heightClass = 'cell-symbol';
+                if (type === 'word') {
+                    heightClass = 'cell-word-stacked';
+                } else if (type === 'number') {
+                    heightClass = 'cell-number-stacked';
+                } else if ((type === 'short' || type === 'long') && subQ.maxChars) {
+                    heightClass = 'cell-short-stacked';
+                }
+
+                html += `<div class="stacked-cell${idx === 0 ? ' first-cell' : ''} ${heightClass}">`;
+                if (unit) {
+                    html += `<span class="cell-unit-bottom">${escapeHtml(unit)}</span>`;
+                }
+                html += `</div>`;
             }
-            html += `</div>`;
 
             if (idx > 0) {
                 html += `</div>`;
