@@ -1,3 +1,16 @@
+// ====== 国語モード専用 ======
+
+// A4用紙サイズの定義（mmからpxへの変換用）
+const TARGET_WIDTH_MM = 180;    // 幅（マージン込み）
+const TARGET_HEIGHT_MM = 257;   // 高さ（マージン込み）
+const LANDSCAPE_WIDTH_MM = 277; // 横向き幅
+const LANDSCAPE_HEIGHT_MM = 190; // 横向き高さ
+
+// mmからpxへの変換（96dpi想定）
+function mmToPx(mm) {
+    return mm * 3.7795275591;
+}
+
 // 国語モード用の原稿用紙をレンダリング（5文字ごとにグループ化）
 function renderVerticalGridPaperHtml(charCount) {
     const charsPerGroup = 5;
@@ -31,49 +44,69 @@ function renderVerticalGridPaperHtml(charCount) {
 }
 
 function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
-    // 全セルを収集（大問ごとに番号をリセット）
+    // 全セルを収集（段落ごとに番号をリセット、子段落も含む）
     const allCells = [];
-    state.sections.forEach((section, sIndex) => {
-        let sectionIdx = 1; // 大問ごとにリセット
-        section.questions.forEach((question) => {
-            question.subQuestions.forEach((subQ) => {
-                const isFirstInSection = allCells.filter(c => c.sectionNum === sIndex + 1).length === 0;
+
+    // 再帰的に段落とその子段落からセルを収集
+    // parentLabelFormat: この段落の番号形式（親から継承）
+    function collectCells(paragraphs, parentNum = '', parentLabelFormat = null) {
+        // トップレベルの場合はrootLabelFormatを使用
+        const labelFormat = parentLabelFormat || state.rootLabelFormat || 'boxed';
+
+        paragraphs.forEach((paragraph, pIndex) => {
+            const paragraphNum = parentNum ? `${parentNum}-(${pIndex + 1})` : (pIndex + 1);
+            let fieldIdx = 1;
+
+            paragraph.answerFields.forEach((field, fIndex) => {
+                const isFirstInParagraph = fIndex === 0;
+                const innerNum = paragraph.showInnerLabel ? fieldIdx : null;
                 allCells.push({
-                    subQ,
-                    sectionNum: sIndex + 1,
-                    isFirstInSection,
-                    sectionIdx: sectionIdx++ // 大問内の番号
+                    field,
+                    paragraphNum: paragraphNum,
+                    paragraphLabelFormat: labelFormat,  // 親から継承した形式を使用
+                    innerLabelFormat: labelFormat,  // 回答欄の内部ラベルも段落番号と同じ形式を使用
+                    isFirstInParagraph,
+                    innerNum: innerNum,
+                    fieldIdx: fieldIdx++
                 });
             });
-        });
-    });
 
-    // セルをグループ化（短いセルは積み重ね、大問マーカーは独立列）
+            // 子段落があれば再帰的に処理（この段落のlabelFormatを子に渡す）
+            if (paragraph.children && paragraph.children.length > 0) {
+                const childLabelFormat = paragraph.labelFormat || 'parenthesis';
+                collectCells(paragraph.children, String(paragraphNum), childLabelFormat);
+            }
+        });
+    }
+
+    collectCells(state.paragraphs);
+
+    // セルをグループ化（短いセルは積み重ね、段落マーカーは独立列）
     const cellGroups = [];
     let i = 0;
-    let isFirstSection = true;
+    let isFirstParagraph = true;
     while (i < allCells.length) {
         const cell = allCells[i];
 
-        // 大問の開始時は空白列と大問マーカー列を追加
-        if (cell.isFirstInSection) {
-            // 最初の大問以外は空白列を挟む
-            if (!isFirstSection) {
+        // 段落の開始時は空白列と段落マーカー列を追加
+        if (cell.isFirstInParagraph) {
+            // 最初の段落以外は空白列を挟む
+            if (!isFirstParagraph) {
                 cellGroups.push({ type: 'spacer' });
             }
-            cellGroups.push({ type: 'sectionMarker', sectionNum: cell.sectionNum });
-            isFirstSection = false;
+            cellGroups.push({ type: 'paragraphMarker', paragraphNum: cell.paragraphNum, labelFormat: cell.paragraphLabelFormat });
+            isFirstParagraph = false;
         }
 
-        if (isShortCell(cell.subQ)) {
-            // 連続する短いセルを収集（大問が変わったら終了、最大4つまで）
+        if (isShortCell(cell.field)) {
+            // 連続する短いセルを収集（段落が変わったら終了、最大4つまで）
             const shortCells = [cell];
             let j = i + 1;
-            while (j < allCells.length && isShortCell(allCells[j].subQ) && !allCells[j].isFirstInSection && shortCells.length < 4) {
+            while (j < allCells.length && isShortCell(allCells[j].field) && !allCells[j].isFirstInParagraph && shortCells.length < 4) {
                 shortCells.push(allCells[j]);
                 j++;
             }
-            cellGroups.push({ type: 'stacked', cells: shortCells });
+            cellGroups.push({ type: 'stacked', cells: shortCells, innerLabelFormat: cell.innerLabelFormat });
             i = j;
         } else {
             cellGroups.push({ type: 'single', cell: cell });
@@ -89,16 +122,18 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
     cellGroups.forEach(group => {
         if (group.type === 'spacer') {
             html += `<div class="vertical-spacer-column"></div>`;
-        } else if (group.type === 'sectionMarker') {
-            html += `<div class="vertical-section-column"><div class="vertical-section-marker">${group.sectionNum}</div></div>`;
+        } else if (group.type === 'paragraphMarker') {
+            const labelHtml = formatNumber(group.paragraphNum, group.labelFormat);
+            html += `<div class="vertical-section-column"><div class="vertical-section-marker">${labelHtml}</div></div>`;
         } else if (group.type === 'stacked') {
-            html += renderStackedCells(group.cells);
+            html += renderStackedCellsNew(group.cells, group.innerLabelFormat);
         } else {
-            html += renderVerticalGridCellFlat(
-                group.cell.subQ,
-                group.cell.sectionIdx,
-                group.cell.sectionNum,
-                false // 大問マーカーは独立列で表示するのでここではfalse
+            html += renderVerticalGridCellFlatNew(
+                group.cell.field,
+                group.cell.innerNum,
+                group.cell.paragraphNum,
+                false, // 段落マーカーは独立列で表示するのでここではfalse
+                group.cell.innerLabelFormat
             );
         }
     });
@@ -144,53 +179,53 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
         }
     });
 
-    // グループを大問単位でまとめる
-    const sectionGroups = []; // 各要素は { sectionNum, groups: [], totalWidth, maxHeight }
-    let currentSection = null;
+    // グループを段落単位でまとめる
+    const paragraphGroups = []; // 各要素は { paragraphNum, groups: [], totalWidth, maxHeight }
+    let currentParagraph = null;
 
     groupMeasures.forEach(({ group, width, height }) => {
         if (group.type === 'spacer') {
-            // スペーサーは次の大問の開始を示す（前の大問を確定）
-            if (currentSection) {
-                sectionGroups.push(currentSection);
+            // スペーサーは次の段落の開始を示す（前の段落を確定）
+            if (currentParagraph) {
+                paragraphGroups.push(currentParagraph);
             }
-            currentSection = {
-                sectionNum: null,
+            currentParagraph = {
+                paragraphNum: null,
                 groups: [{ group, width, height }],
                 totalWidth: width,
                 maxHeight: height
             };
-        } else if (group.type === 'sectionMarker') {
-            // sectionMarkerはcurrentSectionに追加（spacerの後に来る）
-            if (!currentSection) {
-                currentSection = {
-                    sectionNum: group.sectionNum,
+        } else if (group.type === 'paragraphMarker') {
+            // paragraphMarkerはcurrentParagraphに追加（spacerの後に来る）
+            if (!currentParagraph) {
+                currentParagraph = {
+                    paragraphNum: group.paragraphNum,
                     groups: [],
                     totalWidth: 0,
                     maxHeight: 0
                 };
             }
-            currentSection.sectionNum = group.sectionNum;
-            currentSection.groups.push({ group, width, height });
-            currentSection.totalWidth += width;
-            currentSection.maxHeight = Math.max(currentSection.maxHeight, height);
+            currentParagraph.paragraphNum = group.paragraphNum;
+            currentParagraph.groups.push({ group, width, height });
+            currentParagraph.totalWidth += width;
+            currentParagraph.maxHeight = Math.max(currentParagraph.maxHeight, height);
         } else {
-            // 通常のセルは現在の大問に追加
-            if (currentSection) {
-                currentSection.groups.push({ group, width, height });
-                currentSection.totalWidth += width;
-                currentSection.maxHeight = Math.max(currentSection.maxHeight, height);
+            // 通常のセルは現在の段落に追加
+            if (currentParagraph) {
+                currentParagraph.groups.push({ group, width, height });
+                currentParagraph.totalWidth += width;
+                currentParagraph.maxHeight = Math.max(currentParagraph.maxHeight, height);
             }
         }
     });
 
-    if (currentSection && currentSection.groups.length > 0) {
-        sectionGroups.push(currentSection);
+    if (currentParagraph && currentParagraph.groups.length > 0) {
+        paragraphGroups.push(currentParagraph);
     }
 
-    console.log('[国語モード] 大問グループ:', sectionGroups.map(s => ({ num: s.sectionNum, width: s.totalWidth, height: s.maxHeight })));
+    console.log('[国語モード] 段落グループ:', paragraphGroups.map(s => ({ num: s.paragraphNum, width: s.totalWidth, height: s.maxHeight })));
 
-    // 大問単位でページに分配（幅と高さの両方を考慮）
+    // 段落単位でページに分配（幅と高さの両方を考慮）
     const headerWidth = 80 * 3.78; // ヘッダー幅（約80mm）
     const availableWidth = pageWidth - headerWidth;
     const pages = [];
@@ -198,11 +233,11 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
     let currentWidth = 0;
     let currentMaxHeight = 0;
 
-    sectionGroups.forEach((section) => {
+    paragraphGroups.forEach((paragraph) => {
         // すべてのページでヘッダー分を差し引いた幅を使用
-        // 大問が収まらない場合は次のページへ（幅または高さがオーバー）
-        const widthOverflow = currentWidth + section.totalWidth > availableWidth;
-        const heightOverflow = section.maxHeight > pageHeight;
+        // 段落が収まらない場合は次のページへ（幅または高さがオーバー）
+        const widthOverflow = currentWidth + paragraph.totalWidth > availableWidth;
+        const heightOverflow = paragraph.maxHeight > pageHeight;
 
         if ((widthOverflow || heightOverflow) && currentPage.length > 0) {
             pages.push(currentPage);
@@ -210,10 +245,10 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
             currentWidth = 0;
             currentMaxHeight = 0;
         }
-        // 大問のグループを全て追加
-        section.groups.forEach(g => currentPage.push(g.group));
-        currentWidth += section.totalWidth;
-        currentMaxHeight = Math.max(currentMaxHeight, section.maxHeight);
+        // 段落のグループを全て追加
+        paragraph.groups.forEach(g => currentPage.push(g.group));
+        currentWidth += paragraph.totalWidth;
+        currentMaxHeight = Math.max(currentMaxHeight, paragraph.maxHeight);
     });
 
     if (currentPage.length > 0) {
@@ -262,16 +297,18 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
         pageGroups.forEach(group => {
             if (group.type === 'spacer') {
                 html += `<div class="vertical-spacer-column"></div>`;
-            } else if (group.type === 'sectionMarker') {
-                html += `<div class="vertical-section-column"><div class="vertical-section-marker">${group.sectionNum}</div></div>`;
+            } else if (group.type === 'paragraphMarker') {
+                const labelHtml = formatNumber(group.paragraphNum, group.labelFormat);
+                html += `<div class="vertical-section-column"><div class="vertical-section-marker">${labelHtml}</div></div>`;
             } else if (group.type === 'stacked') {
-                html += renderStackedCells(group.cells);
+                html += renderStackedCellsNew(group.cells, group.innerLabelFormat);
             } else {
-                html += renderVerticalGridCellFlat(
-                    group.cell.subQ,
-                    group.cell.sectionIdx,
-                    group.cell.sectionNum,
-                    false
+                html += renderVerticalGridCellFlatNew(
+                    group.cell.field,
+                    group.cell.innerNum,
+                    group.cell.paragraphNum,
+                    false,
+                    group.cell.innerLabelFormat
                 );
             }
         });
@@ -282,68 +319,22 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
     elements.previewContent.innerHTML = html;
 }
 
-function isShortCell(subQ) {
-    const type = subQ.type;
-    // 記号、数値は短いセル
-    if (type === 'symbol' || type === 'number') {
-        return true;
-    }
-    // 記述式で文字数が少ない場合は短いセル扱い
-    if (type === 'text' && subQ.textWidth && subQ.textWidth <= 3) {
-        return true;
-    }
-    // 原稿用紙形式で行数が少ない場合は短いセル扱い
-    if (type === 'grid' && subQ.gridChars && subQ.gridChars <= 10) {
-        return true;
-    }
-    // 複数回答欄は高さを計算して判定
-    if (type === 'multiple') {
-        const subItems = subQ.subItems || [];
-        if (subItems.length === 0) return true;
-        // 子要素の合計高さを計算
-        const totalHeight = subItems.reduce((sum, si) => {
-            if (si.type === 'grid' && si.gridChars) {
-                return sum + si.gridChars * 36 + 25; // 行数 × セルサイズ + ラベル
-            }
-            return sum + 55; // 通常の子要素
-        }, 20); // 親ラベル分
-        // 列の高さ制限（550px）の半分以下なら短いセル扱い
-        return totalHeight <= 275;
-    }
-    return false;
-}
-
-// 連続する短いセルを列にまとめてレンダリング
-function renderStackedCells(cells) {
+// 連続する短いセルを列にまとめてレンダリング（新構造用）
+function renderStackedCellsNew(cells, innerLabelFormat = 'circled') {
     // 高さに基づいて列を分割
     // 170mm ≈ 643px (at 96dpi), padding-top: 45px, マージンを考慮
     const maxColumnHeight = 550; // px (at scale=1.0) - 確実に収まるように余裕を持たせる
 
     // セルタイプごとの高さ（ラベル含む）
-    function getCellHeight(subQ) {
-        const type = subQ.type;
+    function getCellHeight(field) {
+        const type = field.type;
         if (type === 'text') {
-            const chars = subQ.textWidth || 3;
+            const chars = field.textWidth || 3;
             return chars * 36 + 13; // 文字数 × セルサイズ + ラベル
         }
         if (type === 'number') return 55;         // 数値: 42px + ラベル13px
-        if (type === 'grid' && subQ.gridChars && subQ.gridChars <= 10) {
-            return subQ.gridChars * 36 + 13;  // 行数 × 1行5文字 × セルサイズ + ラベル
-        }
-        // 複数回答欄の高さを計算
-        if (type === 'multiple') {
-            const subItems = subQ.subItems || [];
-            if (subItems.length === 0) return 60;
-            const totalHeight = subItems.reduce((sum, si) => {
-                if (si.type === 'grid' && si.gridChars) {
-                    return sum + si.gridChars * 36 + 25; // 原稿用紙: 行数 × 1行5文字 × セルサイズ + ラベル
-                }
-                if (si.type === 'text') {
-                    return sum + (si.textWidth || 3) * 36 + 25;
-                }
-                return sum + 55; // 記号など
-            }, 13); // 親ラベル分
-            return totalHeight;
+        if (type === 'grid' && field.gridChars && field.gridChars <= 10) {
+            return field.gridChars * 36 + 13;  // 文字数 × セルサイズ + ラベル
         }
         return 49;  // 記号: 36px + ラベル13px（正方形）
     }
@@ -354,10 +345,10 @@ function renderStackedCells(cells) {
     let currentHeight = 0;
 
     cells.forEach((cell) => {
-        const cellHeight = getCellHeight(cell.subQ);
+        const cellHeight = getCellHeight(cell.field);
 
-        // 大問の開始時は新しい列にする
-        if (cell.isFirstInSection && currentColumn.length > 0) {
+        // 段落の開始時は新しい列にする
+        if (cell.isFirstInParagraph && currentColumn.length > 0) {
             columns.push(currentColumn);
             currentColumn = [];
             currentHeight = 0;
@@ -385,60 +376,28 @@ function renderStackedCells(cells) {
         html += `<div class="vertical-stacked-column">`;
 
         // 最初のセルのラベル（固定位置）
-        html += `<div class="stacked-first-label">(${firstCell.sectionIdx})</div>`;
+        const firstLabel = formatNumber(firstCell.innerNum, innerLabelFormat);
+        html += `<div class="stacked-first-label">${firstLabel}</div>`;
 
         // セル群
         html += `<div class="stacked-cells-container">`;
         columnCells.forEach((cell, idx) => {
-            const subQ = cell.subQ;
-            const unit = subQ.unit || '';
-            const type = subQ.type;
+            const field = cell.field;
+            const unit = field.unit || '';
+            const type = field.type;
 
             // 2番目以降のセルには上にラベルを表示
             if (idx > 0) {
+                const laterLabel = formatNumber(cell.innerNum, innerLabelFormat);
                 html += `<div class="stacked-later-item">`;
                 html += `<div class="stacked-later-label">`;
-                html += `<span>(${cell.sectionIdx})</span>`;
+                html += `<span>${laterLabel}</span>`;
                 html += `</div>`;
             }
 
-            // 複数回答欄の場合は特別な処理
-            if (type === 'multiple') {
-                const subItems = subQ.subItems || [];
-                html += `<div class="vertical-multiple-cells stacked${idx === 0 ? ' first-cell' : ''}">`;
-                subItems.forEach((si, siIdx) => {
-                    const label = getCircledNumber(siIdx + 1);
-                    html += `<div class="vertical-multiple-item">`;
-                    html += `<div class="vertical-multiple-item-label">${label}</div>`;
-
-                    if (si.type === 'grid' && si.gridChars) {
-                        // 原稿用紙形式（1行5文字）
-                        const charCount = si.gridChars;
-                        html += `<div class="vertical-grid-paper vertical-multiple-cell">`;
-                        for (let i = 0; i < charCount; i++) {
-                            const showMarker = (i + 1) % 5 === 0 && i < charCount - 1;
-                            html += `<div class="vertical-grid-cell${showMarker ? ' with-marker' : ''}">`;
-                            if (showMarker) {
-                                html += `<span class="vertical-grid-marker">${i + 1}</span>`;
-                            }
-                            html += `</div>`;
-                        }
-                        html += `</div>`;
-                    } else {
-                        // 通常のセル（タイプ別クラス）
-                        const subCellClass = (si.type === 'symbol' || si.type === 'number') ? ' cell-symbol-sub' : '';
-                        html += `<div class="grid-cell-item vertical-multiple-cell${subCellClass}">`;
-                        if (si.unit) {
-                            html += `<span class="cell-unit-bottom">${escapeHtml(si.unit)}</span>`;
-                        }
-                        html += `</div>`;
-                    }
-                    html += `</div>`;
-                });
-                html += `</div>`;
-            } else if (type === 'grid' && subQ.gridChars) {
+            if (type === 'grid' && field.gridChars) {
                 // 原稿用紙形式（1行5文字）
-                const charCount = subQ.gridChars;
+                const charCount = field.gridChars;
                 html += `<div class="stacked-grid-paper${idx === 0 ? ' first-cell' : ''}">`;
                 for (let c = 0; c < charCount; c++) {
                     const showMarker = (c + 1) % 5 === 0 && c < charCount - 1;
@@ -450,8 +409,8 @@ function renderStackedCells(cells) {
                 }
                 html += `</div>`;
                 // 後続テキスト（suffixText）
-                if (subQ.suffixText) {
-                    html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
+                if (field.suffixText) {
+                    html += `<div class="vertical-suffix-text">${escapeHtml(field.suffixText)}</div>`;
                 }
             } else {
                 // 通常のセル（記号、記述式、数値など）
@@ -460,7 +419,7 @@ function renderStackedCells(cells) {
                 if (type === 'text') {
                     heightClass = 'cell-text-stacked';
                     // textWidth（文字数）に基づいて高さを計算（1文字 = 36px）
-                    const chars = subQ.textWidth || 3;
+                    const chars = field.textWidth || 3;
                     const height = chars * 36;
                     heightStyle = ` style="min-height: calc(${height}px * var(--scale))"`;
                 } else if (type === 'number') {
@@ -473,8 +432,8 @@ function renderStackedCells(cells) {
                 }
                 html += `</div>`;
                 // 後続テキスト（suffixText）
-                if (subQ.suffixText) {
-                    html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
+                if (field.suffixText) {
+                    html += `<div class="vertical-suffix-text">${escapeHtml(field.suffixText)}</div>`;
                 }
             }
 
@@ -490,83 +449,24 @@ function renderStackedCells(cells) {
     return html;
 }
 
-// 国語モード用のフラットセルレンダリング（大問番号付き）
-function renderVerticalGridCellFlat(subQ, num, sectionNum, isFirstInSection) {
-    const unit = subQ.unit || '';
-    const type = subQ.type;
+// 国語モード用のフラットセルレンダリング（新構造用）
+function renderVerticalGridCellFlatNew(field, num, paragraphNum, isFirstInParagraph, innerLabelFormat = 'circled') {
+    const unit = field.unit || '';
+    const type = field.type;
 
-    // 大問番号ラベル（最初のセルのみ）
-    const sectionLabel = isFirstInSection ? `<div class="vertical-section-marker">${sectionNum}</div>` : '';
-    const hasMarkerClass = isFirstInSection ? ' has-section-marker' : '';
-
-    // 複数回答欄の場合
-    if (type === 'multiple') {
-        const subItems = subQ.subItems || [];
-
-        if (subItems.length === 0) {
-            let html = `<div class="vertical-cell-group${hasMarkerClass}">`;
-            html += sectionLabel;
-            html += `<div class="vertical-cell-label">(${num})</div>`;
-            html += `<div class="grid-cell-item cell-normal"></div>`;
-            html += `</div>`;
-            return html;
-        }
-
-        // 子回答欄をまとめるコンテナ
-        let html = `<div class="vertical-multiple-container${hasMarkerClass}">`;
-        html += sectionLabel;
-        html += `<div class="vertical-multiple-label">(${num})</div>`;
-        html += `<div class="vertical-multiple-cells">`;
-
-        subItems.forEach((si, index) => {
-            const label = getCircledNumber(index + 1);
-
-            html += `<div class="vertical-multiple-item">`;
-            html += `<div class="vertical-multiple-item-label">${label}</div>`;
-
-            // 原稿用紙形式
-            if (si.type === 'grid' && si.gridChars) {
-                const charCount = si.gridChars;
-                html += `<div class="vertical-grid-paper vertical-multiple-cell">`;
-                for (let i = 0; i < charCount; i++) {
-                    const showMarker = (i + 1) % 5 === 0 && i < charCount - 1;
-                    html += `<div class="vertical-grid-cell${showMarker ? ' with-marker' : ''}">`;
-                    if (showMarker) {
-                        html += `<span class="vertical-grid-marker">${i + 1}</span>`;
-                    }
-                    html += `</div>`;
-                }
-                html += `</div>`;
-            } else {
-                // 通常のセル（タイプ別クラス）
-                const subCellClass = (si.type === 'symbol' || si.type === 'number') ? ' cell-symbol-sub' : '';
-                html += `<div class="grid-cell-item vertical-multiple-cell${subCellClass}">`;
-                if (si.unit) {
-                    html += `<span class="cell-unit-bottom">${escapeHtml(si.unit)}</span>`;
-                }
-                html += `</div>`;
-            }
-
-            html += `</div>`;
-        });
-
-        html += `</div>`;
-        // 後続テキスト（suffixText）
-        if (subQ.suffixText) {
-            html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
-        }
-        html += `</div>`;
-        return html;
-    }
+    // 段落番号ラベル（最初のセルのみ）
+    const paragraphLabel = isFirstInParagraph ? `<div class="vertical-section-marker">${paragraphNum}</div>` : '';
+    const hasMarkerClass = isFirstInParagraph ? ' has-section-marker' : '';
 
     // 原稿用紙形式
-    if (type === 'grid' && subQ.gridChars) {
+    if (type === 'grid' && field.gridChars) {
         let html = `<div class="vertical-cell-group${hasMarkerClass}">`;
-        html += sectionLabel;
-        html += `<div class="vertical-cell-label">(${num})</div>`;
-        html += renderVerticalGridPaperHtml(subQ.gridChars);
-        if (subQ.suffixText) {
-            html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
+        html += paragraphLabel;
+        const numLabel = num !== null ? formatNumber(num, innerLabelFormat) : '';
+        html += `<div class="vertical-cell-label">${numLabel}</div>`;
+        html += renderVerticalGridPaperHtml(field.gridChars);
+        if (field.suffixText) {
+            html += `<div class="vertical-suffix-text">${escapeHtml(field.suffixText)}</div>`;
         }
         html += `</div>`;
         return html;
@@ -580,17 +480,18 @@ function renderVerticalGridCellFlat(subQ, num, sectionNum, isFirstInSection) {
     } else if (type === 'text') {
         heightClass = 'cell-text';
         // textWidth（文字数）に基づいて高さを計算（1文字 = 36px）
-        const chars = subQ.textWidth || 3;
+        const chars = field.textWidth || 3;
         const height = chars * 36;
         heightStyle = ` style="min-height: calc(${height}px * var(--scale))"`;
     }
 
     // 縦書き用のセルグループ
     let html = `<div class="vertical-cell-group${hasMarkerClass}">`;
-    html += sectionLabel;
+    html += paragraphLabel;
 
     // 問番号ラベル（上部）
-    html += `<div class="vertical-cell-label">(${num})</div>`;
+    const numLabel = num !== null ? formatNumber(num, innerLabelFormat) : '';
+    html += `<div class="vertical-cell-label">${numLabel}</div>`;
 
     // 回答セル
     html += `<div class="grid-cell-item ${heightClass}"${heightStyle}>`;
@@ -600,114 +501,8 @@ function renderVerticalGridCellFlat(subQ, num, sectionNum, isFirstInSection) {
     html += `</div>`;
 
     // 後続テキスト（suffixText）
-    if (subQ.suffixText) {
-        html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
-    }
-
-    html += `</div>`;
-    return html;
-}
-
-// 国語モード用のセルレンダリング（従来版 - 互換性のため残す）
-function renderVerticalGridCell(subQ, num) {
-    const unit = subQ.unit || '';
-    const type = subQ.type;
-
-    // 複数回答欄の場合 - 子回答欄をコンテナでまとめて高さを揃える
-    if (type === 'multiple') {
-        const subItems = subQ.subItems || [];
-
-        if (subItems.length === 0) {
-            let html = `<div class="vertical-cell-group">`;
-            html += `<div class="vertical-cell-label">(${num})</div>`;
-            html += `<div class="grid-cell-item cell-normal"></div>`;
-            html += `</div>`;
-            return html;
-        }
-
-        // 子回答欄をまとめるコンテナ
-        let html = `<div class="vertical-multiple-container">`;
-        html += `<div class="vertical-multiple-label">(${num})</div>`;
-        html += `<div class="vertical-multiple-cells">`;
-
-        subItems.forEach((si, index) => {
-            const label = getCircledNumber(index + 1);
-
-            html += `<div class="vertical-multiple-item">`;
-            html += `<div class="vertical-multiple-item-label">${label}</div>`;
-
-            // 原稿用紙形式
-            if (si.type === 'grid' && si.gridChars) {
-                const charCount = si.gridChars;
-                html += `<div class="vertical-grid-paper vertical-multiple-cell">`;
-                for (let i = 0; i < charCount; i++) {
-                    const showMarker = (i + 1) % 5 === 0 && i < charCount - 1;
-                    html += `<div class="vertical-grid-cell${showMarker ? ' with-marker' : ''}">`;
-                    if (showMarker) {
-                        html += `<span class="vertical-grid-marker">${i + 1}</span>`;
-                    }
-                    html += `</div>`;
-                }
-                html += `</div>`;
-            } else {
-                // 通常のセル（タイプ別クラス）
-                const subCellClass = (si.type === 'symbol' || si.type === 'number') ? ' cell-symbol-sub' : '';
-                html += `<div class="grid-cell-item vertical-multiple-cell${subCellClass}">`;
-                if (si.unit) {
-                    html += `<span class="cell-unit-bottom">${escapeHtml(si.unit)}</span>`;
-                }
-                html += `</div>`;
-            }
-
-            html += `</div>`;
-        });
-
-        html += `</div></div>`;
-        return html;
-    }
-
-    // 原稿用紙形式
-    if (type === 'grid' && subQ.gridChars) {
-        let html = `<div class="vertical-cell-group">`;
-        html += `<div class="vertical-cell-label">(${num})</div>`;
-        html += renderVerticalGridPaperHtml(subQ.gridChars);
-        // 後続テキスト（suffixText）
-        if (subQ.suffixText) {
-            html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
-        }
-        html += `</div>`;
-        return html;
-    }
-
-    // セルの高さクラスとスタイルを決定
-    let heightClass = 'cell-normal';
-    let heightStyle = '';
-    if (type === 'symbol') {
-        heightClass = 'cell-symbol';
-    } else if (type === 'text') {
-        heightClass = 'cell-text';
-        // textWidth（文字数）に基づいて高さを計算（1文字 = 36px）
-        const chars = subQ.textWidth || 3;
-        const height = chars * 36;
-        heightStyle = ` style="min-height: calc(${height}px * var(--scale))"`;
-    }
-
-    // 縦書き用のセルグループ
-    let html = `<div class="vertical-cell-group">`;
-
-    // 問番号ラベル（上部）
-    html += `<div class="vertical-cell-label">(${num})</div>`;
-
-    // 回答セル
-    html += `<div class="grid-cell-item ${heightClass}"${heightStyle}>`;
-    if (unit) {
-        html += `<span class="cell-unit-bottom">${escapeHtml(unit)}</span>`;
-    }
-    html += `</div>`;
-
-    // 後続テキスト（suffixText）
-    if (subQ.suffixText) {
-        html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
+    if (field.suffixText) {
+        html += `<div class="vertical-suffix-text">${escapeHtml(field.suffixText)}</div>`;
     }
 
     html += `</div>`;
