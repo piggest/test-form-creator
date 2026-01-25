@@ -228,13 +228,14 @@ function init() {
     // 印刷
     elements.printBtn.addEventListener('click', () => {
         // 国語モードの場合はA4横向きに設定
-        if (state.verticalMode) {
+        if (elements.verticalMode.checked) {
             const style = document.createElement('style');
             style.id = 'print-landscape';
             style.textContent = '@page { size: A4 landscape; margin: 10mm; }';
             document.head.appendChild(style);
             window.print();
-            document.getElementById('print-landscape').remove();
+            const printStyle = document.getElementById('print-landscape');
+            if (printStyle) printStyle.remove();
         } else {
             window.print();
         }
@@ -998,10 +999,106 @@ function mmToPx(mm) {
     return mm * 96 / 25.4;
 }
 
+// 国語モード用スケール最適化（1.0以上のみ）
+async function optimizeVerticalModeScale() {
+    // 初期スケール1.0でコンテンツサイズを測定
+    elements.previewContent.style.setProperty('--scale', '1');
+    await new Promise(resolve => requestAnimationFrame(resolve));
+
+    const questionsFlow = elements.previewContent.querySelector('.preview-questions-flow');
+    if (!questionsFlow) {
+        console.log('[国語モード最適化] questions-flow が見つかりません');
+        return;
+    }
+
+    // 実際のコンテンツ範囲を計算（子要素のbounding boxから）
+    const children = questionsFlow.children;
+    let minX = Infinity, maxX = -Infinity;
+    let minY = Infinity, maxY = -Infinity;
+    const flowRect = questionsFlow.getBoundingClientRect();
+
+    for (const child of children) {
+        const rect = child.getBoundingClientRect();
+        minX = Math.min(minX, rect.left - flowRect.left);
+        maxX = Math.max(maxX, rect.right - flowRect.left);
+        minY = Math.min(minY, rect.top - flowRect.top);
+        maxY = Math.max(maxY, rect.bottom - flowRect.top);
+    }
+
+    const contentWidth = maxX - minX;
+    const contentHeight = maxY - minY;
+    const pageWidth = flowRect.width;
+    const pageHeight = 170 * 3.78; // 170mm in pixels
+
+    console.log(`[国語モード最適化] scale=1.0 時: コンテンツ=${contentWidth.toFixed(0)}x${contentHeight.toFixed(0)}px, ページ=${pageWidth.toFixed(0)}x${pageHeight.toFixed(0)}px`);
+
+    if (contentWidth <= 0 || contentHeight <= 0) {
+        console.log('[国語モード最適化] コンテンツなし');
+        return;
+    }
+
+    // 幅と高さの両方を考慮してスケールを計算
+    const widthScale = pageWidth / contentWidth;
+    const heightScale = pageHeight / contentHeight;
+
+    // 両方に収まる最大スケールを選択（少し余裕を持たせる）
+    let targetScale = Math.min(widthScale, heightScale) * 0.95;
+
+    // 上限を設定（最大2.5倍）
+    targetScale = Math.min(targetScale, 2.5);
+
+    // 1.0以上を保証（縮小しない）
+    targetScale = Math.max(targetScale, 1.0);
+
+    console.log(`[国語モード最適化] 幅スケール=${widthScale.toFixed(3)}, 高さスケール=${heightScale.toFixed(3)}, 目標=${targetScale.toFixed(3)}`);
+
+    // 二分探索で最適スケールを見つける
+    let low = 1.0;
+    let high = targetScale;
+    let bestScale = 1.0;
+
+    for (let iteration = 0; iteration < 8; iteration++) {
+        const testScale = (low + high) / 2;
+        elements.previewContent.style.setProperty('--scale', String(testScale));
+        await new Promise(resolve => requestAnimationFrame(resolve));
+
+        // 再測定
+        let newMaxX = -Infinity, newMaxY = -Infinity;
+        const newFlowRect = questionsFlow.getBoundingClientRect();
+        for (const child of questionsFlow.children) {
+            const rect = child.getBoundingClientRect();
+            newMaxX = Math.max(newMaxX, rect.right - newFlowRect.left);
+            newMaxY = Math.max(newMaxY, rect.bottom - newFlowRect.top);
+        }
+
+        const fits = newMaxX <= newFlowRect.width * 1.01 && newMaxY <= pageHeight * 1.01;
+        console.log(`[国語モード最適化] 反復${iteration + 1}: scale=${testScale.toFixed(3)}, 収まる=${fits}`);
+
+        if (fits) {
+            bestScale = testScale;
+            low = testScale;
+        } else {
+            high = testScale;
+        }
+
+        if (high - low < 0.02) break;
+    }
+
+    elements.previewContent.style.setProperty('--scale', String(bestScale));
+    console.log(`[国語モード最適化] 最終スケール: ${bestScale.toFixed(3)}`);
+}
+
 // 反復的に最適化を行う
 async function optimizePreviewScale() {
     // まず内容をレンダリング
     renderPreviewContent();
+
+    // 国語モード（縦書き）の場合は別の最適化ロジック
+    if (elements.verticalMode.checked) {
+        elements.previewContent.style.maxWidth = 'none';
+        await optimizeVerticalModeScale();
+        return;
+    }
 
     // 幅は常にA4フルサイズを維持
     const fixedWidth = TARGET_WIDTH_MM;
@@ -1072,8 +1169,10 @@ function renderPreviewContent() {
     const title = elements.testTitle.value || 'テスト';
     const subtitle = elements.testSubtitle.value;
     const maxScore = parseInt(elements.maxScore.value) || 100;
+    const isVertical = elements.verticalMode.checked;
 
-    let html = `
+    // ヘッダーHTML
+    const headerHtml = `
         <div class="preview-header">
             <div class="preview-title-row">
                 <h2>${escapeHtml(title)}${subtitle ? `<span class="preview-subtitle">（${escapeHtml(subtitle)}）</span>` : ''}</h2>
@@ -1093,11 +1192,17 @@ function renderPreviewContent() {
     `;
 
     if (state.sections.length === 0) {
-        html += '<p style="text-align: center; color: #999;">問題がありません</p>';
-    } else {
-        html += '<div class="preview-questions-flow">';
+        elements.previewContent.innerHTML = headerHtml + '<p style="text-align: center; color: #999;">問題がありません</p>';
+        return;
+    }
 
-        const isVertical = elements.verticalMode.checked;
+    if (isVertical) {
+        // 国語モード：ページ分割を考慮してレンダリング
+        renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore);
+    } else {
+        // 通常モード：従来の構造
+        let html = headerHtml;
+        html += '<div class="preview-questions-flow">';
 
         state.sections.forEach((section, sIndex) => {
             const hasText = section.text && section.text.trim();
@@ -1121,7 +1226,7 @@ function renderPreviewContent() {
             if (allSubQuestions.length > 0) {
                 html += `<div class="preview-answer-grid">`;
                 allSubQuestions.forEach((subQ, idx) => {
-                    html += renderGridCell(subQ, idx + 1, isVertical);
+                    html += renderGridCell(subQ, idx + 1, false);
                 });
                 html += `</div>`;
             }
@@ -1130,7 +1235,158 @@ function renderPreviewContent() {
         });
 
         html += '</div>';
+        elements.previewContent.innerHTML = html;
     }
+}
+
+// 国語モード：ページ分割を考慮してレンダリング
+function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
+    // 全セルを収集
+    let globalIdx = 1;
+    const allCells = [];
+    state.sections.forEach((section, sIndex) => {
+        section.questions.forEach((question) => {
+            question.subQuestions.forEach((subQ) => {
+                const isFirstInSection = allCells.filter(c => c.sectionNum === sIndex + 1).length === 0;
+                allCells.push({
+                    subQ,
+                    sectionNum: sIndex + 1,
+                    isFirstInSection,
+                    globalIdx: globalIdx++
+                });
+            });
+        });
+    });
+
+    // セルをグループ化（短いセルは積み重ね）
+    const cellGroups = [];
+    let i = 0;
+    while (i < allCells.length) {
+        const cell = allCells[i];
+
+        if (isShortCell(cell.subQ)) {
+            // 連続する短いセルを収集（最大8個）
+            const shortCells = [cell];
+            let j = i + 1;
+            while (j < allCells.length && isShortCell(allCells[j].subQ) && shortCells.length < 8) {
+                shortCells.push(allCells[j]);
+                j++;
+            }
+            cellGroups.push({ type: 'stacked', cells: shortCells });
+            i = j;
+        } else {
+            cellGroups.push({ type: 'single', cell: cell });
+            i++;
+        }
+    }
+
+    // まず1ページとしてレンダリングして、実際の幅を測定
+    let html = `<div class="preview-page">`;
+    html += headerHtml;
+    html += '<div class="preview-questions-flow">';
+
+    cellGroups.forEach(group => {
+        if (group.type === 'stacked') {
+            html += renderStackedCells(group.cells);
+        } else {
+            html += renderVerticalGridCellFlat(
+                group.cell.subQ,
+                group.cell.globalIdx,
+                group.cell.sectionNum,
+                group.cell.isFirstInSection
+            );
+        }
+    });
+
+    html += '</div></div>';
+    elements.previewContent.innerHTML = html;
+
+    // レンダリング後、幅を測定してページ分割が必要か判断
+    const questionsFlow = elements.previewContent.querySelector('.preview-questions-flow');
+    if (!questionsFlow) return;
+
+    const flowWidth = questionsFlow.scrollWidth;
+    const pageWidth = questionsFlow.clientWidth;
+
+    console.log(`[国語モード] コンテンツ幅: ${flowWidth}px, ページ幅: ${pageWidth}px`);
+
+    // 1ページに収まる場合はそのまま
+    if (flowWidth <= pageWidth * 1.05) {
+        console.log('[国語モード] 1ページに収まります');
+        return;
+    }
+
+    // 複数ページが必要 - 再レンダリング
+    console.log('[国語モード] 複数ページに分割します');
+
+    // 各グループの幅を測定
+    const children = questionsFlow.children;
+    const groupWidths = [];
+    let childIdx = 0;
+
+    cellGroups.forEach((group, idx) => {
+        if (childIdx < children.length) {
+            const child = children[childIdx];
+            groupWidths.push({
+                group,
+                width: child.offsetWidth + 3, // gap分を加算
+                index: idx
+            });
+            childIdx++;
+        }
+    });
+
+    // グループをページに分配（幅ベース）
+    const headerWidth = 80 * 3.78; // ヘッダー幅（約80mm）
+    const availableWidth = pageWidth - headerWidth;
+    const pages = [];
+    let currentPage = [];
+    let currentWidth = 0;
+
+    groupWidths.forEach(({ group, width }) => {
+        if (currentWidth + width > availableWidth && currentPage.length > 0) {
+            pages.push(currentPage);
+            currentPage = [];
+            currentWidth = 0;
+        }
+        currentPage.push(group);
+        currentWidth += width;
+    });
+
+    if (currentPage.length > 0) {
+        pages.push(currentPage);
+    }
+
+    // 複数ページをレンダリング
+    html = '';
+    pages.forEach((pageGroups, pageIdx) => {
+        html += `<div class="preview-page">`;
+
+        if (pageIdx === 0) {
+            html += headerHtml;
+        } else {
+            html += `<div class="preview-header">
+                <div class="preview-title-row"><h2>${escapeHtml(title)} (${pageIdx + 1})</h2></div>
+            </div>`;
+        }
+
+        html += '<div class="preview-questions-flow">';
+
+        pageGroups.forEach(group => {
+            if (group.type === 'stacked') {
+                html += renderStackedCells(group.cells);
+            } else {
+                html += renderVerticalGridCellFlat(
+                    group.cell.subQ,
+                    group.cell.globalIdx,
+                    group.cell.sectionNum,
+                    group.cell.isFirstInSection
+                );
+            }
+        });
+
+        html += '</div></div>';
+    });
 
     elements.previewContent.innerHTML = html;
 }
@@ -1271,7 +1527,199 @@ function renderGridCell(subQ, num, isVertical = false) {
     `;
 }
 
-// 国語モード用のセルレンダリング
+// セルが短い（積み重ね可能）かどうかを判定
+function isShortCell(subQ) {
+    const type = subQ.type;
+    // 記号、選択、〇×、語句は短いセル
+    if (type === 'symbol' || type === 'choice' || type === 'truefalse' || type === 'word') {
+        return true;
+    }
+    return false;
+}
+
+// 連続する短いセルを列にまとめてレンダリング
+function renderStackedCells(cells) {
+    // 1列あたりの最大セル数（高さに基づく概算）
+    const maxCellsPerColumn = 8;
+
+    let html = '';
+    for (let colStart = 0; colStart < cells.length; colStart += maxCellsPerColumn) {
+        const columnCells = cells.slice(colStart, colStart + maxCellsPerColumn);
+
+        // この列の最初のセルに大問マーカーが必要かチェック
+        const firstCell = columnCells[0];
+        const hasMarker = firstCell.isFirstInSection;
+        const markerSection = hasMarker ? firstCell.sectionNum : null;
+
+        html += `<div class="vertical-stacked-column${hasMarker ? ' has-section-marker' : ''}">`;
+
+        // 大問マーカー（最初のセルが大問の最初の場合のみ）
+        if (hasMarker) {
+            html += `<div class="vertical-section-marker">${markerSection}</div>`;
+        }
+
+        // 最初のセルのラベル（固定位置）
+        html += `<div class="stacked-first-label">(${firstCell.globalIdx})</div>`;
+
+        // セル群
+        html += `<div class="stacked-cells-container">`;
+        columnCells.forEach((cell, idx) => {
+            const subQ = cell.subQ;
+            const unit = subQ.unit || '';
+            const type = subQ.type;
+
+            // セルの高さクラス
+            let heightClass = 'cell-symbol';
+            if (type === 'word') {
+                heightClass = 'cell-word-stacked';
+            }
+
+            // 2番目以降のセルには上にラベルを表示
+            if (idx > 0) {
+                // 大問の区切りマーカー
+                const showInlineMarker = cell.isFirstInSection;
+                html += `<div class="stacked-later-item">`;
+                html += `<div class="stacked-later-label">`;
+                if (showInlineMarker) {
+                    html += `<span class="stacked-section-marker">${cell.sectionNum}</span>`;
+                }
+                html += `<span>(${cell.globalIdx})</span>`;
+                html += `</div>`;
+                html += `<div class="stacked-cell ${heightClass}">`;
+            } else {
+                html += `<div class="stacked-cell first-cell ${heightClass}">`;
+            }
+
+            if (unit) {
+                html += `<span class="cell-unit-bottom">${escapeHtml(unit)}</span>`;
+            }
+            html += `</div>`;
+
+            if (idx > 0) {
+                html += `</div>`;
+            }
+        });
+        html += `</div>`;
+
+        html += `</div>`;
+    }
+
+    return html;
+}
+
+// 国語モード用のフラットセルレンダリング（大問番号付き）
+function renderVerticalGridCellFlat(subQ, num, sectionNum, isFirstInSection) {
+    const unit = subQ.unit || '';
+    const type = subQ.type;
+
+    // 大問番号ラベル（最初のセルのみ）
+    const sectionLabel = isFirstInSection ? `<div class="vertical-section-marker">${sectionNum}</div>` : '';
+    const hasMarkerClass = isFirstInSection ? ' has-section-marker' : '';
+
+    // 複数回答欄の場合
+    if (type === 'multiple') {
+        const subItems = subQ.subItems || [];
+
+        if (subItems.length === 0) {
+            let html = `<div class="vertical-cell-group${hasMarkerClass}">`;
+            html += sectionLabel;
+            html += `<div class="vertical-cell-label">(${num})</div>`;
+            html += `<div class="grid-cell-item cell-normal"></div>`;
+            html += `</div>`;
+            return html;
+        }
+
+        // 子回答欄をまとめるコンテナ
+        let html = `<div class="vertical-multiple-container${hasMarkerClass}">`;
+        html += sectionLabel;
+        html += `<div class="vertical-multiple-label">(${num})</div>`;
+        html += `<div class="vertical-multiple-cells">`;
+
+        subItems.forEach((si, index) => {
+            const label = getCircledNumber(index + 1);
+
+            html += `<div class="vertical-multiple-item">`;
+            html += `<div class="vertical-multiple-item-label">${label}</div>`;
+
+            // 記述式で文字数制限がある場合は原稿用紙形式
+            if ((si.type === 'short' || si.type === 'long') && si.maxChars) {
+                const charCount = si.maxChars;
+                html += `<div class="vertical-grid-paper vertical-multiple-cell">`;
+                for (let i = 0; i < charCount; i++) {
+                    const showMarker = (i + 1) % 5 === 0 && i < charCount - 1;
+                    html += `<div class="vertical-grid-cell${showMarker ? ' with-marker' : ''}">`;
+                    if (showMarker) {
+                        html += `<span class="vertical-grid-marker">${i + 1}</span>`;
+                    }
+                    html += `</div>`;
+                }
+                html += `</div>`;
+            } else {
+                // 通常のセル
+                html += `<div class="grid-cell-item vertical-multiple-cell">`;
+                if (si.unit) {
+                    html += `<span class="cell-unit-bottom">${escapeHtml(si.unit)}</span>`;
+                }
+                html += `</div>`;
+            }
+
+            html += `</div>`;
+        });
+
+        html += `</div></div>`;
+        return html;
+    }
+
+    // 記述式で文字数制限がある場合は原稿用紙形式
+    if ((type === 'short' || type === 'long') && subQ.maxChars) {
+        const charCount = subQ.maxChars;
+        let html = `<div class="vertical-cell-group${hasMarkerClass}">`;
+        html += sectionLabel;
+        html += `<div class="vertical-cell-label">(${num})</div>`;
+        html += `<div class="vertical-grid-paper">`;
+        for (let i = 0; i < charCount; i++) {
+            const showMarker = (i + 1) % 5 === 0 && i < charCount - 1;
+            html += `<div class="vertical-grid-cell${showMarker ? ' with-marker' : ''}">`;
+            if (showMarker) {
+                html += `<span class="vertical-grid-marker">${i + 1}</span>`;
+            }
+            html += `</div>`;
+        }
+        html += `</div></div>`;
+        return html;
+    }
+
+    // セルの高さクラスを決定
+    let heightClass = 'cell-normal';
+    if (type === 'symbol' || type === 'choice' || type === 'truefalse') {
+        heightClass = 'cell-symbol';
+    } else if (type === 'word') {
+        heightClass = 'cell-wide';
+    } else if (type === 'short' && !subQ.maxChars) {
+        heightClass = 'cell-short-text';
+    } else if (type === 'long' || type === 'short') {
+        heightClass = 'cell-wide';
+    }
+
+    // 縦書き用のセルグループ
+    let html = `<div class="vertical-cell-group${hasMarkerClass}">`;
+    html += sectionLabel;
+
+    // 問番号ラベル（上部）
+    html += `<div class="vertical-cell-label">(${num})</div>`;
+
+    // 回答セル
+    html += `<div class="grid-cell-item ${heightClass}">`;
+    if (unit) {
+        html += `<span class="cell-unit-bottom">${escapeHtml(unit)}</span>`;
+    }
+    html += `</div>`;
+
+    html += `</div>`;
+    return html;
+}
+
+// 国語モード用のセルレンダリング（従来版 - 互換性のため残す）
 function renderVerticalGridCell(subQ, num) {
     const unit = subQ.unit || '';
     const type = subQ.type;
