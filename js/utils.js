@@ -20,8 +20,6 @@ function getCircledNumber(num) {
 // 子回答欄タイプのラベル
 function getSubItemTypeLabel(type) {
     const labels = {
-        'choice': '選択式',
-        'truefalse': '〇×式',
         'symbol': '記号回答式',
         'word': '語句回答式',
         'number': '数値記述式',
