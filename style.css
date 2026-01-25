@@ -1018,6 +1018,28 @@ body {
     z-index: 1;
 }
 
+/* 国語モード：大問間の空白列 */
+.preview-content.vertical-mode .vertical-spacer-column {
+    width: calc(20px * var(--scale));
+    min-height: calc(50px * var(--scale));
+}
+
+/* 国語モード：大問マーカー独立列 */
+.preview-content.vertical-mode .vertical-section-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: calc(10px * var(--scale));
+}
+
+.preview-content.vertical-mode .vertical-section-column .vertical-section-marker {
+    position: static;
+    transform: none;
+    width: calc(28px * var(--scale));
+    height: calc(28px * var(--scale));
+    font-size: calc(0.9rem * var(--scale));
+}
+
 /* 国語モード：積み重ねられたセル列 */
 .preview-content.vertical-mode .vertical-stacked-column {
     display: flex;
