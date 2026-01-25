@@ -1874,7 +1874,12 @@ function renderVerticalGridCellFlat(subQ, num, sectionNum, isFirstInSection) {
             html += `</div>`;
         });
 
-        html += `</div></div>`;
+        html += `</div>`;
+        // 後続テキスト（suffixText）
+        if (subQ.suffixText) {
+            html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
+        }
+        html += `</div>`;
         return html;
     }
 
@@ -1893,7 +1898,12 @@ function renderVerticalGridCellFlat(subQ, num, sectionNum, isFirstInSection) {
             }
             html += `</div>`;
         }
-        html += `</div></div>`;
+        html += `</div>`;
+        // 後続テキスト（suffixText）
+        if (subQ.suffixText) {
+            html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
+        }
+        html += `</div>`;
         return html;
     }
 
@@ -1922,6 +1932,11 @@ function renderVerticalGridCellFlat(subQ, num, sectionNum, isFirstInSection) {
         html += `<span class="cell-unit-bottom">${escapeHtml(unit)}</span>`;
     }
     html += `</div>`;
+
+    // 後続テキスト（suffixText）
+    if (subQ.suffixText) {
+        html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
+    }
 
     html += `</div>`;
     return html;
