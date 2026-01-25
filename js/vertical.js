@@ -288,8 +288,8 @@ function isShortCell(subQ) {
     if (type === 'symbol' || type === 'number') {
         return true;
     }
-    // 記述式で行数が少ない場合は短いセル扱い
-    if (type === 'text' && subQ.textRows && subQ.textRows <= 2) {
+    // 記述式で文字数が少ない場合は短いセル扱い
+    if (type === 'text' && subQ.textWidth && subQ.textWidth <= 3) {
         return true;
     }
     // 原稿用紙形式で行数が少ない場合は短いセル扱い
@@ -323,8 +323,8 @@ function renderStackedCells(cells) {
     function getCellHeight(subQ) {
         const type = subQ.type;
         if (type === 'text') {
-            const rows = subQ.textRows || 1;
-            return rows * 36 + 13; // 行数 × セルサイズ + ラベル
+            const chars = subQ.textWidth || 3;
+            return chars * 36 + 13; // 文字数 × セルサイズ + ラベル
         }
         if (type === 'number') return 55;         // 数値: 42px + ラベル13px
         if (type === 'grid' && subQ.gridChars && subQ.gridChars <= 10) {
@@ -339,7 +339,7 @@ function renderStackedCells(cells) {
                     return sum + si.gridChars * 36 + 25; // 原稿用紙: 行数 × 1行5文字 × セルサイズ + ラベル
                 }
                 if (si.type === 'text') {
-                    return sum + (si.textRows || 1) * 36 + 25;
+                    return sum + (si.textWidth || 3) * 36 + 25;
                 }
                 return sum + 55; // 記号など
             }, 13); // 親ラベル分
@@ -449,20 +449,33 @@ function renderStackedCells(cells) {
                     html += `</div>`;
                 }
                 html += `</div>`;
+                // 後続テキスト（suffixText）
+                if (subQ.suffixText) {
+                    html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
+                }
             } else {
                 // 通常のセル（記号、記述式、数値など）
                 let heightClass = 'cell-symbol';
+                let heightStyle = '';
                 if (type === 'text') {
                     heightClass = 'cell-text-stacked';
+                    // textWidth（文字数）に基づいて高さを計算（1文字 = 36px）
+                    const chars = subQ.textWidth || 3;
+                    const height = chars * 36;
+                    heightStyle = ` style="min-height: calc(${height}px * var(--scale))"`;
                 } else if (type === 'number') {
                     heightClass = 'cell-number-stacked';
                 }
 
-                html += `<div class="stacked-cell${idx === 0 ? ' first-cell' : ''} ${heightClass}">`;
+                html += `<div class="stacked-cell${idx === 0 ? ' first-cell' : ''} ${heightClass}"${heightStyle}>`;
                 if (unit) {
                     html += `<span class="cell-unit-bottom">${escapeHtml(unit)}</span>`;
                 }
                 html += `</div>`;
+                // 後続テキスト（suffixText）
+                if (subQ.suffixText) {
+                    html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
+                }
             }
 
             if (idx > 0) {
@@ -559,12 +572,17 @@ function renderVerticalGridCellFlat(subQ, num, sectionNum, isFirstInSection) {
         return html;
     }
 
-    // セルの高さクラスを決定
+    // セルの高さクラスとスタイルを決定
     let heightClass = 'cell-normal';
+    let heightStyle = '';
     if (type === 'symbol') {
         heightClass = 'cell-symbol';
     } else if (type === 'text') {
         heightClass = 'cell-text';
+        // textWidth（文字数）に基づいて高さを計算（1文字 = 36px）
+        const chars = subQ.textWidth || 3;
+        const height = chars * 36;
+        heightStyle = ` style="min-height: calc(${height}px * var(--scale))"`;
     }
 
     // 縦書き用のセルグループ
@@ -575,7 +593,7 @@ function renderVerticalGridCellFlat(subQ, num, sectionNum, isFirstInSection) {
     html += `<div class="vertical-cell-label">(${num})</div>`;
 
     // 回答セル
-    html += `<div class="grid-cell-item ${heightClass}">`;
+    html += `<div class="grid-cell-item ${heightClass}"${heightStyle}>`;
     if (unit) {
         html += `<span class="cell-unit-bottom">${escapeHtml(unit)}</span>`;
     }
@@ -653,16 +671,25 @@ function renderVerticalGridCell(subQ, num) {
         let html = `<div class="vertical-cell-group">`;
         html += `<div class="vertical-cell-label">(${num})</div>`;
         html += renderVerticalGridPaperHtml(subQ.gridChars);
+        // 後続テキスト（suffixText）
+        if (subQ.suffixText) {
+            html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
+        }
         html += `</div>`;
         return html;
     }
 
-    // セルの高さクラスを決定
+    // セルの高さクラスとスタイルを決定
     let heightClass = 'cell-normal';
+    let heightStyle = '';
     if (type === 'symbol') {
         heightClass = 'cell-symbol';
     } else if (type === 'text') {
         heightClass = 'cell-text';
+        // textWidth（文字数）に基づいて高さを計算（1文字 = 36px）
+        const chars = subQ.textWidth || 3;
+        const height = chars * 36;
+        heightStyle = ` style="min-height: calc(${height}px * var(--scale))"`;
     }
 
     // 縦書き用のセルグループ
@@ -672,11 +699,16 @@ function renderVerticalGridCell(subQ, num) {
     html += `<div class="vertical-cell-label">(${num})</div>`;
 
     // 回答セル
-    html += `<div class="grid-cell-item ${heightClass}">`;
+    html += `<div class="grid-cell-item ${heightClass}"${heightStyle}>`;
     if (unit) {
         html += `<span class="cell-unit-bottom">${escapeHtml(unit)}</span>`;
     }
     html += `</div>`;
+
+    // 後続テキスト（suffixText）
+    if (subQ.suffixText) {
+        html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
+    }
 
     html += `</div>`;
     return html;

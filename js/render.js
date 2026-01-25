@@ -462,11 +462,15 @@ function renderGridCell(subQ, num, isVertical = false) {
         return cells;
     }
 
+    // 後続テキスト（suffixText）
+    const suffixHtml = subQ.suffixText ? `<span class="suffix-text">${escapeHtml(subQ.suffixText)}</span>` : '';
+
     return `
         ${numCell}
         <div class="grid-cell-item ${widthClass}">
             ${unit ? `<span class="cell-unit-bottom">${escapeHtml(unit)}</span>` : ''}
         </div>
+        ${suffixHtml}
     `;
 }
 
@@ -638,6 +642,10 @@ function renderStackedCells(cells) {
                     html += `</div>`;
                 }
                 html += `</div>`;
+                // 後続テキスト（suffixText）
+                if (subQ.suffixText) {
+                    html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
+                }
             } else {
                 // 通常のセル（記号、記述式、数値など）
                 let heightClass = 'cell-symbol';
@@ -652,6 +660,10 @@ function renderStackedCells(cells) {
                     html += `<span class="cell-unit-bottom">${escapeHtml(unit)}</span>`;
                 }
                 html += `</div>`;
+                // 後続テキスト（suffixText）
+                if (subQ.suffixText) {
+                    html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
+                }
             }
 
             if (idx > 0) {
@@ -887,6 +899,11 @@ function renderVerticalGridCell(subQ, num) {
     }
     html += `</div>`;
 
+    // 後続テキスト（suffixText）
+    if (subQ.suffixText) {
+        html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
+    }
+
     html += `</div>`;
     return html;
 }
@@ -913,7 +930,7 @@ function renderAnswerArea(subQ) {
             `;
 
         case 'grid':
-            return renderGridPaper(subQ.gridChars || 50) + renderSuffixText(subQ);
+            return renderGridPaper(subQ.gridChars || 5) + renderSuffixText(subQ);
 
         default:
             return '';
@@ -994,7 +1011,7 @@ function renderSubItemAnswerArea(si) {
             `;
 
         case 'grid':
-            return renderGridPaper(si.gridChars || 50) + renderSuffixText(si);
+            return renderGridPaper(si.gridChars || 5) + renderSuffixText(si);
 
         default:
             return '';
@@ -1097,7 +1114,7 @@ function renderMiniPreview(subQ) {
             return `<div class="mini-textarea" style="width:${miniWidth}px;"></div>${subQ.suffixText ? `<span class="mini-label">${escapeHtml(subQ.suffixText)}</span>` : ''}`;
 
         case 'grid':
-            const gridChars = subQ.gridChars || 50;
+            const gridChars = subQ.gridChars || 5;
             const totalChars = gridChars;
             const gridCount = Math.min(totalChars, 6);
             return `<div class="mini-grid">${Array(gridCount).fill('<div class="mini-grid-cell"></div>').join('')}</div>${totalChars > 6 ? '<span class="mini-label">...</span>' : ''}${subQ.suffixText ? `<span class="mini-label">${escapeHtml(subQ.suffixText)}</span>` : ''}`;

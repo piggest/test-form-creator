@@ -149,7 +149,7 @@ function openSubQuestionModal(sectionId, questionId, type, editId = null) {
             elements.suffixText.value = subQ.suffixText || '';
             elements.answerCount.value = subQ.answerCount || '1';
             // 原稿用紙形式
-            elements.gridChars.value = subQ.gridChars || '50';
+            elements.gridChars.value = subQ.gridChars || '5';
             elements.gridSuffixText.value = subQ.suffixText || '';
             // 単位の設定
             const unit = subQ.unit || '';
@@ -190,7 +190,7 @@ function resetSubQuestionForm(type) {
     elements.textWidth.value = '3';
     elements.textRows.value = '1';
     elements.suffixText.value = '';
-    elements.gridChars.value = '50';
+    elements.gridChars.value = '5';
     elements.gridSuffixText.value = '';
     elements.answerCount.value = '1';
     elements.numberUnit.value = '';
@@ -230,7 +230,7 @@ function saveSubQuestion(e) {
 
     // 原稿用紙形式
     if (type === 'grid') {
-        subQuestion.gridChars = parseInt(elements.gridChars.value) || 50;
+        subQuestion.gridChars = parseInt(elements.gridChars.value) || 5;
         const suffixText = elements.gridSuffixText.value.trim();
         if (suffixText) subQuestion.suffixText = suffixText;
     }
