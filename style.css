@@ -268,7 +268,7 @@ body {
 }
 
 .tree-field-label {
-    color: #7b1fa2;
+    color: #f57c00;
     font-weight: 600;
     min-width: 30px;
 }
@@ -279,6 +279,13 @@ body {
     color: #fff;
     padding: 5px 14px;
     border-radius: 4px;
+}
+
+.tree-field-preview {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 8px;
 }
 
 .tree-actions {
@@ -348,9 +355,31 @@ body {
 }
 
 .tree-add-btn:hover {
-    background: #42a5f5;
-    border-color: #42a5f5;
     color: #fff;
+}
+
+/* 回答欄追加ボタン */
+.tree-add-btn-field {
+    background: rgba(255, 152, 0, 0.1);
+    border-color: #ffb74d;
+    color: #f57c00;
+}
+
+.tree-add-btn-field:hover {
+    background: #f57c00;
+    border-color: #f57c00;
+}
+
+/* 子段落追加ボタン */
+.tree-add-btn-child {
+    background: rgba(76, 175, 80, 0.1);
+    border-color: #81c784;
+    color: #43a047;
+}
+
+.tree-add-btn-child:hover {
+    background: #43a047;
+    border-color: #43a047;
 }
 
 /* ルートの追加ボタン */
@@ -796,7 +825,8 @@ body {
     flex-wrap: wrap;
 }
 
-.subq-preview .mini-box {
+.subq-preview .mini-box,
+.tree-field-preview .mini-box {
     width: 24px;
     height: 24px;
     border: 1.5px solid #666;
@@ -804,7 +834,8 @@ body {
     background: #fff;
 }
 
-.subq-preview .mini-circle {
+.subq-preview .mini-circle,
+.tree-field-preview .mini-circle {
     width: 20px;
     height: 20px;
     border: 1.5px solid #666;
@@ -812,7 +843,8 @@ body {
     background: #fff;
 }
 
-.subq-preview .mini-word-box {
+.subq-preview .mini-word-box,
+.tree-field-preview .mini-word-box {
     width: 60px;
     height: 24px;
     border: 1.5px solid #666;
@@ -820,7 +852,8 @@ body {
     background: #fff;
 }
 
-.subq-preview .mini-number-box {
+.subq-preview .mini-number-box,
+.tree-field-preview .mini-number-box {
     width: 36px;
     height: 24px;
     border: 1.5px solid #666;
@@ -828,7 +861,8 @@ body {
     background: #fff;
 }
 
-.subq-preview .mini-textarea {
+.subq-preview .mini-textarea,
+.tree-field-preview .mini-textarea {
     width: 100px;
     height: 24px;
     border: 1.5px solid #666;
@@ -836,14 +870,16 @@ body {
     background: #fff;
 }
 
-.subq-preview .mini-grid {
+.subq-preview .mini-grid,
+.tree-field-preview .mini-grid {
     display: flex;
     border: 1px solid #666;
     border-right: none;
     border-bottom: none;
 }
 
-.subq-preview .mini-grid-cell {
+.subq-preview .mini-grid-cell,
+.tree-field-preview .mini-grid-cell {
     width: 16px;
     height: 16px;
     border-right: 1px solid #666;
@@ -851,18 +887,21 @@ body {
     background: #fff;
 }
 
-.subq-preview .mini-separator {
+.subq-preview .mini-separator,
+.tree-field-preview .mini-separator {
     font-size: 0.85rem;
     font-weight: bold;
     color: #666;
 }
 
-.subq-preview .mini-label {
+.subq-preview .mini-label,
+.tree-field-preview .mini-label {
     font-size: 0.75rem;
     color: #666;
 }
 
-.subq-preview .mini-unit {
+.subq-preview .mini-unit,
+.tree-field-preview .mini-unit {
     font-size: 0.8rem;
     color: #333;
 }
