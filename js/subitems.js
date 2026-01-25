@@ -1,0 +1,200 @@
+// ====== 子回答欄関連 ======
+
+function addSubItem(sectionId, questionId, parentId) {
+    openSubItemModal(sectionId, questionId, parentId);
+}
+
+// 子回答欄オプション表示切り替え
+function updateSubItemOptions(type) {
+    elements.subItemChoiceOptions.style.display = type === 'choice' ? 'block' : 'none';
+    elements.subItemTextOptions.style.display = (type === 'short' || type === 'long') ? 'block' : 'none';
+    elements.subItemRowsOption.style.display = type === 'long' ? 'block' : 'none';
+    elements.subItemAnswerCountOptions.style.display = (type === 'symbol' || type === 'word') ? 'block' : 'none';
+    elements.subItemNumberOptions.style.display = type === 'number' ? 'block' : 'none';
+}
+
+// 子回答欄の選択肢追加
+function addSubItemChoice(value = '') {
+    const div = document.createElement('div');
+    div.className = 'choice-input';
+    div.innerHTML = `
+        <input type="text" class="sub-item-choice-text" value="${escapeHtml(value)}" placeholder="選択肢を入力">
+        <button type="button" class="remove-choice">×</button>
+    `;
+    div.querySelector('.remove-choice').addEventListener('click', () => {
+        if (elements.subItemChoicesContainer.children.length > 2) {
+            div.remove();
+        } else {
+            alert('選択肢は最低2つ必要です');
+        }
+    });
+    elements.subItemChoicesContainer.appendChild(div);
+}
+
+function openSubItemModal(sectionId, questionId, parentId, editId = null) {
+    elements.subItemModal.style.display = 'flex';
+    elements.subItemSectionId.value = sectionId;
+    elements.subItemQuestionId.value = questionId;
+    elements.subItemParentId.value = parentId;
+    elements.subItemId.value = editId || '';
+    elements.subItemModalTitle.textContent = editId ? '子回答欄を編集' : '子回答欄を追加';
+
+    // リセット
+    elements.subItemType.value = 'symbol';
+    elements.subItemChoicesContainer.innerHTML = '';
+    elements.subItemMinChars.value = '';
+    elements.subItemMaxChars.value = '';
+    elements.subItemTextRows.value = '5';
+    elements.subItemSuffixText.value = '';
+    elements.subItemAnswerCount.value = '1';
+    elements.subItemUnit.value = '';
+    elements.subItemUnitCustom.value = '';
+    elements.subItemUnitCustom.style.display = 'none';
+    elements.subItemRatioCount.value = '2';
+    elements.subItemRatioCountOption.style.display = 'none';
+    document.querySelector('input[name="subItemNumberFormat"][value="simple"]').checked = true;
+    updateSubItemOptions('symbol');
+
+    if (editId) {
+        const section = state.sections.find(s => s.id === sectionId);
+        const question = section?.questions.find(q => q.id === questionId);
+        const parent = question?.subQuestions.find(sq => sq.id === parentId);
+        const subItem = parent?.subItems?.find(si => si.id === editId);
+
+        if (subItem) {
+            elements.subItemType.value = subItem.type || 'symbol';
+            updateSubItemOptions(subItem.type);
+
+            // 選択式
+            if (subItem.choices) {
+                subItem.choices.forEach(choice => addSubItemChoice(choice));
+            }
+
+            // 記述式
+            elements.subItemMinChars.value = subItem.minChars || '';
+            elements.subItemMaxChars.value = subItem.maxChars || '';
+            elements.subItemTextRows.value = subItem.rows || '5';
+            elements.subItemSuffixText.value = subItem.suffixText || '';
+
+            // 回答欄数
+            elements.subItemAnswerCount.value = subItem.answerCount || '1';
+
+            // 数値記述式
+            if (subItem.numberFormat) {
+                document.querySelector(`input[name="subItemNumberFormat"][value="${subItem.numberFormat}"]`).checked = true;
+                elements.subItemRatioCountOption.style.display = subItem.numberFormat === 'ratio' ? 'block' : 'none';
+            }
+            elements.subItemRatioCount.value = subItem.ratioCount || '2';
+
+            if (subItem.unit) {
+                const unitOptions = Array.from(elements.subItemUnit.options).map(o => o.value);
+                if (!unitOptions.includes(subItem.unit)) {
+                    elements.subItemUnit.value = '__custom__';
+                    elements.subItemUnitCustom.value = subItem.unit;
+                    elements.subItemUnitCustom.style.display = 'block';
+                } else {
+                    elements.subItemUnit.value = subItem.unit;
+                }
+            }
+        }
+    } else {
+        // 新規追加時、選択式なら選択肢を2つ追加
+        if (elements.subItemType.value === 'choice') {
+            addSubItemChoice();
+            addSubItemChoice();
+        }
+    }
+}
+
+function saveSubItem(e) {
+    e.preventDefault();
+
+    const sectionId = parseInt(elements.subItemSectionId.value);
+    const questionId = parseInt(elements.subItemQuestionId.value);
+    const parentId = parseInt(elements.subItemParentId.value);
+    const editId = elements.subItemId.value;
+    const type = elements.subItemType.value;
+
+    const section = state.sections.find(s => s.id === sectionId);
+    const question = section?.questions.find(q => q.id === questionId);
+    const parent = question?.subQuestions.find(sq => sq.id === parentId);
+
+    if (!parent) return;
+
+    // subItems配列がなければ作成
+    if (!parent.subItems) parent.subItems = [];
+
+    const subItem = {
+        id: editId ? parseInt(editId) : state.nextSubQuestionId++,
+        type: type
+    };
+
+    // 選択式
+    if (type === 'choice') {
+        const choices = Array.from(elements.subItemChoicesContainer.querySelectorAll('.sub-item-choice-text'))
+            .map(input => input.value.trim())
+            .filter(v => v);
+        if (choices.length < 2) {
+            alert('選択肢を2つ以上入力してください');
+            return;
+        }
+        subItem.choices = choices;
+    }
+
+    // 記述式
+    if (type === 'short' || type === 'long') {
+        const minChars = parseInt(elements.subItemMinChars.value) || 0;
+        const maxChars = parseInt(elements.subItemMaxChars.value) || 0;
+        if (minChars > 0) subItem.minChars = minChars;
+        if (maxChars > 0) subItem.maxChars = maxChars;
+        if (type === 'long') {
+            subItem.rows = parseInt(elements.subItemTextRows.value) || 5;
+        }
+        const suffixText = elements.subItemSuffixText.value.trim();
+        if (suffixText) subItem.suffixText = suffixText;
+    }
+
+    // 記号・語句回答式
+    if (type === 'symbol' || type === 'word') {
+        subItem.answerCount = parseInt(elements.subItemAnswerCount.value) || 1;
+    }
+
+    // 数値記述式
+    if (type === 'number') {
+        const format = document.querySelector('input[name="subItemNumberFormat"]:checked').value;
+        subItem.numberFormat = format;
+        let unit = elements.subItemUnit.value;
+        if (unit === '__custom__') {
+            unit = elements.subItemUnitCustom.value.trim();
+        }
+        if (unit) subItem.unit = unit;
+        if (format === 'ratio') {
+            subItem.ratioCount = parseInt(elements.subItemRatioCount.value) || 2;
+        }
+    }
+
+    if (editId) {
+        const index = parent.subItems.findIndex(si => si.id === parseInt(editId));
+        if (index !== -1) {
+            parent.subItems[index] = subItem;
+        }
+    } else {
+        parent.subItems.push(subItem);
+    }
+
+    closeModal('subItem');
+    renderSections();
+    saveToStorage();
+}
+
+function deleteSubItem(sectionId, questionId, parentId, subItemId) {
+    const section = state.sections.find(s => s.id === sectionId);
+    const question = section?.questions.find(q => q.id === questionId);
+    const parent = question?.subQuestions.find(sq => sq.id === parentId);
+
+    if (parent && parent.subItems) {
+        parent.subItems = parent.subItems.filter(si => si.id !== subItemId);
+        renderSections();
+        saveToStorage();
+    }
+}
