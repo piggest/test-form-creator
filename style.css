@@ -1092,6 +1092,14 @@ body {
     min-height: calc(60px * var(--scale));
 }
 
+.preview-content.vertical-mode .vertical-stacked-column .stacked-cell.cell-number-stacked {
+    min-height: calc(35px * var(--scale));
+}
+
+.preview-content.vertical-mode .vertical-stacked-column .stacked-cell.cell-short-stacked {
+    min-height: calc(80px * var(--scale));
+}
+
 /* 大問区切りマーカー */
 .preview-content.vertical-mode .vertical-stacked-column .stacked-section-marker {
     width: calc(16px * var(--scale));
