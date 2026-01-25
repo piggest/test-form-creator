@@ -1052,6 +1052,15 @@ body {
     z-index: 1;
 }
 
+/* 国語モード：後続テキスト（suffixText） */
+.preview-content.vertical-mode .vertical-suffix-text {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    font-size: calc(0.75rem * var(--scale));
+    padding: calc(4px * var(--scale)) 0;
+    text-align: center;
+}
+
 /* 国語モード：大問間の空白列 */
 .preview-content.vertical-mode .vertical-spacer-column {
     width: calc(20px * var(--scale));
