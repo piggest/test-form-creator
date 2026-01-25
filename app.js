@@ -226,7 +226,19 @@ function init() {
     elements.fileInput.addEventListener('change', loadFromJson);
 
     // 印刷
-    elements.printBtn.addEventListener('click', () => window.print());
+    elements.printBtn.addEventListener('click', () => {
+        // 国語モードの場合はA4横向きに設定
+        if (state.verticalMode) {
+            const style = document.createElement('style');
+            style.id = 'print-landscape';
+            style.textContent = '@page { size: A4 landscape; margin: 10mm; }';
+            document.head.appendChild(style);
+            window.print();
+            document.getElementById('print-landscape').remove();
+        } else {
+            window.print();
+        }
+    });
 
     // PDF保存
     document.getElementById('pdfBtn').addEventListener('click', saveToPdf);
@@ -1270,7 +1282,7 @@ function renderVerticalGridCell(subQ, num) {
 
         if (subItems.length === 0) {
             let html = `<div class="vertical-cell-group">`;
-            html += `<div class="vertical-cell-label">問${num}</div>`;
+            html += `<div class="vertical-cell-label">(${num})</div>`;
             html += `<div class="grid-cell-item cell-normal"></div>`;
             html += `</div>`;
             return html;
@@ -1278,7 +1290,7 @@ function renderVerticalGridCell(subQ, num) {
 
         // 子回答欄をまとめるコンテナ
         let html = `<div class="vertical-multiple-container">`;
-        html += `<div class="vertical-multiple-label">問${num}</div>`;
+        html += `<div class="vertical-multiple-label">(${num})</div>`;
         html += `<div class="vertical-multiple-cells">`;
 
         subItems.forEach((si, index) => {
@@ -1320,7 +1332,7 @@ function renderVerticalGridCell(subQ, num) {
     if ((type === 'short' || type === 'long') && subQ.maxChars) {
         const charCount = subQ.maxChars;
         let html = `<div class="vertical-cell-group">`;
-        html += `<div class="vertical-cell-label">問${num}</div>`;
+        html += `<div class="vertical-cell-label">(${num})</div>`;
         html += `<div class="vertical-grid-paper">`;
         for (let i = 0; i < charCount; i++) {
             const showMarker = (i + 1) % 5 === 0 && i < charCount - 1;
@@ -1336,8 +1348,14 @@ function renderVerticalGridCell(subQ, num) {
 
     // セルの高さクラスを決定
     let heightClass = 'cell-normal';
-    if (type === 'word') {
+    if (type === 'symbol' || type === 'choice' || type === 'truefalse') {
+        // 記号・選択は1文字分
+        heightClass = 'cell-symbol';
+    } else if (type === 'word') {
         heightClass = 'cell-wide';
+    } else if (type === 'short' && !subQ.maxChars) {
+        // 記述式1行（文字数制限なし）は10文字分のスペース
+        heightClass = 'cell-short-text';
     } else if (type === 'long' || type === 'short') {
         heightClass = 'cell-wide';
     }
@@ -1346,7 +1364,7 @@ function renderVerticalGridCell(subQ, num) {
     let html = `<div class="vertical-cell-group">`;
 
     // 問番号ラベル（上部）
-    html += `<div class="vertical-cell-label">問${num}</div>`;
+    html += `<div class="vertical-cell-label">(${num})</div>`;
 
     // 回答セル
     html += `<div class="grid-cell-item ${heightClass}">`;

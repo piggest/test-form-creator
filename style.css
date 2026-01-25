@@ -872,8 +872,10 @@ body {
     display: flex;
     flex-direction: row;
     max-width: none;
-    width: 100%;
-    padding: calc(15px * var(--scale));
+    width: 277mm;
+    min-height: 190mm;
+    padding: calc(10px * var(--scale));
+    box-sizing: border-box;
 }
 
 /* 国語モード：ヘッダー（右端に縦書き） */
@@ -957,9 +959,12 @@ body {
     flex: 1;
     display: flex;
     flex-direction: row-reverse;
+    flex-wrap: wrap;
     align-items: flex-start;
+    align-content: flex-start;
     gap: calc(15px * var(--scale));
     order: 1;
+    max-height: calc(170mm * var(--scale));
 }
 
 .preview-content.vertical-mode .preview-section {
@@ -1015,9 +1020,8 @@ body {
 }
 
 .preview-content.vertical-mode .vertical-cell-label {
-    writing-mode: vertical-rl;
-    text-orientation: upright;
-    font-size: calc(0.6rem * var(--scale));
+    writing-mode: horizontal-tb;
+    font-size: calc(0.65rem * var(--scale));
     white-space: nowrap;
     text-align: center;
     position: absolute;
@@ -1041,12 +1045,22 @@ body {
     min-height: calc(80px * var(--scale));
 }
 
+/* 記号用（1文字分） */
+.preview-content.vertical-mode .vertical-cell-group .grid-cell-item.cell-symbol {
+    min-height: calc(32px * var(--scale));
+}
+
 .preview-content.vertical-mode .vertical-cell-group .grid-cell-item.cell-wide {
     min-height: calc(140px * var(--scale));
 }
 
 .preview-content.vertical-mode .vertical-cell-group .grid-cell-item.cell-extra-tall {
     min-height: calc(200px * var(--scale));
+}
+
+/* 記述式1行用（10文字分） */
+.preview-content.vertical-mode .vertical-cell-group .grid-cell-item.cell-short-text {
+    min-height: calc(280px * var(--scale));
 }
 
 .preview-content.vertical-mode .vertical-cell-group .cell-unit-bottom {
@@ -1100,9 +1114,8 @@ body {
 }
 
 .preview-content.vertical-mode .vertical-multiple-label {
-    writing-mode: vertical-rl;
-    text-orientation: upright;
-    font-size: calc(0.6rem * var(--scale));
+    writing-mode: horizontal-tb;
+    font-size: calc(0.65rem * var(--scale));
     position: absolute;
     top: 0;
     left: 50%;
@@ -1771,6 +1784,24 @@ body {
 
     .preview-questions-flow {
         page-break-inside: auto;
+    }
+
+    /* 国語モード印刷設定 */
+    .preview-content.vertical-mode {
+        padding: 0;
+        height: auto;
+        max-height: none;
+    }
+
+    .preview-content.vertical-mode .preview-questions-flow {
+        flex-wrap: wrap;
+        align-content: flex-start;
+        max-height: 170mm;
+    }
+
+    .preview-content.vertical-mode .preview-section {
+        page-break-inside: avoid;
+        break-inside: avoid;
     }
 }
 
