@@ -867,6 +867,15 @@ body {
     border-right: none;
 }
 
+/* ページ番号 */
+.page-number {
+    font-size: calc(0.7rem * var(--scale));
+    color: #666;
+    writing-mode: horizontal-tb;
+    text-align: center;
+    padding: calc(3px * var(--scale));
+}
+
 /* 国語モード（縦書き解答用紙） */
 .preview-content.vertical-mode {
     display: flex;
@@ -899,7 +908,7 @@ body {
     flex-wrap: wrap;
     align-items: flex-start;
     align-content: flex-start;
-    gap: calc(3px * var(--scale));
+    gap: calc(8px * var(--scale));
     order: 1;
     max-height: 170mm;
 }
@@ -987,6 +996,31 @@ body {
     font-size: calc(0.55rem * var(--scale));
 }
 
+/* 国語モード：2ページ目以降のヘッダー（横書き・簡易版） */
+.preview-content.vertical-mode .preview-header-subsequent {
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+    border-left: none;
+    border-bottom: 1px solid #333;
+    padding: calc(5px * var(--scale)) calc(10px * var(--scale));
+    margin: 0;
+    margin-bottom: calc(10px * var(--scale));
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.preview-content.vertical-mode .preview-header-subsequent h2 {
+    font-size: calc(1rem * var(--scale));
+    letter-spacing: 0;
+}
+
+.preview-content.vertical-mode .preview-header-subsequent .page-number {
+    font-size: calc(0.8rem * var(--scale));
+}
+
 /* 国語モード：問題エリア */
 .preview-content.vertical-mode .preview-questions-flow {
     flex: 1;
@@ -995,7 +1029,7 @@ body {
     flex-wrap: wrap;
     align-items: flex-start;
     align-content: flex-start;
-    gap: calc(3px * var(--scale));
+    gap: calc(8px * var(--scale));
     order: 1;
     max-height: 170mm;
 }
@@ -1111,7 +1145,7 @@ body {
 }
 
 .preview-content.vertical-mode .vertical-stacked-column .stacked-cell.cell-word-stacked {
-    min-height: calc(75px * var(--scale));
+    min-height: calc(180px * var(--scale)); /* 5文字分: 36px × 5 */
 }
 
 .preview-content.vertical-mode .vertical-stacked-column .stacked-cell.cell-number-stacked {
@@ -1119,7 +1153,39 @@ body {
 }
 
 .preview-content.vertical-mode .vertical-stacked-column .stacked-cell.cell-short-stacked {
-    min-height: calc(100px * var(--scale));
+    min-height: calc(360px * var(--scale)); /* 10文字分: 36px × 10 */
+}
+
+/* 積み重ね列内の原稿用紙形式（記述式） */
+.preview-content.vertical-mode .vertical-stacked-column .stacked-grid-paper {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #333;
+}
+
+.preview-content.vertical-mode .vertical-stacked-column .stacked-grid-cell {
+    width: calc(36px * var(--scale));
+    height: calc(36px * var(--scale));
+    border-bottom: 1px dashed #999;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.preview-content.vertical-mode .vertical-stacked-column .stacked-grid-cell.with-marker {
+    border-bottom: 1px solid #333;
+}
+
+.preview-content.vertical-mode .vertical-stacked-column .stacked-grid-cell:last-child {
+    border-bottom: none;
+}
+
+.preview-content.vertical-mode .vertical-stacked-column .stacked-grid-marker {
+    position: absolute;
+    right: calc(2px * var(--scale));
+    bottom: calc(1px * var(--scale));
+    font-size: calc(0.45rem * var(--scale));
+    color: #666;
+    writing-mode: horizontal-tb;
 }
 
 /* 積み重ね列内の複数回答欄（縦並び） */
@@ -1236,7 +1302,7 @@ body {
 }
 
 .preview-content.vertical-mode .vertical-cell-group .grid-cell-item.cell-normal {
-    min-height: calc(80px * var(--scale));
+    min-height: calc(360px * var(--scale)); /* 10文字分: 36px × 10 */
 }
 
 /* 記号用（1文字分） */
@@ -1254,7 +1320,7 @@ body {
 
 /* 記述式1行用（10文字分） */
 .preview-content.vertical-mode .vertical-cell-group .grid-cell-item.cell-short-text {
-    min-height: calc(280px * var(--scale));
+    min-height: calc(360px * var(--scale)); /* 10文字分: 36px × 10 */
 }
 
 .preview-content.vertical-mode .vertical-cell-group .cell-unit-bottom {
@@ -1291,8 +1357,8 @@ body {
 
 .preview-content.vertical-mode .vertical-grid-marker {
     position: absolute;
-    right: calc(-12px * var(--scale));
-    bottom: 0;
+    right: calc(2px * var(--scale));
+    bottom: calc(1px * var(--scale));
     font-size: calc(0.45rem * var(--scale));
     color: #666;
     writing-mode: horizontal-tb;
@@ -1369,6 +1435,7 @@ body {
 .preview-content.vertical-mode .vertical-multiple-cell.grid-cell-item {
     border: none;
     position: relative;
+    min-height: calc(180px * var(--scale)); /* 語句: 5文字分 */
 }
 
 .preview-content.vertical-mode .vertical-multiple-cell.vertical-grid-paper {
