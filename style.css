@@ -1159,7 +1159,6 @@ body {
 .preview-content.vertical-mode .vertical-stacked-column .stacked-cell.cell-number-stacked {
     min-height: calc(42px * var(--scale));
 }
-}
 
 /* 積み重ね列内の原稿用紙形式（記述式） */
 .preview-content.vertical-mode .vertical-stacked-column .stacked-grid-paper {
@@ -1363,6 +1362,22 @@ body {
     border-bottom: 1px dashed #999;
     box-sizing: border-box;
     position: relative;
+}
+
+/* vertical-grid-paper直下のセル（rowなしの場合）に罫線を追加 */
+.preview-content.vertical-mode .vertical-grid-paper > .vertical-grid-cell {
+    border-left: 1px solid #333;
+    border-right: 1px solid #333;
+    margin-bottom: -1px;
+}
+
+.preview-content.vertical-mode .vertical-grid-paper > .vertical-grid-cell:first-child {
+    border-top: 1px solid #333;
+}
+
+.preview-content.vertical-mode .vertical-grid-paper > .vertical-grid-cell:last-child {
+    border-bottom: 1px solid #333;
+    margin-bottom: 0;
 }
 
 .preview-content.vertical-mode .vertical-grid-cell .vertical-grid-marker {
