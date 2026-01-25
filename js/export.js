@@ -56,7 +56,7 @@ function saveToPdf() {
 
 function saveToJson() {
     const data = {
-        version: 2, // 新形式を示すバージョン番号
+        version: 3, // items配列形式
         title: elements.testTitle.value,
         subtitle: elements.testSubtitle.value,
         maxScore: parseInt(elements.maxScore.value) || 100,

@@ -127,7 +127,7 @@ window.moveParagraphDown = moveParagraphDown;
 window.addAnswerField = addAnswerField;
 window.editAnswerField = (paragraphId, fieldId) => {
     const paragraph = findParagraphById(paragraphId);
-    const field = paragraph?.answerFields.find(f => f.id === fieldId);
+    const field = (paragraph?.items || []).find(f => f.itemType === 'field' && f.id === fieldId);
     if (field) {
         openAnswerFieldModal(paragraphId, field.type, fieldId);
     }
