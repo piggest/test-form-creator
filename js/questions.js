@@ -108,7 +108,8 @@ function addSubQuestionWithType(sectionId, questionId, template) {
     };
 
     // タイプ別のプロパティをコピー
-    if (template.rows) newSubQ.rows = template.rows;
+    if (template.textWidth) newSubQ.textWidth = template.textWidth;
+    if (template.textRows) newSubQ.textRows = template.textRows;
     if (template.suffixText) newSubQ.suffixText = template.suffixText;
     if (template.answerCount) newSubQ.answerCount = template.answerCount;
     if (template.subItems) newSubQ.subItems = JSON.parse(JSON.stringify(template.subItems));
@@ -142,11 +143,13 @@ function openSubQuestionModal(sectionId, questionId, type, editId = null) {
 
         if (subQ) {
             elements.subQuestionText.value = subQ.text || '';
-            elements.textRows.value = subQ.rows || '5';
+            // 記述式
+            elements.textWidth.value = subQ.textWidth || '3';
+            elements.textRows.value = subQ.textRows || '1';
             elements.suffixText.value = subQ.suffixText || '';
             elements.answerCount.value = subQ.answerCount || '1';
             // 原稿用紙形式
-            elements.gridChars.value = subQ.gridChars || '20';
+            elements.gridChars.value = subQ.gridChars || '50';
             elements.gridSuffixText.value = subQ.suffixText || '';
             // 単位の設定
             const unit = subQ.unit || '';
@@ -174,10 +177,9 @@ function openSubQuestionModal(sectionId, questionId, type, editId = null) {
 
 // 回答欄オプション表示切り替え
 function updateSubQuestionOptions(type) {
-    elements.textOptions.style.display = (type === 'short' || type === 'long') ? 'block' : 'none';
-    elements.rowsOption.style.display = type === 'long' ? 'block' : 'none';
+    elements.textOptions.style.display = type === 'text' ? 'block' : 'none';
     elements.gridOptions.style.display = type === 'grid' ? 'block' : 'none';
-    elements.answerCountOptions.style.display = (type === 'symbol' || type === 'word') ? 'block' : 'none';
+    elements.answerCountOptions.style.display = type === 'symbol' ? 'block' : 'none';
     elements.multipleOptions.style.display = type === 'multiple' ? 'block' : 'none';
     elements.numberOptions.style.display = type === 'number' ? 'block' : 'none';
 }
@@ -185,9 +187,10 @@ function updateSubQuestionOptions(type) {
 // 回答欄フォームリセット
 function resetSubQuestionForm(type) {
     elements.subQuestionText.value = '';
-    elements.textRows.value = '5';
+    elements.textWidth.value = '3';
+    elements.textRows.value = '1';
     elements.suffixText.value = '';
-    elements.gridChars.value = '20';
+    elements.gridChars.value = '50';
     elements.gridSuffixText.value = '';
     elements.answerCount.value = '1';
     elements.numberUnit.value = '';
@@ -218,23 +221,22 @@ function saveSubQuestion(e) {
     };
 
     // 記述式
-    if (type === 'short' || type === 'long') {
-        if (type === 'long') {
-            subQuestion.rows = parseInt(elements.textRows.value) || 5;
-        }
+    if (type === 'text') {
+        subQuestion.textWidth = parseInt(elements.textWidth.value) || 3;
+        subQuestion.textRows = parseInt(elements.textRows.value) || 1;
         const suffixText = elements.suffixText.value.trim();
         if (suffixText) subQuestion.suffixText = suffixText;
     }
 
     // 原稿用紙形式
     if (type === 'grid') {
-        subQuestion.gridChars = parseInt(elements.gridChars.value) || 20;
+        subQuestion.gridChars = parseInt(elements.gridChars.value) || 50;
         const suffixText = elements.gridSuffixText.value.trim();
         if (suffixText) subQuestion.suffixText = suffixText;
     }
 
-    // 記号・語句回答式
-    if (type === 'symbol' || type === 'word') {
+    // 記号回答式
+    if (type === 'symbol') {
         subQuestion.answerCount = parseInt(elements.answerCount.value) || 1;
     }
 
