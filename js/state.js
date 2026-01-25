@@ -66,9 +66,14 @@ const elements = {
 
 // 旧形式から新形式へのマイグレーション
 function migrateFromOldFormat(data) {
-    if (data.paragraphs) {
-        // 既に新形式の場合
+    // version 3: items配列を使用
+    if (data.version >= 3) {
         return data;
+    }
+
+    // version 2: answerFields + children形式からitemsへ変換
+    if (data.paragraphs) {
+        return migrateV2ToV3(data);
     }
 
     // 旧形式（sections）から新形式（paragraphs）へ変換
@@ -79,12 +84,12 @@ function migrateFromOldFormat(data) {
         data.sections.forEach((section, sIdx) => {
             const paragraph = {
                 id: section.id || (sIdx + 1),
-                labelFormat: 'boxed', // 旧大問は四角囲み
+                itemType: 'paragraph',
+                labelFormat: 'boxed',
                 startNumber: 1,
                 showInnerLabel: section.showQuestionLabel !== false,
-                innerLabelFormat: 'circled',
                 text: section.text || '',
-                answerFields: []
+                items: []
             };
 
             // 全ての問から回答欄を収集
@@ -92,40 +97,24 @@ function migrateFromOldFormat(data) {
                 section.questions.forEach(question => {
                     if (question.subQuestions && Array.isArray(question.subQuestions)) {
                         question.subQuestions.forEach(subQ => {
-                            // multipleタイプの場合は子回答欄を展開
                             if (subQ.type === 'multiple' && subQ.subItems && subQ.subItems.length > 0) {
                                 subQ.subItems.forEach(si => {
                                     const field = {
                                         id: si.id || nextAnswerFieldId++,
+                                        itemType: 'field',
                                         type: si.type || 'symbol'
                                     };
-                                    // タイプ別プロパティをコピー
-                                    if (si.textWidth) field.textWidth = si.textWidth;
-                                    if (si.textRows) field.textRows = si.textRows;
-                                    if (si.suffixText) field.suffixText = si.suffixText;
-                                    if (si.gridChars) field.gridChars = si.gridChars;
-                                    if (si.answerCount) field.answerCount = si.answerCount;
-                                    if (si.numberFormat) field.numberFormat = si.numberFormat;
-                                    if (si.unit) field.unit = si.unit;
-                                    if (si.ratioCount) field.ratioCount = si.ratioCount;
-                                    paragraph.answerFields.push(field);
+                                    copyFieldProperties(si, field);
+                                    paragraph.items.push(field);
                                 });
                             } else {
-                                // 通常の回答欄
                                 const field = {
                                     id: subQ.id || nextAnswerFieldId++,
+                                    itemType: 'field',
                                     type: subQ.type || 'symbol'
                                 };
-                                // タイプ別プロパティをコピー
-                                if (subQ.textWidth) field.textWidth = subQ.textWidth;
-                                if (subQ.textRows) field.textRows = subQ.textRows;
-                                if (subQ.suffixText) field.suffixText = subQ.suffixText;
-                                if (subQ.gridChars) field.gridChars = subQ.gridChars;
-                                if (subQ.answerCount) field.answerCount = subQ.answerCount;
-                                if (subQ.numberFormat) field.numberFormat = subQ.numberFormat;
-                                if (subQ.unit) field.unit = subQ.unit;
-                                if (subQ.ratioCount) field.ratioCount = subQ.ratioCount;
-                                paragraph.answerFields.push(field);
+                                copyFieldProperties(subQ, field);
+                                paragraph.items.push(field);
                             }
                         });
                     }
@@ -137,6 +126,7 @@ function migrateFromOldFormat(data) {
     }
 
     return {
+        version: 3,
         title: data.title,
         subtitle: data.subtitle,
         maxScore: data.maxScore || 100,
@@ -145,6 +135,66 @@ function migrateFromOldFormat(data) {
         nextParagraphId: (data.nextSectionId || paragraphs.length) + 1,
         nextAnswerFieldId: nextAnswerFieldId
     };
+}
+
+// version 2 (answerFields + children) から version 3 (items) へ変換
+function migrateV2ToV3(data) {
+    function convertParagraph(p) {
+        const items = [];
+
+        // answerFieldsをitemsに変換
+        if (p.answerFields) {
+            p.answerFields.forEach(field => {
+                items.push({
+                    ...field,
+                    itemType: 'field'
+                });
+            });
+        }
+
+        // childrenをitemsに変換（再帰的）
+        if (p.children) {
+            p.children.forEach(child => {
+                items.push(convertParagraph(child));
+            });
+        }
+
+        return {
+            id: p.id,
+            itemType: 'paragraph',
+            labelFormat: p.labelFormat || 'parenthesis',
+            startNumber: p.startNumber || 1,
+            showInnerLabel: p.showInnerLabel !== false,
+            text: p.text || '',
+            items: items
+        };
+    }
+
+    const paragraphs = data.paragraphs.map(p => convertParagraph(p));
+
+    return {
+        version: 3,
+        title: data.title,
+        subtitle: data.subtitle,
+        maxScore: data.maxScore || 100,
+        verticalMode: data.verticalMode || false,
+        rootLabelFormat: data.rootLabelFormat || 'boxed',
+        paragraphs: paragraphs,
+        nextParagraphId: data.nextParagraphId || 1,
+        nextAnswerFieldId: data.nextAnswerFieldId || 1
+    };
+}
+
+// 回答欄プロパティをコピー
+function copyFieldProperties(src, dest) {
+    if (src.textWidth) dest.textWidth = src.textWidth;
+    if (src.textRows) dest.textRows = src.textRows;
+    if (src.suffixText) dest.suffixText = src.suffixText;
+    if (src.gridChars) dest.gridChars = src.gridChars;
+    if (src.answerCount) dest.answerCount = src.answerCount;
+    if (src.numberFormat) dest.numberFormat = src.numberFormat;
+    if (src.unit) dest.unit = src.unit;
+    if (src.ratioCount) dest.ratioCount = src.ratioCount;
 }
 
 // ローカルストレージから復元
@@ -178,6 +228,7 @@ function loadFromStorage() {
 function saveToStorage() {
     try {
         const data = {
+            version: 3,
             title: elements.testTitle.value,
             subtitle: elements.testSubtitle.value,
             maxScore: parseInt(elements.maxScore.value) || 100,
@@ -197,8 +248,10 @@ function saveToStorage() {
 function findParagraphById(id, paragraphs = state.paragraphs) {
     for (const p of paragraphs) {
         if (p.id === id) return p;
-        if (p.children && p.children.length > 0) {
-            const found = findParagraphById(id, p.children);
+        // items内の子段落も検索
+        if (p.items && p.items.length > 0) {
+            const childParagraphs = p.items.filter(item => item.itemType === 'paragraph');
+            const found = findParagraphById(id, childParagraphs);
             if (found) return found;
         }
     }
@@ -209,22 +262,40 @@ function findParagraphById(id, paragraphs = state.paragraphs) {
 function findParentParagraph(id, paragraphs = state.paragraphs, parent = null) {
     for (const p of paragraphs) {
         if (p.id === id) return parent;
-        if (p.children && p.children.length > 0) {
-            const found = findParentParagraph(id, p.children, p);
+        if (p.items && p.items.length > 0) {
+            const childParagraphs = p.items.filter(item => item.itemType === 'paragraph');
+            const found = findParentParagraph(id, childParagraphs, p);
             if (found !== undefined) return found;
         }
     }
     return undefined;
 }
 
-// 段落が属する配列を取得
-function findParagraphArray(id, paragraphs = state.paragraphs) {
+// 段落が属する配列またはitems配列を取得
+function findParagraphContainer(id, paragraphs = state.paragraphs) {
     for (let i = 0; i < paragraphs.length; i++) {
-        if (paragraphs[i].id === id) return paragraphs;
-        if (paragraphs[i].children && paragraphs[i].children.length > 0) {
-            const found = findParagraphArray(id, paragraphs[i].children);
+        if (paragraphs[i].id === id) {
+            return { array: paragraphs, index: i, isItems: false };
+        }
+        if (paragraphs[i].items && paragraphs[i].items.length > 0) {
+            // items内を検索
+            for (let j = 0; j < paragraphs[i].items.length; j++) {
+                const item = paragraphs[i].items[j];
+                if (item.itemType === 'paragraph' && item.id === id) {
+                    return { array: paragraphs[i].items, index: j, isItems: true };
+                }
+            }
+            // 再帰的に子段落内を検索
+            const childParagraphs = paragraphs[i].items.filter(item => item.itemType === 'paragraph');
+            const found = findParagraphContainer(id, childParagraphs);
             if (found) return found;
         }
     }
     return null;
+}
+
+// 後方互換性のため
+function findParagraphArray(id, paragraphs = state.paragraphs) {
+    const result = findParagraphContainer(id, paragraphs);
+    return result ? result.array : null;
 }

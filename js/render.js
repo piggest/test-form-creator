@@ -1,96 +1,94 @@
 // ====== 描画 ======
 
 function renderParagraphs() {
-    if (state.paragraphs.length === 0) {
-        elements.paragraphsContainer.innerHTML = '<p class="empty-message">段落がまだありません。上のボタンから追加してください。</p>';
-        return;
+    const rootFormat = state.rootLabelFormat || 'boxed';
+    let html = '<ul class="tree-list">';
+
+    if (state.paragraphs.length > 0) {
+        state.paragraphs.forEach((paragraph, pIndex) => {
+            html += renderTreeItem(paragraph, pIndex, 0, rootFormat, null);
+        });
     }
 
-    // トップレベル段落はrootLabelFormatを使用
-    const rootFormat = state.rootLabelFormat || 'boxed';
-    let html = '';
-    state.paragraphs.forEach((paragraph, pIndex) => {
-        const result = renderParagraphCard(paragraph, pIndex, 0, rootFormat);
-        html += result.html;
-    });
+    // 段落追加ボタン
+    html += `
+        <li class="tree-item tree-add-item">
+            <button class="tree-add-btn-root" onclick="addParagraph()">＋ 段落を追加</button>
+        </li>
+    `;
+
+    html += '</ul>';
     elements.paragraphsContainer.innerHTML = html;
 }
 
-// 段落カードを再帰的にレンダリング
-// parentLabelFormat: この段落自身の番号形式（親から継承）
-// startNumber: この段落の開始番号
-// 戻り値: { html, nextNumber }
-function renderParagraphCard(paragraph, index, depth, parentLabelFormat, startNumber = null) {
-    const depthClass = depth > 0 ? ` section-card-child depth-${Math.min(depth, 3)}` : '';
-    // startNumberが指定されていればそれを使用、なければindex + 1
+// ツリー形式で段落をレンダリング（ul/li構造）
+function renderTreeItem(paragraph, index, depth, parentLabelFormat, startNumber) {
     const paragraphNum = startNumber !== null ? startNumber : (index + 1);
-    let currentNumber = paragraphNum + 1; // 次の番号（子段落用）
-    // この段落の子供用の番号形式
     const childLabelFormat = paragraph.labelFormat || 'parenthesis';
+    const paragraphLabel = formatNumberEdit(paragraphNum, parentLabelFormat);
+    const textPreview = paragraph.text ? `<span class="tree-text">${escapeHtml(paragraph.text.substring(0, 40))}${paragraph.text.length > 40 ? '...' : ''}</span>` : '';
 
-    // 回答欄の内部ラベル形式はこの段落のlabelFormatを使用（1から開始）
-    const fieldsHtml = paragraph.answerFields.map((field, fIndex) => {
-        const typeLabel = getAnswerFieldTypeLabel(field.type);
-        const unitLabel = field.unit ? ` (${field.unit})` : '';
-        const innerNum = paragraph.showInnerLabel ? formatNumberEdit(fIndex + 1, childLabelFormat) : '';
-
-        return `
-            <div class="field-item">
-                <div class="field-content">
-                    <span class="field-label">${innerNum}</span>
-                    <span class="field-type">${typeLabel}${unitLabel}</span>
-                    <div class="field-preview">${renderMiniPreview(field)}</div>
-                </div>
-                <div class="field-actions">
-                    <button class="move-btn" onclick="moveAnswerFieldUp(${paragraph.id}, ${field.id})" title="上へ">↑</button>
-                    <button class="move-btn" onclick="moveAnswerFieldDown(${paragraph.id}, ${field.id})" title="下へ">↓</button>
-                    <button class="edit-btn" onclick="editAnswerField(${paragraph.id}, ${field.id})">編集</button>
-                    <button class="delete-btn" onclick="deleteAnswerField(${paragraph.id}, ${field.id})">削除</button>
-                </div>
+    let html = `
+        <li class="tree-item tree-paragraph depth-${Math.min(depth, 3)}">
+            <div class="tree-row">
+                <span class="tree-label">${paragraphLabel}</span>
+                ${textPreview}
+                <span class="tree-actions">
+                    <button class="tree-btn" onclick="moveParagraphUp(${paragraph.id})" title="上へ">↑</button>
+                    <button class="tree-btn" onclick="moveParagraphDown(${paragraph.id})" title="下へ">↓</button>
+                    <button class="tree-btn edit" onclick="editParagraph(${paragraph.id})">編集</button>
+                    <button class="tree-btn delete" onclick="deleteParagraph(${paragraph.id})">削除</button>
+                </span>
             </div>
-        `;
-    }).join('');
+    `;
 
-    // 子段落をレンダリング（この段落のlabelFormatを子に渡す、回答欄の続きから連番）
-    let childrenHtml = '';
-    if (paragraph.children && paragraph.children.length > 0) {
-        // 子段落は回答欄の続きの番号から開始
-        let childNumber = paragraph.answerFields.length + 1;
-        paragraph.children.forEach((child, cIndex) => {
-            const result = renderParagraphCard(child, cIndex, depth + 1, childLabelFormat, childNumber);
-            childrenHtml += result.html;
-            childNumber = result.nextNumber;
+    // 子要素があれば入れ子のリスト
+    const items = paragraph.items || [];
+    if (items.length > 0 || true) { // 常に子リストを表示（追加ボタン用）
+        html += '<ul class="tree-children">';
+
+        // 回答欄と子段落で共通の連番
+        let itemNumber = 0;
+
+        items.forEach((item) => {
+            itemNumber++;
+            if (item.itemType === 'field') {
+                const innerNum = paragraph.showInnerLabel ? formatNumberEdit(itemNumber, childLabelFormat) : '';
+                const typeLabel = getAnswerFieldTypeLabel(item.type);
+                const unitLabel = item.unit ? ` (${item.unit})` : '';
+
+                html += `
+                    <li class="tree-item tree-field">
+                        <div class="tree-row">
+                            <span class="tree-field-label">${innerNum}</span>
+                            <span class="tree-field-type">${typeLabel}${unitLabel}</span>
+                            <span class="tree-actions">
+                                <button class="tree-btn" onclick="moveAnswerFieldUp(${paragraph.id}, ${item.id})" title="上へ">↑</button>
+                                <button class="tree-btn" onclick="moveAnswerFieldDown(${paragraph.id}, ${item.id})" title="下へ">↓</button>
+                                <button class="tree-btn edit" onclick="editAnswerField(${paragraph.id}, ${item.id})">編集</button>
+                                <button class="tree-btn delete" onclick="deleteAnswerField(${paragraph.id}, ${item.id})">削除</button>
+                            </span>
+                        </div>
+                    </li>
+                `;
+            } else if (item.itemType === 'paragraph') {
+                html += renderTreeItem(item, 0, depth + 1, childLabelFormat, itemNumber);
+            }
         });
-        currentNumber = childNumber;
+
+        // 追加ボタン
+        html += `
+            <li class="tree-item tree-add-item">
+                <button class="tree-add-btn" onclick="addAnswerField(${paragraph.id})">＋ 回答欄</button>
+                <button class="tree-add-btn" onclick="addParagraph(${paragraph.id})">＋ 子段落</button>
+            </li>
+        `;
+
+        html += '</ul>';
     }
 
-    const html = `
-        <div class="section-card${depthClass}">
-            <div class="section-header">
-                <div class="section-title">
-                    <span class="section-number">${formatNumberEdit(paragraphNum, parentLabelFormat)}</span>
-                </div>
-                <div class="section-actions">
-                    <button class="move-btn" onclick="moveParagraphUp(${paragraph.id})" title="上へ">↑</button>
-                    <button class="move-btn" onclick="moveParagraphDown(${paragraph.id})" title="下へ">↓</button>
-                    <button class="edit-btn" onclick="editParagraph(${paragraph.id})">編集</button>
-                    <button class="delete-btn" onclick="deleteParagraph(${paragraph.id})">削除</button>
-                </div>
-            </div>
-            <div class="section-body">
-                ${paragraph.text ? `<div class="section-text">${escapeHtml(paragraph.text)}</div>` : ''}
-                <div class="section-buttons">
-                    <button class="add-subquestion-btn" onclick="addAnswerField(${paragraph.id})">＋ 回答欄を追加</button>
-                    <button class="add-child-btn" onclick="addParagraph(${paragraph.id})">＋ 子段落を追加</button>
-                </div>
-                <div class="fields-list">
-                    ${fieldsHtml || '<div style="color: #999; font-size: 0.85rem; padding: 10px;">回答欄がありません</div>'}
-                </div>
-                ${childrenHtml ? `<div class="children-list">${childrenHtml}</div>` : ''}
-            </div>
-        </div>
-    `;
-    return { html, nextNumber: currentNumber };
+    html += '</li>';
+    return html;
 }
 
 // 国語モード用スケール最適化（1.0以上のみ）
@@ -316,39 +314,44 @@ function renderPreviewContent() {
 // 戻り値: { html, nextNumber }
 function renderPreviewSection(paragraph, index, depth, parentLabelFormat, startNumber = null) {
     const hasText = paragraph.text && paragraph.text.trim();
-    // startNumberが指定されていればそれを使用、なければindex + 1
     const paragraphNum = startNumber !== null ? startNumber : (index + 1);
-    let currentNumber = paragraphNum + 1; // 次の番号（回答欄・子段落共通）
+    let currentNumber = paragraphNum + 1;
     const depthClass = depth > 0 ? ` preview-section-child depth-${Math.min(depth, 3)}` : '';
-    // この段落の子供用の番号形式
     const childLabelFormat = paragraph.labelFormat || 'parenthesis';
+
+    const items = paragraph.items || [];
+    const answerFields = items.filter(item => item.itemType === 'field');
+    const hasAnswerFields = answerFields.length > 0;
 
     let html = `<div class="preview-section${depthClass}">`;
 
     // 子段落（depth > 0）でテキストがなく回答欄がある場合のみ、段落番号を回答欄グリッドに含める
-    if (depth > 0 && !hasText && paragraph.answerFields.length > 0) {
+    if (depth > 0 && !hasText && hasAnswerFields) {
         html += `<div class="preview-answer-grid">`;
         // 段落番号セル
         html += `<div class="grid-cell-item cell-number-cell"><span class="cell-number">${formatNumber(paragraphNum, parentLabelFormat)}</span></div>`;
-        // 回答欄セル
-        paragraph.answerFields.forEach((field, idx) => {
-            const innerNum = paragraph.showInnerLabel ? (idx + 1) : null;
-            html += renderGridCell(field, innerNum, false, childLabelFormat);
+        // 回答欄セル（共通の連番）
+        let itemNumber = 0;
+        items.forEach(item => {
+            itemNumber++;
+            if (item.itemType === 'field') {
+                const innerNum = paragraph.showInnerLabel ? itemNumber : null;
+                html += renderGridCell(item, innerNum, false, childLabelFormat);
+            }
         });
         html += `</div>`;
 
-        // 子段落を再帰的にレンダリング
-        if (paragraph.children && paragraph.children.length > 0) {
-            html += `<div class="preview-children">`;
-            let childNumber = paragraph.answerFields.length + 1;
-            paragraph.children.forEach((child, cIndex) => {
-                const result = renderPreviewSection(child, cIndex, depth + 1, childLabelFormat, childNumber);
+        // 子段落を再帰的にレンダリング（共通連番で）
+        let itemIdx = 0;
+        items.forEach(item => {
+            itemIdx++;
+            if (item.itemType === 'paragraph') {
+                html += `<div class="preview-children">`;
+                const result = renderPreviewSection(item, 0, depth + 1, childLabelFormat, itemIdx);
                 html += result.html;
-                childNumber = result.nextNumber;
-            });
-            currentNumber = childNumber;
-            html += `</div>`;
-        }
+                html += `</div>`;
+            }
+        });
     } else {
         // それ以外は従来通り左に番号
         html += `<div class="preview-section-left">${formatNumber(paragraphNum, parentLabelFormat)}</div>`;
@@ -358,28 +361,31 @@ function renderPreviewSection(paragraph, index, depth, parentLabelFormat, startN
             html += `<div class="preview-section-text">${escapeHtml(paragraph.text)}</div>`;
         }
 
-        // 回答欄をグリッド表示
-        if (paragraph.answerFields.length > 0) {
+        // 回答欄をグリッド表示（共通連番）
+        if (hasAnswerFields) {
             html += `<div class="preview-answer-grid">`;
-            paragraph.answerFields.forEach((field, idx) => {
-                const innerNum = paragraph.showInnerLabel ? (idx + 1) : null;
-                html += renderGridCell(field, innerNum, false, childLabelFormat);
+            let itemNumber = 0;
+            items.forEach(item => {
+                itemNumber++;
+                if (item.itemType === 'field') {
+                    const innerNum = paragraph.showInnerLabel ? itemNumber : null;
+                    html += renderGridCell(item, innerNum, false, childLabelFormat);
+                }
             });
             html += `</div>`;
         }
 
-        // 子段落を再帰的にレンダリング（preview-section-rightの中に含める）
-        if (paragraph.children && paragraph.children.length > 0) {
-            html += `<div class="preview-children">`;
-            let childNumber = paragraph.answerFields.length + 1;
-            paragraph.children.forEach((child, cIndex) => {
-                const result = renderPreviewSection(child, cIndex, depth + 1, childLabelFormat, childNumber);
+        // 子段落を再帰的にレンダリング（共通連番で）
+        let itemIdx = 0;
+        items.forEach(item => {
+            itemIdx++;
+            if (item.itemType === 'paragraph') {
+                html += `<div class="preview-children">`;
+                const result = renderPreviewSection(item, 0, depth + 1, childLabelFormat, itemIdx);
                 html += result.html;
-                childNumber = result.nextNumber;
-            });
-            currentNumber = childNumber;
-            html += `</div>`;
-        }
+                html += `</div>`;
+            }
+        });
 
         html += `</div>`;
     }

@@ -55,27 +55,33 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
 
         paragraphs.forEach((paragraph, pIndex) => {
             const paragraphNum = parentNum ? `${parentNum}-(${pIndex + 1})` : (pIndex + 1);
-            let fieldIdx = 1;
+            let isFirstField = true;
 
-            paragraph.answerFields.forEach((field, fIndex) => {
-                const isFirstInParagraph = fIndex === 0;
-                const innerNum = paragraph.showInnerLabel ? fieldIdx : null;
-                allCells.push({
-                    field,
-                    paragraphNum: paragraphNum,
-                    paragraphLabelFormat: labelFormat,  // 親から継承した形式を使用
-                    innerLabelFormat: labelFormat,  // 回答欄の内部ラベルも段落番号と同じ形式を使用
-                    isFirstInParagraph,
-                    innerNum: innerNum,
-                    fieldIdx: fieldIdx++
-                });
+            const items = paragraph.items || [];
+            const childLabelFormat = paragraph.labelFormat || 'parenthesis';
+
+            // 共通の連番でitemsを処理
+            let itemNumber = 0;
+            items.forEach((item) => {
+                itemNumber++;
+                if (item.itemType === 'field') {
+                    const isFirstInParagraph = isFirstField;
+                    isFirstField = false;
+                    const innerNum = paragraph.showInnerLabel ? itemNumber : null;
+                    allCells.push({
+                        field: item,
+                        paragraphNum: paragraphNum,
+                        paragraphLabelFormat: labelFormat,
+                        innerLabelFormat: childLabelFormat,
+                        isFirstInParagraph,
+                        innerNum: innerNum,
+                        fieldIdx: itemNumber
+                    });
+                } else if (item.itemType === 'paragraph') {
+                    // 子段落を再帰的に処理
+                    collectCells([item], String(paragraphNum), childLabelFormat);
+                }
             });
-
-            // 子段落があれば再帰的に処理（この段落のlabelFormatを子に渡す）
-            if (paragraph.children && paragraph.children.length > 0) {
-                const childLabelFormat = paragraph.labelFormat || 'parenthesis';
-                collectCells(paragraph.children, String(paragraphNum), childLabelFormat);
-            }
         });
     }
 

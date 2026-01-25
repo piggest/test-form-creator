@@ -8,13 +8,15 @@ function addAnswerField(paragraphId) {
     // 既存の回答欄がある場合、前と同じ形式で追加
     let template = { type: 'symbol', answerCount: 1 };
 
-    if (paragraph.answerFields.length > 0) {
-        template = paragraph.answerFields[paragraph.answerFields.length - 1];
+    const fields = (paragraph.items || []).filter(item => item.itemType === 'field');
+    if (fields.length > 0) {
+        template = fields[fields.length - 1];
     } else {
         // この段落に回答欄がない場合、他の段落から探す
         for (const p of state.paragraphs) {
-            if (p.answerFields.length > 0) {
-                template = p.answerFields[p.answerFields.length - 1];
+            const pFields = (p.items || []).filter(item => item.itemType === 'field');
+            if (pFields.length > 0) {
+                template = pFields[pFields.length - 1];
             }
         }
     }
@@ -29,6 +31,7 @@ function addAnswerFieldWithType(paragraphId, template) {
 
     const newField = {
         id: state.nextAnswerFieldId++,
+        itemType: 'field',
         type: template.type
     };
 
@@ -42,7 +45,8 @@ function addAnswerFieldWithType(paragraphId, template) {
     if (template.ratioCount) newField.ratioCount = template.ratioCount;
     if (template.gridChars) newField.gridChars = template.gridChars;
 
-    paragraph.answerFields.push(newField);
+    if (!paragraph.items) paragraph.items = [];
+    paragraph.items.push(newField);
     renderParagraphs();
     saveToStorage();
 }
@@ -62,7 +66,7 @@ function openAnswerFieldModal(paragraphId, type, editId = null) {
     // フォームリセット
     if (editId) {
         const paragraph = findParagraphById(paragraphId);
-        const field = paragraph?.answerFields.find(f => f.id === editId);
+        const field = (paragraph?.items || []).find(f => f.itemType === 'field' && f.id === editId);
 
         if (field) {
             // 記述式
@@ -133,6 +137,7 @@ function saveAnswerField(e) {
 
     const field = {
         id: editId ? parseInt(editId) : state.nextAnswerFieldId++,
+        itemType: 'field',
         type: type
     };
 
@@ -170,13 +175,15 @@ function saveAnswerField(e) {
         }
     }
 
+    if (!paragraph.items) paragraph.items = [];
+
     if (editId) {
-        const index = paragraph.answerFields.findIndex(f => f.id === parseInt(editId));
+        const index = paragraph.items.findIndex(f => f.itemType === 'field' && f.id === parseInt(editId));
         if (index !== -1) {
-            paragraph.answerFields[index] = field;
+            paragraph.items[index] = field;
         }
     } else {
-        paragraph.answerFields.push(field);
+        paragraph.items.push(field);
     }
 
     closeModal('answerField');
@@ -186,38 +193,41 @@ function saveAnswerField(e) {
 
 function deleteAnswerField(paragraphId, fieldId) {
     const paragraph = findParagraphById(paragraphId);
-    if (paragraph) {
-        paragraph.answerFields = paragraph.answerFields.filter(f => f.id !== fieldId);
+    if (paragraph && paragraph.items) {
+        const index = paragraph.items.findIndex(f => f.itemType === 'field' && f.id === fieldId);
+        if (index !== -1) {
+            paragraph.items.splice(index, 1);
+        }
         renderParagraphs();
         saveToStorage();
     }
 }
 
-// 回答欄の移動（上へ）
+// 回答欄の移動（上へ）- items配列内で移動
 function moveAnswerFieldUp(paragraphId, fieldId) {
     const paragraph = findParagraphById(paragraphId);
-    if (!paragraph) return;
+    if (!paragraph || !paragraph.items) return;
 
-    const index = paragraph.answerFields.findIndex(f => f.id === fieldId);
+    const index = paragraph.items.findIndex(f => f.itemType === 'field' && f.id === fieldId);
     if (index > 0) {
-        const temp = paragraph.answerFields[index];
-        paragraph.answerFields[index] = paragraph.answerFields[index - 1];
-        paragraph.answerFields[index - 1] = temp;
+        const temp = paragraph.items[index];
+        paragraph.items[index] = paragraph.items[index - 1];
+        paragraph.items[index - 1] = temp;
         renderParagraphs();
         saveToStorage();
     }
 }
 
-// 回答欄の移動（下へ）
+// 回答欄の移動（下へ）- items配列内で移動
 function moveAnswerFieldDown(paragraphId, fieldId) {
     const paragraph = findParagraphById(paragraphId);
-    if (!paragraph) return;
+    if (!paragraph || !paragraph.items) return;
 
-    const index = paragraph.answerFields.findIndex(f => f.id === fieldId);
-    if (index < paragraph.answerFields.length - 1) {
-        const temp = paragraph.answerFields[index];
-        paragraph.answerFields[index] = paragraph.answerFields[index + 1];
-        paragraph.answerFields[index + 1] = temp;
+    const index = paragraph.items.findIndex(f => f.itemType === 'field' && f.id === fieldId);
+    if (index < paragraph.items.length - 1) {
+        const temp = paragraph.items[index];
+        paragraph.items[index] = paragraph.items[index + 1];
+        paragraph.items[index + 1] = temp;
         renderParagraphs();
         saveToStorage();
     }

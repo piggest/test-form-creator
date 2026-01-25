@@ -2,33 +2,30 @@
 
 // 段落を即追加（前の段落の設定を引き継ぐ）
 function addParagraph(parentId = null) {
-    let labelFormat = 'boxed';
+    let labelFormat = 'parenthesis';
     let showInnerLabel = true;
 
     // 親段落がある場合は子として追加
     if (parentId) {
         const parent = findParagraphById(parentId);
         if (parent) {
-            // 子段落はデフォルトで括弧形式
-            labelFormat = 'parenthesis';
-
-            // 既存の子があればその設定を引き継ぐ
-            if (parent.children && parent.children.length > 0) {
-                const lastChild = parent.children[parent.children.length - 1];
+            // 既存の子段落があればその設定を引き継ぐ
+            const childParagraphs = (parent.items || []).filter(item => item.itemType === 'paragraph');
+            if (childParagraphs.length > 0) {
+                const lastChild = childParagraphs[childParagraphs.length - 1];
                 labelFormat = lastChild.labelFormat || 'parenthesis';
                 showInnerLabel = lastChild.showInnerLabel !== false;
             }
 
-            if (!parent.children) parent.children = [];
-            parent.children.push({
+            if (!parent.items) parent.items = [];
+            parent.items.push({
                 id: state.nextParagraphId++,
+                itemType: 'paragraph',
                 labelFormat: labelFormat,
                 startNumber: 1,
                 showInnerLabel: showInnerLabel,
-                innerLabelFormat: 'circled',
                 text: '',
-                answerFields: [],
-                children: []
+                items: []
             });
             renderParagraphs();
             saveToStorage();
@@ -41,17 +38,18 @@ function addParagraph(parentId = null) {
         const lastParagraph = state.paragraphs[state.paragraphs.length - 1];
         labelFormat = lastParagraph.labelFormat || 'boxed';
         showInnerLabel = lastParagraph.showInnerLabel !== false;
+    } else {
+        labelFormat = 'boxed';
     }
 
     state.paragraphs.push({
         id: state.nextParagraphId++,
+        itemType: 'paragraph',
         labelFormat: labelFormat,
         startNumber: 1,
         showInnerLabel: showInnerLabel,
-        innerLabelFormat: 'circled',
         text: '',
-        answerFields: [],
-        children: []
+        items: []
     });
     renderParagraphs();
     saveToStorage();
@@ -97,13 +95,9 @@ function saveParagraph(e) {
 function deleteParagraph(id) {
     if (!confirm('この段落を削除しますか？')) return;
 
-    // 所属する配列を見つけて削除
-    const arr = findParagraphArray(id);
-    if (arr) {
-        const index = arr.findIndex(p => p.id === id);
-        if (index !== -1) {
-            arr.splice(index, 1);
-        }
+    const container = findParagraphContainer(id);
+    if (container) {
+        container.array.splice(container.index, 1);
     }
 
     renderParagraphs();
@@ -112,14 +106,14 @@ function deleteParagraph(id) {
 
 // 段落の移動（上へ）
 function moveParagraphUp(id) {
-    const arr = findParagraphArray(id);
-    if (!arr) return;
+    const container = findParagraphContainer(id);
+    if (!container) return;
 
-    const index = arr.findIndex(p => p.id === id);
+    const { array, index } = container;
     if (index > 0) {
-        const temp = arr[index];
-        arr[index] = arr[index - 1];
-        arr[index - 1] = temp;
+        const temp = array[index];
+        array[index] = array[index - 1];
+        array[index - 1] = temp;
         renderParagraphs();
         saveToStorage();
     }
@@ -127,14 +121,14 @@ function moveParagraphUp(id) {
 
 // 段落の移動（下へ）
 function moveParagraphDown(id) {
-    const arr = findParagraphArray(id);
-    if (!arr) return;
+    const container = findParagraphContainer(id);
+    if (!container) return;
 
-    const index = arr.findIndex(p => p.id === id);
-    if (index < arr.length - 1) {
-        const temp = arr[index];
-        arr[index] = arr[index + 1];
-        arr[index + 1] = temp;
+    const { array, index } = container;
+    if (index < array.length - 1) {
+        const temp = array[index];
+        array[index] = array[index + 1];
+        array[index + 1] = temp;
         renderParagraphs();
         saveToStorage();
     }
