@@ -1,0 +1,1795 @@
+/* 基本スタイル */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Noto Sans JP', 'Yu Gothic UI', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+    font-weight: 400;
+}
+
+#app {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* ヘッダー */
+.header {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.header h1 {
+    font-size: 1.5rem;
+    color: #2c3e50;
+}
+
+.mode-toggle {
+    display: flex;
+    gap: 10px;
+}
+
+.mode-btn {
+    padding: 10px 20px;
+    border: 2px solid #3498db;
+    background: #fff;
+    color: #3498db;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.mode-btn:hover {
+    background: #ecf0f1;
+}
+
+.mode-btn.active {
+    background: #3498db;
+    color: #fff;
+}
+
+/* メインコンテンツ */
+.main-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* テスト情報 */
+.test-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.test-info input {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.test-info input[type="text"]:first-child {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.max-score-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.max-score-input label {
+    font-weight: 500;
+}
+
+.max-score-input input {
+    width: 80px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.vertical-toggle {
+    display: flex;
+    align-items: center;
+}
+
+.vertical-toggle label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.vertical-toggle input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+/* 大問追加パネル */
+.add-section-panel {
+    margin-bottom: 20px;
+}
+
+.add-section-btn {
+    width: 100%;
+    padding: 15px;
+    background: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: background 0.3s;
+}
+
+.add-section-btn:hover {
+    background: #2980b9;
+}
+
+/* 大問カード */
+.section-card {
+    background: #f8f9fa;
+    border: 2px solid #3498db;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.section-header {
+    background: #3498db;
+    color: #fff;
+    padding: 12px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.section-header .section-title {
+    font-weight: bold;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-header .section-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 2px solid #fff;
+    font-weight: bold;
+}
+
+.section-header .section-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.section-header .section-actions button {
+    padding: 5px 12px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.section-header .edit-btn {
+    background: #fff;
+    color: #3498db;
+}
+
+.section-header .delete-btn {
+    background: #e74c3c;
+    color: #fff;
+}
+
+.section-body {
+    padding: 15px;
+}
+
+.section-text {
+    margin-bottom: 15px;
+    color: #555;
+    font-style: italic;
+}
+
+/* 問追加ボタン */
+.add-question-btn {
+    width: 100%;
+    padding: 10px;
+    background: #27ae60;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-bottom: 15px;
+}
+
+.add-question-btn:hover {
+    background: #219a52;
+}
+
+/* 問カード */
+.question-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.question-header {
+    background: #ecf0f1;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.question-header .question-title {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.question-header .question-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.question-header .question-actions button {
+    padding: 4px 10px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.question-header .edit-btn {
+    background: #3498db;
+    color: #fff;
+}
+
+.question-header .delete-btn {
+    background: #e74c3c;
+    color: #fff;
+}
+
+.question-body {
+    padding: 10px 15px;
+}
+
+.question-text {
+    margin-bottom: 10px;
+    color: #555;
+}
+
+/* 小問追加ボタン */
+.add-subquestion-btn {
+    width: 100%;
+    padding: 8px;
+    background: #9b59b6;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.add-subquestion-btn:hover {
+    background: #8e44ad;
+}
+
+/* 小問リスト */
+.subquestion-item {
+    background: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.subquestion-item .subq-content {
+    flex: 1;
+}
+
+.subquestion-item .subq-label {
+    font-weight: bold;
+    color: #9b59b6;
+    margin-right: 8px;
+}
+
+.subquestion-item .subq-type {
+    font-size: 0.8rem;
+    background: #95a5a6;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 8px;
+}
+
+.subquestion-item .subq-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.subquestion-item .subq-actions button {
+    padding: 3px 8px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.75rem;
+}
+
+.subquestion-item .edit-btn {
+    background: #3498db;
+    color: #fff;
+}
+
+.subquestion-item .delete-btn {
+    background: #e74c3c;
+    color: #fff;
+}
+
+/* 編集モードのミニプレビュー */
+.subq-preview {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+}
+
+.subq-preview .mini-box {
+    width: 24px;
+    height: 24px;
+    border: 1.5px solid #666;
+    border-radius: 2px;
+    background: #fff;
+}
+
+.subq-preview .mini-circle {
+    width: 20px;
+    height: 20px;
+    border: 1.5px solid #666;
+    border-radius: 50%;
+    background: #fff;
+}
+
+.subq-preview .mini-word-box {
+    width: 60px;
+    height: 24px;
+    border: 1.5px solid #666;
+    border-radius: 2px;
+    background: #fff;
+}
+
+.subq-preview .mini-number-box {
+    width: 36px;
+    height: 24px;
+    border: 1.5px solid #666;
+    border-radius: 2px;
+    background: #fff;
+}
+
+.subq-preview .mini-textarea {
+    width: 100px;
+    height: 24px;
+    border: 1.5px solid #666;
+    border-radius: 2px;
+    background: #fff;
+}
+
+.subq-preview .mini-grid {
+    display: flex;
+    border: 1px solid #666;
+    border-right: none;
+    border-bottom: none;
+}
+
+.subq-preview .mini-grid-cell {
+    width: 16px;
+    height: 16px;
+    border-right: 1px solid #666;
+    border-bottom: 1px solid #666;
+    background: #fff;
+}
+
+.subq-preview .mini-separator {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #666;
+}
+
+.subq-preview .mini-label {
+    font-size: 0.75rem;
+    color: #666;
+}
+
+.subq-preview .mini-unit {
+    font-size: 0.8rem;
+    color: #333;
+}
+
+/* データ管理 */
+.data-management {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.data-btn {
+    padding: 10px 20px;
+    background: #9b59b6;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.3s;
+}
+
+.data-btn:hover {
+    background: #8e44ad;
+}
+
+.data-btn.new-btn {
+    background: #27ae60;
+}
+
+.data-btn.new-btn:hover {
+    background: #219a52;
+}
+
+.empty-message {
+    color: #999;
+    text-align: center;
+    padding: 30px;
+}
+
+/* モーダル */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-content h3 {
+    margin-bottom: 20px;
+    color: #2c3e50;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.form-group textarea {
+    resize: vertical;
+}
+
+.form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+/* タイプ選択ボタン */
+.type-select-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.type-btn {
+    padding: 15px;
+    background: #ecf0f1;
+    border: 2px solid #bdc3c7;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.type-btn:hover {
+    background: #3498db;
+    border-color: #3498db;
+    color: #fff;
+}
+
+/* 選択肢入力 */
+#choicesContainer {
+    margin-bottom: 10px;
+}
+
+.choice-input {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+    align-items: center;
+}
+
+.choice-input input {
+    flex: 1;
+}
+
+.choice-input .remove-choice {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.small-btn {
+    padding: 5px 15px;
+    background: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.small-btn:hover {
+    background: #2980b9;
+}
+
+/* 文字数制限入力 */
+.char-limit-inputs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.char-limit-inputs input {
+    width: 80px;
+}
+
+/* モーダルボタン */
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.cancel-btn {
+    padding: 10px 20px;
+    background: #95a5a6;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.submit-btn {
+    padding: 10px 20px;
+    background: #27ae60;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.cancel-btn:hover {
+    background: #7f8c8d;
+}
+
+.submit-btn:hover {
+    background: #219a52;
+}
+
+/* プレビューモード */
+.preview-controls {
+    margin-bottom: 20px;
+}
+
+.preview-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.print-btn, .pdf-btn, .json-btn {
+    padding: 10px 30px;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.print-btn {
+    background: #e67e22;
+}
+
+.print-btn:hover {
+    background: #d35400;
+}
+
+.pdf-btn {
+    background: #c0392b;
+}
+
+.pdf-btn:hover {
+    background: #a93226;
+}
+
+.json-btn {
+    background: #9b59b6;
+}
+
+.json-btn:hover {
+    background: #8e44ad;
+}
+
+/* スケール変数のデフォルト値 */
+.preview-content {
+    --scale: 1;
+    --base-font-size: 14px;
+    --box-size: 40px;
+    --small-box-size: 24px;
+    --grid-cell-size: 28px;
+    --number-box-width: 60px;
+    --word-box-width: 130px;
+    --gap-size: 12px;
+
+    padding: 20px;
+    max-width: 180mm; /* A4幅 - マージン */
+    margin: 0 auto;
+    font-size: calc(var(--base-font-size) * var(--scale));
+}
+
+.preview-header {
+    margin-bottom: calc(15px * var(--scale));
+    padding-bottom: calc(10px * var(--scale));
+    border-bottom: 1px solid #333;
+}
+
+.preview-title-row {
+    text-align: center;
+    margin-bottom: calc(8px * var(--scale));
+}
+
+.preview-header h2 {
+    font-size: calc(1.5rem * var(--scale));
+    font-weight: 500;
+}
+
+.preview-subtitle {
+    font-size: calc(1rem * var(--scale));
+    font-weight: 400;
+}
+
+.preview-info-row {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.preview-info-grid {
+    display: inline-flex;
+    border: 1px solid #333;
+    border-right: none;
+    border-bottom: none;
+}
+
+.info-cell {
+    border-right: 1px solid #333;
+    border-bottom: 1px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(28px * var(--scale));
+}
+
+.info-cell-label {
+    padding: 0 calc(8px * var(--scale));
+    font-size: calc(0.7rem * var(--scale));
+    background: #f9f9f9;
+}
+
+.info-cell-value {
+    min-width: calc(50px * var(--scale));
+}
+
+.info-cell-name-label {
+    /* 氏名ラベル */
+}
+
+.info-cell-name {
+    min-width: calc(120px * var(--scale));
+}
+
+.info-cell-max {
+    padding: 0 calc(6px * var(--scale));
+    font-size: calc(0.65rem * var(--scale));
+    background: #f9f9f9;
+}
+
+/* プレビュー: 問題コンテナ */
+.preview-questions-flow {
+    display: flex;
+    flex-direction: column;
+    gap: calc(20px * var(--scale));
+}
+
+/* プレビュー: 大問セクション */
+.preview-section {
+    display: flex;
+    align-items: flex-start;
+    gap: calc(10px * var(--scale));
+}
+
+.preview-section-left {
+    flex-shrink: 0;
+}
+
+.preview-section-right {
+    flex: 1;
+    min-width: 0;
+}
+
+/* 回答グリッド */
+.preview-answer-grid {
+    display: inline-flex;
+    flex-wrap: wrap;
+    border: 1px solid #333;
+    border-right: none;
+    border-bottom: none;
+}
+
+.grid-cell-item {
+    border-right: 1px solid #333;
+    border-bottom: 1px solid #333;
+    min-height: calc(45px * var(--scale));
+    position: relative;
+}
+
+.grid-cell-item.cell-normal {
+    min-width: calc(65px * var(--scale));
+}
+
+.grid-cell-item.cell-wide {
+    min-width: calc(95px * var(--scale));
+}
+
+.grid-cell-item.cell-number-cell {
+    min-width: calc(30px * var(--scale));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cell-number {
+    font-size: calc(0.65rem * var(--scale));
+}
+
+.cell-unit-bottom {
+    position: absolute;
+    bottom: calc(2px * var(--scale));
+    right: calc(4px * var(--scale));
+    font-size: calc(0.6rem * var(--scale));
+}
+
+.cell-unit-center {
+    position: absolute;
+    bottom: calc(2px * var(--scale));
+    right: calc(-3px * var(--scale));
+    font-size: calc(0.7rem * var(--scale));
+}
+
+.cell-no-right-border {
+    border-right: none;
+}
+
+/* 国語モード（縦書き解答用紙） */
+.preview-content.vertical-mode {
+    display: flex;
+    flex-direction: row;
+    max-width: none;
+    width: 100%;
+    padding: calc(15px * var(--scale));
+}
+
+/* 国語モード：ヘッダー（右端に縦書き） */
+.preview-content.vertical-mode .preview-header {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    border-bottom: none;
+    border-left: 1px solid #333;
+    padding: calc(10px * var(--scale));
+    padding-right: 0;
+    margin: 0;
+    margin-left: calc(10px * var(--scale));
+    flex-shrink: 0;
+    order: 2;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: calc(5px * var(--scale));
+}
+
+.preview-content.vertical-mode .preview-title-row {
+    margin: 0;
+    padding-left: calc(5px * var(--scale));
+}
+
+.preview-content.vertical-mode .preview-header h2 {
+    font-size: calc(1.2rem * var(--scale));
+    letter-spacing: 0.2em;
+    margin: 0;
+}
+
+.preview-content.vertical-mode .preview-subtitle {
+    font-size: calc(0.9rem * var(--scale));
+    display: block;
+    margin-top: calc(5px * var(--scale));
+}
+
+.preview-content.vertical-mode .preview-info-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+}
+
+.preview-content.vertical-mode .preview-info-grid {
+    display: flex;
+    flex-direction: row;
+    border: none;
+}
+
+.preview-content.vertical-mode .info-cell {
+    border: 1px solid #333;
+    margin-left: -1px;
+    min-width: calc(24px * var(--scale));
+    min-height: calc(24px * var(--scale));
+    padding: calc(3px * var(--scale));
+    font-size: calc(0.6rem * var(--scale));
+}
+
+.preview-content.vertical-mode .info-cell:first-child {
+    margin-left: 0;
+}
+
+.preview-content.vertical-mode .info-cell-value {
+    min-height: calc(60px * var(--scale));
+}
+
+.preview-content.vertical-mode .info-cell-name {
+    min-height: calc(120px * var(--scale));
+}
+
+.preview-content.vertical-mode .info-cell-max {
+    writing-mode: horizontal-tb;
+    display: flex;
+    align-items: flex-end;
+    padding-bottom: calc(3px * var(--scale));
+    font-size: calc(0.55rem * var(--scale));
+}
+
+/* 国語モード：問題エリア */
+.preview-content.vertical-mode .preview-questions-flow {
+    flex: 1;
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: flex-start;
+    gap: calc(15px * var(--scale));
+    order: 1;
+}
+
+.preview-content.vertical-mode .preview-section {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: flex-start;
+    gap: calc(5px * var(--scale));
+}
+
+.preview-content.vertical-mode .preview-section-left {
+    flex-shrink: 0;
+}
+
+.preview-content.vertical-mode .preview-section-number {
+    min-width: calc(24px * var(--scale));
+    height: calc(24px * var(--scale));
+    font-size: calc(0.85rem * var(--scale));
+}
+
+.preview-content.vertical-mode .preview-section-right {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: flex-start;
+    gap: 0;
+}
+
+.preview-content.vertical-mode .preview-section-text {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    margin: 0;
+    margin-right: calc(5px * var(--scale));
+    font-size: calc(0.75rem * var(--scale));
+}
+
+/* 国語モード：回答グリッド */
+.preview-content.vertical-mode .preview-answer-grid {
+    display: flex;
+    flex-direction: row-reverse;
+    flex-wrap: nowrap;
+    gap: 0;
+    border: none;
+    align-items: flex-start;
+}
+
+/* 国語モード：縦セルグループ */
+.preview-content.vertical-mode .vertical-cell-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    align-self: flex-start;
+    position: relative;
+    padding-top: calc(45px * var(--scale));
+}
+
+.preview-content.vertical-mode .vertical-cell-label {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    font-size: calc(0.6rem * var(--scale));
+    white-space: nowrap;
+    text-align: center;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    height: calc(42px * var(--scale));
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.preview-content.vertical-mode .vertical-cell-group .grid-cell-item {
+    border: 1px solid #333;
+    min-width: calc(30px * var(--scale));
+    position: relative;
+    writing-mode: vertical-rl;
+}
+
+.preview-content.vertical-mode .vertical-cell-group .grid-cell-item.cell-normal {
+    min-height: calc(80px * var(--scale));
+}
+
+.preview-content.vertical-mode .vertical-cell-group .grid-cell-item.cell-wide {
+    min-height: calc(140px * var(--scale));
+}
+
+.preview-content.vertical-mode .vertical-cell-group .grid-cell-item.cell-extra-tall {
+    min-height: calc(200px * var(--scale));
+}
+
+.preview-content.vertical-mode .vertical-cell-group .cell-unit-bottom {
+    writing-mode: horizontal-tb;
+    position: absolute;
+    bottom: calc(2px * var(--scale));
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: calc(0.5rem * var(--scale));
+}
+
+/* 国語モード：原稿用紙形式（縦書き文字数制限） */
+.preview-content.vertical-mode .vertical-grid-paper {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #333;
+}
+
+.preview-content.vertical-mode .vertical-grid-cell {
+    width: calc(28px * var(--scale));
+    height: calc(28px * var(--scale));
+    border-bottom: 1px dashed #999;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.preview-content.vertical-mode .vertical-grid-cell.with-marker {
+    border-bottom: 1px solid #333;
+}
+
+.preview-content.vertical-mode .vertical-grid-cell:last-child {
+    border-bottom: none;
+}
+
+.preview-content.vertical-mode .vertical-grid-marker {
+    position: absolute;
+    right: calc(-12px * var(--scale));
+    bottom: 0;
+    font-size: calc(0.45rem * var(--scale));
+    color: #666;
+    writing-mode: horizontal-tb;
+}
+
+/* 国語モード：複数回答欄コンテナ */
+.preview-content.vertical-mode .vertical-multiple-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    padding-top: calc(45px * var(--scale));
+}
+
+.preview-content.vertical-mode .vertical-multiple-label {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    font-size: calc(0.6rem * var(--scale));
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    height: calc(42px * var(--scale));
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.preview-content.vertical-mode .vertical-multiple-cells {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: stretch;
+    border: 1px solid #333;
+}
+
+.preview-content.vertical-mode .vertical-multiple-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    align-self: stretch;
+    min-width: calc(30px * var(--scale));
+    border-left: 1px solid #333;
+}
+
+/* 左端のアイテムはコンテナの枠があるので仕切り不要 */
+.preview-content.vertical-mode .vertical-multiple-item:last-child {
+    border-left: none;
+}
+
+.preview-content.vertical-mode .vertical-multiple-item-label {
+    font-size: calc(0.55rem * var(--scale));
+    padding: calc(4px * var(--scale));
+    writing-mode: horizontal-tb;
+    text-align: center;
+    border-bottom: 1px solid #333;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.preview-content.vertical-mode .vertical-multiple-cell {
+    flex: 1;
+    min-width: calc(30px * var(--scale));
+}
+
+.preview-content.vertical-mode .vertical-multiple-cell.grid-cell-item {
+    border: none;
+    position: relative;
+}
+
+.preview-content.vertical-mode .vertical-multiple-cell.vertical-grid-paper {
+    border: none;
+}
+
+
+.preview-section-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: calc(var(--small-box-size) * var(--scale));
+    height: calc(var(--small-box-size) * var(--scale));
+    border: 1px solid #333;
+    font-weight: 600;
+    font-size: calc(1rem * var(--scale));
+    padding: 0 4px;
+}
+
+/* プレビュー: 大問（インラインブロック） */
+.preview-section-inline {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+    gap: calc(8px * var(--scale));
+    margin-bottom: calc(10px * var(--scale));
+}
+
+.preview-section-inline > .preview-section-number {
+    flex-shrink: 0;
+}
+
+.preview-section-inline > .preview-question-wrapper {
+    margin-bottom: 0;
+}
+
+.preview-section-text {
+    font-size: calc(0.9rem * var(--scale));
+    line-height: 1.6;
+    margin-bottom: calc(8px * var(--scale));
+}
+
+/* 大問テキストがある場合は改行 */
+.preview-section-block {
+    width: 100%;
+    margin-bottom: calc(10px * var(--scale));
+}
+
+.preview-section-block .preview-section-header {
+    display: flex;
+    align-items: center;
+    gap: calc(10px * var(--scale));
+    margin-bottom: calc(10px * var(--scale));
+}
+
+.preview-section-block .preview-section-content {
+    display: flex;
+    flex-direction: column;
+    gap: calc(5px * var(--scale));
+}
+
+/* プレビュー: 問 */
+.preview-question-wrapper {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+    margin-bottom: calc(10px * var(--scale));
+}
+
+.preview-question-label {
+    font-weight: 500;
+    font-size: calc(0.9rem * var(--scale));
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: calc(2.5em * var(--scale));
+}
+
+.preview-question-content {
+    flex: 1;
+    min-width: 0; /* flexboxで折り返しが効くように */
+}
+
+.preview-question-text {
+    margin-bottom: calc(8px * var(--scale));
+    line-height: 1.6;
+}
+
+.preview-question-answers {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: calc(10px * var(--scale)) calc(var(--gap-size) * var(--scale));
+}
+
+/* プレビュー: 小問 */
+.preview-subquestion {
+    display: flex;
+    align-items: flex-start;
+}
+
+.preview-subquestion-label {
+    font-weight: 500;
+    font-size: calc(0.75rem * var(--scale));
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: calc(1.6em * var(--scale));
+    position: relative;
+    top: calc(-0.4em * var(--scale));
+}
+
+.preview-subquestion-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: calc(5px * var(--scale));
+}
+
+.preview-subquestion-text {
+    line-height: 1.6;
+}
+
+.preview-subquestion-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(8px * var(--scale));
+}
+
+.preview-subquestion-inline .preview-subquestion-label {
+    min-width: auto;
+}
+
+.preview-answer-area {
+    display: flex;
+    align-items: center;
+}
+
+/* 選択肢スタイル */
+.preview-choices {
+    display: flex;
+    flex-direction: column;
+    gap: calc(8px * var(--scale));
+}
+
+.preview-choice {
+    display: flex;
+    align-items: center;
+    gap: calc(10px * var(--scale));
+}
+
+.preview-choice .choice-box {
+    width: calc(var(--small-box-size) * var(--scale));
+    height: calc(var(--small-box-size) * var(--scale));
+    border: 1px solid #333;
+    border-radius: 2px;
+}
+
+/* 〇×スタイル */
+.preview-truefalse {
+    display: flex;
+    gap: calc(30px * var(--scale));
+}
+
+.preview-truefalse .tf-option {
+    display: flex;
+    align-items: center;
+    gap: calc(10px * var(--scale));
+}
+
+.preview-truefalse .tf-circle {
+    width: calc(var(--small-box-size) * var(--scale) * 1.15);
+    height: calc(var(--small-box-size) * var(--scale) * 1.15);
+    border: 1px solid #333;
+    border-radius: 50%;
+}
+
+/* 記述欄スタイル */
+.preview-textarea {
+    border: 1px solid #333;
+    min-height: calc(50px * var(--scale));
+    position: relative;
+    width: 100%;
+}
+
+.preview-textarea.preview-textarea-short {
+    height: calc(40px * var(--scale));
+    min-height: auto;
+}
+
+.preview-textarea.multi-line {
+    min-height: calc(120px * var(--scale));
+}
+
+.preview-textarea .lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.preview-textarea .line {
+    border-bottom: 1px dashed #ccc;
+    height: calc(36px * var(--scale));
+}
+
+.suffix-text {
+    font-size: calc(var(--base-font-size) * var(--scale));
+    margin-left: calc(4px * var(--scale));
+    white-space: nowrap;
+}
+
+.char-limit-info {
+    font-size: calc(0.85rem * var(--scale));
+    color: #666;
+    margin-top: calc(5px * var(--scale));
+}
+
+/* 方眼スタイル */
+.grid-paper {
+    display: flex;
+    flex-wrap: wrap;
+    border: 1px solid #333;
+    border-right: none;
+    border-bottom: none;
+    /* 20文字分の幅（1行あたり最大20セル） */
+    max-width: calc(var(--grid-cell-size) * var(--scale) * 20 + 1px);
+}
+
+.grid-cell {
+    width: calc(var(--grid-cell-size) * var(--scale));
+    height: calc(var(--grid-cell-size) * var(--scale));
+    border-right: 1px solid #333;
+    border-bottom: 1px solid #333;
+    box-sizing: border-box;
+}
+
+/* 記号・語句回答欄スタイル */
+.answer-boxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--gap-size) * var(--scale));
+}
+
+.answer-box {
+    display: flex;
+    align-items: center;
+    gap: calc(8px * var(--scale));
+}
+
+.answer-box .box-label {
+    font-size: calc(0.7rem * var(--scale));
+    min-width: calc(16px * var(--scale));
+    position: relative;
+    top: calc(-0.4em * var(--scale));
+}
+
+.answer-box .symbol-box {
+    width: calc(var(--box-size) * var(--scale));
+    height: calc(var(--box-size) * var(--scale));
+    border: 1px solid #333;
+    border-radius: 2px;
+}
+
+.answer-box .word-box {
+    width: calc(var(--word-box-width) * var(--scale));
+    height: calc(var(--box-size) * var(--scale));
+    border: 1px solid #333;
+    border-radius: 2px;
+}
+
+/* 複数回答欄スタイル */
+.multiple-answers {
+    display: flex;
+    flex-direction: column;
+    gap: calc(8px * var(--scale));
+}
+
+.multiple-answer-item {
+    display: flex;
+    align-items: center;
+    gap: calc(8px * var(--scale));
+}
+
+.multiple-label {
+    font-size: calc(0.85rem * var(--scale));
+    min-width: calc(1.2em * var(--scale));
+}
+
+.multiple-answer-item .symbol-box {
+    width: calc(var(--box-size) * var(--scale));
+    height: calc(var(--box-size) * var(--scale));
+    border: 1px solid #333;
+    border-radius: 2px;
+}
+
+.multiple-answer-item .word-box {
+    width: calc(var(--word-box-width) * var(--scale));
+    height: calc(var(--box-size) * var(--scale));
+    border: 1px solid #333;
+    border-radius: 2px;
+}
+
+.multiple-answer-content {
+    flex: 1;
+}
+
+.multiple-line-box {
+    width: calc(180px * var(--scale));
+    height: calc(var(--box-size) * var(--scale));
+    border-bottom: 1px solid #333;
+}
+
+/* グリッドセル内の上部ラベル */
+.cell-label-top {
+    position: absolute;
+    top: calc(2px * var(--scale));
+    left: calc(4px * var(--scale));
+    font-size: calc(0.55rem * var(--scale));
+}
+
+/* 複数回答欄のグリッドセル */
+.grid-cell-item.cell-multiple {
+    min-width: auto;
+    padding: calc(4px * var(--scale));
+}
+
+.cell-multiple-inner {
+    display: flex;
+    flex-direction: row;
+    gap: calc(2px * var(--scale));
+}
+
+.cell-multi-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(2px * var(--scale));
+}
+
+.cell-multi-label {
+    font-size: calc(0.55rem * var(--scale));
+    line-height: 1;
+}
+
+.cell-multi-symbol {
+    width: calc(24px * var(--scale));
+    height: calc(24px * var(--scale));
+    border: 1px solid #333;
+}
+
+.cell-multi-word {
+    width: calc(50px * var(--scale));
+    height: calc(24px * var(--scale));
+    border: 1px solid #333;
+}
+
+.cell-multi-line {
+    width: calc(50px * var(--scale));
+    height: calc(24px * var(--scale));
+    border-bottom: 1px solid #333;
+}
+
+.cell-multi-unit {
+    font-size: calc(0.45rem * var(--scale));
+    margin-left: calc(2px * var(--scale));
+}
+
+/* 国語モード用の複数回答欄 */
+.preview-content.vertical-mode .grid-cell-item.cell-multiple-vertical {
+    min-height: auto;
+    padding: calc(4px * var(--scale));
+}
+
+.cell-multiple-inner-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: calc(4px * var(--scale));
+}
+
+.cell-multi-item-v {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: calc(4px * var(--scale));
+}
+
+.cell-multi-label-v {
+    font-size: calc(0.5rem * var(--scale));
+    writing-mode: horizontal-tb;
+}
+
+.cell-multi-symbol-v {
+    width: calc(22px * var(--scale));
+    height: calc(22px * var(--scale));
+    border: 1px solid #333;
+}
+
+.cell-multi-word-v {
+    width: calc(22px * var(--scale));
+    height: calc(45px * var(--scale));
+    border: 1px solid #333;
+}
+
+.cell-multi-line-v {
+    width: calc(22px * var(--scale));
+    height: calc(45px * var(--scale));
+    border-right: 1px solid #333;
+}
+
+/* 複数回答欄の説明 */
+.multiple-info {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    background: #f0f7ff;
+    padding: 12px;
+    border-radius: 5px;
+    border-left: 3px solid #3498db;
+}
+
+/* 子回答欄リスト */
+.sub-items-container {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f5f0ff;
+    border-radius: 5px;
+    border: 1px dashed #9b59b6;
+}
+
+.sub-items-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.sub-items-title {
+    font-size: 0.85rem;
+    color: #9b59b6;
+    font-weight: 500;
+}
+
+.add-sub-item-btn {
+    padding: 4px 10px;
+    background: #9b59b6;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.add-sub-item-btn:hover {
+    background: #8e44ad;
+}
+
+.sub-item-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background: #fff;
+    border-radius: 3px;
+    margin-bottom: 4px;
+}
+
+.sub-item-label {
+    font-weight: 500;
+    color: #9b59b6;
+    min-width: 24px;
+}
+
+.sub-item-type {
+    flex: 1;
+    font-size: 0.85rem;
+    color: #555;
+}
+
+.sub-item-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.sub-item-actions button {
+    padding: 2px 6px;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 0.7rem;
+}
+
+.sub-item-edit-btn {
+    background: #3498db;
+    color: #fff;
+}
+
+.sub-item-delete-btn {
+    background: #e74c3c;
+    color: #fff;
+}
+
+/* 数値記述式 */
+.number-format-select {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.number-format-select label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.unit-input {
+    margin-bottom: 15px;
+}
+
+.unit-input select {
+    width: 150px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.unit-input input {
+    width: 150px;
+}
+
+/* 数値回答欄スタイル */
+.number-answer {
+    display: flex;
+    align-items: center;
+    gap: calc(8px * var(--scale));
+    flex-wrap: wrap;
+}
+
+.number-answer .number-box {
+    width: calc(var(--number-box-width) * var(--scale));
+    height: calc(var(--box-size) * var(--scale));
+    border: 1px solid #333;
+    border-radius: 2px;
+}
+
+.number-answer .number-unit {
+    font-size: calc(0.7rem * var(--scale));
+    position: relative;
+    top: calc(0.5em * var(--scale));
+}
+
+.number-answer .number-separator {
+    font-size: calc(0.85rem * var(--scale));
+    font-weight: 500;
+}
+
+/* 時間形式 */
+.time-answer {
+    display: flex;
+    align-items: center;
+    gap: calc(6px * var(--scale));
+}
+
+.time-answer .time-box {
+    width: calc(60px * var(--scale));
+    height: calc(var(--box-size) * var(--scale));
+    border: 1px solid #333;
+    border-radius: 2px;
+}
+
+.time-answer .time-label {
+    font-size: calc(0.7rem * var(--scale));
+    position: relative;
+    top: calc(0.5em * var(--scale));
+}
+
+/* 印刷スタイル - A4縦向き */
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 15mm;
+    }
+
+    body {
+        background: #fff;
+    }
+
+    #app {
+        max-width: 100%;
+        padding: 0;
+    }
+
+    .header,
+    .no-print {
+        display: none !important;
+    }
+
+    .main-content {
+        box-shadow: none;
+        padding: 0;
+        background: #fff;
+    }
+
+    /* スケール変数は維持される（JSで設定済み） */
+    .preview-content {
+        padding: 0;
+        /* 印刷時の幅もJSで設定されたmax-widthを維持 */
+    }
+
+    .preview-section-block,
+    .preview-section-inline {
+        page-break-inside: avoid;
+    }
+
+    .preview-questions-flow {
+        page-break-inside: auto;
+    }
+}
+
+/* レスポンシブ */
+@media (max-width: 600px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .data-management {
+        flex-direction: column;
+    }
+
+    .data-btn {
+        width: 100%;
+    }
+
+    .type-select-buttons {
+        grid-template-columns: 1fr;
+    }
+}
