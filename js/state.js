@@ -1,13 +1,13 @@
 // ====== 状態管理 ======
 
-// アプリケーション状態
+// アプリケーション状態（新構造）
 let state = {
-    sections: [],
-    nextSectionId: 1,
-    nextQuestionId: 1,
-    nextSubQuestionId: 1,
+    paragraphs: [],
+    nextParagraphId: 1,
+    nextAnswerFieldId: 1,
     maxScore: 100,
-    verticalMode: false
+    verticalMode: false,
+    rootLabelFormat: 'boxed'  // トップレベル段落の番号形式
 };
 
 // DOM要素の取得
@@ -20,34 +20,27 @@ const elements = {
     testSubtitle: document.getElementById('testSubtitle'),
     maxScore: document.getElementById('maxScore'),
     verticalMode: document.getElementById('verticalMode'),
-    sectionsContainer: document.getElementById('sectionsContainer'),
+    rootLabelFormat: document.getElementById('rootLabelFormat'),
+    paragraphsContainer: document.getElementById('paragraphsContainer'),
     previewContent: document.getElementById('previewContent'),
 
-    // 大問モーダル
-    sectionModal: document.getElementById('sectionModal'),
-    sectionForm: document.getElementById('sectionForm'),
-    sectionModalTitle: document.getElementById('sectionModalTitle'),
-    sectionId: document.getElementById('sectionId'),
-    sectionText: document.getElementById('sectionText'),
-    showQuestionLabel: document.getElementById('showQuestionLabel'),
+    // 段落モーダル
+    paragraphModal: document.getElementById('paragraphModal'),
+    paragraphForm: document.getElementById('paragraphForm'),
+    paragraphModalTitle: document.getElementById('paragraphModalTitle'),
+    paragraphId: document.getElementById('paragraphId'),
+    paragraphText: document.getElementById('paragraphText'),
+    labelFormat: document.getElementById('labelFormat'),
+    startNumber: document.getElementById('startNumber'),
+    showInnerLabel: document.getElementById('showInnerLabel'),
 
-    // 問モーダル
-    questionModal: document.getElementById('questionModal'),
-    questionForm: document.getElementById('questionForm'),
-    questionModalTitle: document.getElementById('questionModalTitle'),
-    questionSectionId: document.getElementById('questionSectionId'),
-    questionId: document.getElementById('questionId'),
-    questionText: document.getElementById('questionText'),
-
-    // 小問モーダル
-    subQuestionModal: document.getElementById('subQuestionModal'),
-    subQuestionForm: document.getElementById('subQuestionForm'),
-    subQuestionModalTitle: document.getElementById('subQuestionModalTitle'),
-    subQuestionSectionId: document.getElementById('subQuestionSectionId'),
-    subQuestionQuestionId: document.getElementById('subQuestionQuestionId'),
-    subQuestionId: document.getElementById('subQuestionId'),
-    subQuestionType: document.getElementById('subQuestionType'),
-    subQuestionText: document.getElementById('subQuestionText'),
+    // 回答欄モーダル
+    answerFieldModal: document.getElementById('answerFieldModal'),
+    answerFieldForm: document.getElementById('answerFieldForm'),
+    answerFieldModalTitle: document.getElementById('answerFieldModalTitle'),
+    answerFieldParagraphId: document.getElementById('answerFieldParagraphId'),
+    answerFieldId: document.getElementById('answerFieldId'),
+    answerFieldType: document.getElementById('answerFieldType'),
     textOptions: document.getElementById('textOptions'),
     textWidth: document.getElementById('textWidth'),
     textRows: document.getElementById('textRows'),
@@ -57,66 +50,124 @@ const elements = {
     gridSuffixText: document.getElementById('gridSuffixText'),
     answerCountOptions: document.getElementById('answerCountOptions'),
     answerCount: document.getElementById('answerCount'),
-    multipleOptions: document.getElementById('multipleOptions'),
     numberOptions: document.getElementById('numberOptions'),
     numberUnit: document.getElementById('numberUnit'),
     numberUnitCustom: document.getElementById('numberUnitCustom'),
     ratioCountOption: document.getElementById('ratioCountOption'),
     ratioCount: document.getElementById('ratioCount'),
 
-    // タイプ選択モーダル
-    typeSelectModal: document.getElementById('typeSelectModal'),
-    typeSelectSectionId: document.getElementById('typeSelectSectionId'),
-    typeSelectQuestionId: document.getElementById('typeSelectQuestionId'),
-
-    // 子回答欄モーダル
-    subItemModal: document.getElementById('subItemModal'),
-    subItemForm: document.getElementById('subItemForm'),
-    subItemModalTitle: document.getElementById('subItemModalTitle'),
-    subItemSectionId: document.getElementById('subItemSectionId'),
-    subItemQuestionId: document.getElementById('subItemQuestionId'),
-    subItemParentId: document.getElementById('subItemParentId'),
-    subItemId: document.getElementById('subItemId'),
-    subItemType: document.getElementById('subItemType'),
-    subItemTextOptions: document.getElementById('subItemTextOptions'),
-    subItemTextWidth: document.getElementById('subItemTextWidth'),
-    subItemTextRows: document.getElementById('subItemTextRows'),
-    subItemSuffixText: document.getElementById('subItemSuffixText'),
-    subItemGridOptions: document.getElementById('subItemGridOptions'),
-    subItemGridChars: document.getElementById('subItemGridChars'),
-    subItemGridSuffixText: document.getElementById('subItemGridSuffixText'),
-    subItemAnswerCountOptions: document.getElementById('subItemAnswerCountOptions'),
-    subItemAnswerCount: document.getElementById('subItemAnswerCount'),
-    subItemNumberOptions: document.getElementById('subItemNumberOptions'),
-    subItemUnit: document.getElementById('subItemUnit'),
-    subItemUnitCustom: document.getElementById('subItemUnitCustom'),
-    subItemRatioCountOption: document.getElementById('subItemRatioCountOption'),
-    subItemRatioCount: document.getElementById('subItemRatioCount'),
-
     // その他
-    addSectionBtn: document.getElementById('addSectionBtn'),
+    addParagraphBtn: document.getElementById('addParagraphBtn'),
     saveBtn: document.getElementById('saveBtn'),
     loadBtn: document.getElementById('loadBtn'),
     fileInput: document.getElementById('fileInput'),
     printBtn: document.getElementById('printBtn')
 };
 
+// 旧形式から新形式へのマイグレーション
+function migrateFromOldFormat(data) {
+    if (data.paragraphs) {
+        // 既に新形式の場合
+        return data;
+    }
+
+    // 旧形式（sections）から新形式（paragraphs）へ変換
+    const paragraphs = [];
+    let nextAnswerFieldId = data.nextSubQuestionId || 1;
+
+    if (data.sections && Array.isArray(data.sections)) {
+        data.sections.forEach((section, sIdx) => {
+            const paragraph = {
+                id: section.id || (sIdx + 1),
+                labelFormat: 'boxed', // 旧大問は四角囲み
+                startNumber: 1,
+                showInnerLabel: section.showQuestionLabel !== false,
+                innerLabelFormat: 'circled',
+                text: section.text || '',
+                answerFields: []
+            };
+
+            // 全ての問から回答欄を収集
+            if (section.questions && Array.isArray(section.questions)) {
+                section.questions.forEach(question => {
+                    if (question.subQuestions && Array.isArray(question.subQuestions)) {
+                        question.subQuestions.forEach(subQ => {
+                            // multipleタイプの場合は子回答欄を展開
+                            if (subQ.type === 'multiple' && subQ.subItems && subQ.subItems.length > 0) {
+                                subQ.subItems.forEach(si => {
+                                    const field = {
+                                        id: si.id || nextAnswerFieldId++,
+                                        type: si.type || 'symbol'
+                                    };
+                                    // タイプ別プロパティをコピー
+                                    if (si.textWidth) field.textWidth = si.textWidth;
+                                    if (si.textRows) field.textRows = si.textRows;
+                                    if (si.suffixText) field.suffixText = si.suffixText;
+                                    if (si.gridChars) field.gridChars = si.gridChars;
+                                    if (si.answerCount) field.answerCount = si.answerCount;
+                                    if (si.numberFormat) field.numberFormat = si.numberFormat;
+                                    if (si.unit) field.unit = si.unit;
+                                    if (si.ratioCount) field.ratioCount = si.ratioCount;
+                                    paragraph.answerFields.push(field);
+                                });
+                            } else {
+                                // 通常の回答欄
+                                const field = {
+                                    id: subQ.id || nextAnswerFieldId++,
+                                    type: subQ.type || 'symbol'
+                                };
+                                // タイプ別プロパティをコピー
+                                if (subQ.textWidth) field.textWidth = subQ.textWidth;
+                                if (subQ.textRows) field.textRows = subQ.textRows;
+                                if (subQ.suffixText) field.suffixText = subQ.suffixText;
+                                if (subQ.gridChars) field.gridChars = subQ.gridChars;
+                                if (subQ.answerCount) field.answerCount = subQ.answerCount;
+                                if (subQ.numberFormat) field.numberFormat = subQ.numberFormat;
+                                if (subQ.unit) field.unit = subQ.unit;
+                                if (subQ.ratioCount) field.ratioCount = subQ.ratioCount;
+                                paragraph.answerFields.push(field);
+                            }
+                        });
+                    }
+                });
+            }
+
+            paragraphs.push(paragraph);
+        });
+    }
+
+    return {
+        title: data.title,
+        subtitle: data.subtitle,
+        maxScore: data.maxScore || 100,
+        verticalMode: data.verticalMode || false,
+        paragraphs: paragraphs,
+        nextParagraphId: (data.nextSectionId || paragraphs.length) + 1,
+        nextAnswerFieldId: nextAnswerFieldId
+    };
+}
+
 // ローカルストレージから復元
 function loadFromStorage() {
     try {
         const saved = localStorage.getItem('testFormCreator');
         if (saved) {
-            const data = JSON.parse(saved);
-            state.sections = data.sections || [];
-            state.nextSectionId = data.nextSectionId || 1;
-            state.nextQuestionId = data.nextQuestionId || 1;
-            state.nextSubQuestionId = data.nextSubQuestionId || 1;
+            let data = JSON.parse(saved);
+
+            // 旧形式の場合はマイグレーション
+            data = migrateFromOldFormat(data);
+
+            state.paragraphs = data.paragraphs || [];
+            state.nextParagraphId = data.nextParagraphId || 1;
+            state.nextAnswerFieldId = data.nextAnswerFieldId || 1;
             state.maxScore = data.maxScore || 100;
             state.verticalMode = data.verticalMode || false;
+            state.rootLabelFormat = data.rootLabelFormat || 'boxed';
             elements.testTitle.value = data.title || 'テスト';
             elements.testSubtitle.value = data.subtitle || '';
             elements.maxScore.value = state.maxScore;
             elements.verticalMode.checked = state.verticalMode;
+            elements.rootLabelFormat.value = state.rootLabelFormat;
         }
     } catch (e) {
         console.error('Failed to load from storage:', e);
@@ -131,13 +182,49 @@ function saveToStorage() {
             subtitle: elements.testSubtitle.value,
             maxScore: parseInt(elements.maxScore.value) || 100,
             verticalMode: elements.verticalMode.checked,
-            sections: state.sections,
-            nextSectionId: state.nextSectionId,
-            nextQuestionId: state.nextQuestionId,
-            nextSubQuestionId: state.nextSubQuestionId
+            rootLabelFormat: elements.rootLabelFormat.value || 'boxed',
+            paragraphs: state.paragraphs,
+            nextParagraphId: state.nextParagraphId,
+            nextAnswerFieldId: state.nextAnswerFieldId
         };
         localStorage.setItem('testFormCreator', JSON.stringify(data));
     } catch (e) {
         console.error('Failed to save to storage:', e);
     }
+}
+
+// 段落をIDで検索（再帰的）
+function findParagraphById(id, paragraphs = state.paragraphs) {
+    for (const p of paragraphs) {
+        if (p.id === id) return p;
+        if (p.children && p.children.length > 0) {
+            const found = findParagraphById(id, p.children);
+            if (found) return found;
+        }
+    }
+    return null;
+}
+
+// 段落の親を取得
+function findParentParagraph(id, paragraphs = state.paragraphs, parent = null) {
+    for (const p of paragraphs) {
+        if (p.id === id) return parent;
+        if (p.children && p.children.length > 0) {
+            const found = findParentParagraph(id, p.children, p);
+            if (found !== undefined) return found;
+        }
+    }
+    return undefined;
+}
+
+// 段落が属する配列を取得
+function findParagraphArray(id, paragraphs = state.paragraphs) {
+    for (let i = 0; i < paragraphs.length; i++) {
+        if (paragraphs[i].id === id) return paragraphs;
+        if (paragraphs[i].children && paragraphs[i].children.length > 0) {
+            const found = findParagraphArray(id, paragraphs[i].children);
+            if (found) return found;
+        }
+    }
+    return null;
 }

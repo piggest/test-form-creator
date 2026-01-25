@@ -6,21 +6,22 @@ function createNew() {
     }
 
     // 状態をリセット
-    state.sections = [];
-    state.nextSectionId = 1;
-    state.nextQuestionId = 1;
-    state.nextSubQuestionId = 1;
+    state.paragraphs = [];
+    state.nextParagraphId = 1;
+    state.nextAnswerFieldId = 1;
     state.maxScore = 100;
     state.verticalMode = false;
+    state.rootLabelFormat = 'boxed';
 
     // フォームをリセット
     elements.testTitle.value = 'テスト';
     elements.testSubtitle.value = '';
     elements.maxScore.value = 100;
     elements.verticalMode.checked = false;
+    elements.rootLabelFormat.value = 'boxed';
 
     // 再描画と保存
-    renderSections();
+    renderParagraphs();
     saveToStorage();
 }
 
@@ -55,14 +56,15 @@ function saveToPdf() {
 
 function saveToJson() {
     const data = {
+        version: 2, // 新形式を示すバージョン番号
         title: elements.testTitle.value,
         subtitle: elements.testSubtitle.value,
         maxScore: parseInt(elements.maxScore.value) || 100,
         verticalMode: elements.verticalMode.checked,
-        sections: state.sections,
-        nextSectionId: state.nextSectionId,
-        nextQuestionId: state.nextQuestionId,
-        nextSubQuestionId: state.nextSubQuestionId
+        rootLabelFormat: state.rootLabelFormat || 'boxed',
+        paragraphs: state.paragraphs,
+        nextParagraphId: state.nextParagraphId,
+        nextAnswerFieldId: state.nextAnswerFieldId
     };
 
     const json = JSON.stringify(data, null, 2);
@@ -84,20 +86,24 @@ function loadFromJson(e) {
     const reader = new FileReader();
     reader.onload = (event) => {
         try {
-            const data = JSON.parse(event.target.result);
+            let data = JSON.parse(event.target.result);
+
+            // 旧形式の場合はマイグレーション
+            data = migrateFromOldFormat(data);
 
             elements.testTitle.value = data.title || '';
             elements.testSubtitle.value = data.subtitle || '';
             elements.maxScore.value = data.maxScore || 100;
             elements.verticalMode.checked = data.verticalMode || false;
-            state.sections = data.sections || [];
-            state.nextSectionId = data.nextSectionId || 1;
-            state.nextQuestionId = data.nextQuestionId || 1;
-            state.nextSubQuestionId = data.nextSubQuestionId || 1;
+            elements.rootLabelFormat.value = data.rootLabelFormat || 'boxed';
+            state.paragraphs = data.paragraphs || [];
+            state.nextParagraphId = data.nextParagraphId || 1;
+            state.nextAnswerFieldId = data.nextAnswerFieldId || 1;
             state.maxScore = data.maxScore || 100;
             state.verticalMode = data.verticalMode || false;
+            state.rootLabelFormat = data.rootLabelFormat || 'boxed';
 
-            renderSections();
+            renderParagraphs();
             saveToStorage();
             alert('読み込みが完了しました');
         } catch (err) {

@@ -1,97 +1,96 @@
 // ====== 描画 ======
 
-function renderSections() {
-    if (state.sections.length === 0) {
-        elements.sectionsContainer.innerHTML = '<p class="empty-message">大問がまだありません。上のボタンから追加してください。</p>';
+function renderParagraphs() {
+    if (state.paragraphs.length === 0) {
+        elements.paragraphsContainer.innerHTML = '<p class="empty-message">段落がまだありません。上のボタンから追加してください。</p>';
         return;
     }
 
-    elements.sectionsContainer.innerHTML = state.sections.map((section, sIndex) => {
-        const questionsHtml = section.questions.map((question, qIndex) => {
-            const subQuestionsHtml = question.subQuestions.map((subQ, sqIndex) => {
-                // 複数回答欄の場合、子回答欄を表示
-                let subItemsHtml = '';
-                if (subQ.type === 'multiple') {
-                    const subItemsList = (subQ.subItems || []).map((si, siIndex) => {
-                        const typeLabel = getSubItemTypeLabel(si.type);
-                        const unitLabel = si.unit ? ` (${si.unit})` : '';
-                        return `
-                            <div class="sub-item-row">
-                                <span class="sub-item-label">${getCircledNumber(siIndex + 1)}</span>
-                                <span class="sub-item-type">${typeLabel}${unitLabel}</span>
-                                <div class="sub-item-actions">
-                                    <button class="sub-item-edit-btn" onclick="editSubItem(${section.id}, ${question.id}, ${subQ.id}, ${si.id})">編集</button>
-                                    <button class="sub-item-delete-btn" onclick="deleteSubItem(${section.id}, ${question.id}, ${subQ.id}, ${si.id})">削除</button>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
+    // トップレベル段落はrootLabelFormatを使用
+    const rootFormat = state.rootLabelFormat || 'boxed';
+    let html = '';
+    state.paragraphs.forEach((paragraph, pIndex) => {
+        const result = renderParagraphCard(paragraph, pIndex, 0, rootFormat);
+        html += result.html;
+    });
+    elements.paragraphsContainer.innerHTML = html;
+}
 
-                    subItemsHtml = `
-                        <div class="sub-items-container">
-                            <div class="sub-items-header">
-                                <span class="sub-items-title">子回答欄</span>
-                                <button class="add-sub-item-btn" onclick="addSubItem(${section.id}, ${question.id}, ${subQ.id})">＋ 追加</button>
-                            </div>
-                            ${subItemsList || '<div style="color: #999; font-size: 0.85rem;">子回答欄がありません</div>'}
-                        </div>
-                    `;
-                }
+// 段落カードを再帰的にレンダリング
+// parentLabelFormat: この段落自身の番号形式（親から継承）
+// startNumber: この段落の開始番号
+// 戻り値: { html, nextNumber }
+function renderParagraphCard(paragraph, index, depth, parentLabelFormat, startNumber = null) {
+    const depthClass = depth > 0 ? ` section-card-child depth-${Math.min(depth, 3)}` : '';
+    // startNumberが指定されていればそれを使用、なければindex + 1
+    const paragraphNum = startNumber !== null ? startNumber : (index + 1);
+    let currentNumber = paragraphNum + 1; // 次の番号（子段落用）
+    // この段落の子供用の番号形式
+    const childLabelFormat = paragraph.labelFormat || 'parenthesis';
 
-                return `
-                    <div class="subquestion-item">
-                        <div class="subq-content">
-                            <span class="subq-label">(${sqIndex + 1})</span>
-                            ${subQ.text ? escapeHtml(subQ.text) : ''}
-                            <div class="subq-preview">${renderMiniPreview(subQ)}</div>
-                            ${subItemsHtml}
-                        </div>
-                        <div class="subq-actions">
-                            <button class="edit-btn" onclick="editSubQuestion(${section.id}, ${question.id}, ${subQ.id})">編集</button>
-                            <button class="delete-btn" onclick="deleteSubQuestion(${section.id}, ${question.id}, ${subQ.id})">削除</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            return `
-                <div class="question-card">
-                    <div class="question-header">
-                        <span class="question-title">問${qIndex + 1}</span>
-                        <div class="question-actions">
-                            <button class="edit-btn" onclick="editQuestion(${section.id}, ${question.id})">編集</button>
-                            <button class="delete-btn" onclick="deleteQuestion(${section.id}, ${question.id})">削除</button>
-                        </div>
-                    </div>
-                    <div class="question-body">
-                        ${question.text ? `<div class="question-text">${escapeHtml(question.text)}</div>` : ''}
-                        <button class="add-subquestion-btn" onclick="addSubQuestion(${section.id}, ${question.id})">＋ 回答欄を追加</button>
-                        ${subQuestionsHtml}
-                    </div>
-                </div>
-            `;
-        }).join('');
+    // 回答欄の内部ラベル形式はこの段落のlabelFormatを使用（1から開始）
+    const fieldsHtml = paragraph.answerFields.map((field, fIndex) => {
+        const typeLabel = getAnswerFieldTypeLabel(field.type);
+        const unitLabel = field.unit ? ` (${field.unit})` : '';
+        const innerNum = paragraph.showInnerLabel ? formatNumberEdit(fIndex + 1, childLabelFormat) : '';
 
         return `
-            <div class="section-card">
-                <div class="section-header">
-                    <div class="section-title">
-                        <span class="section-number">${sIndex + 1}</span>
-                        <span>大問${sIndex + 1}</span>
-                    </div>
-                    <div class="section-actions">
-                        <button class="edit-btn" onclick="editSection(${section.id})">編集</button>
-                        <button class="delete-btn" onclick="deleteSection(${section.id})">削除</button>
-                    </div>
+            <div class="field-item">
+                <div class="field-content">
+                    <span class="field-label">${innerNum}</span>
+                    <span class="field-type">${typeLabel}${unitLabel}</span>
+                    <div class="field-preview">${renderMiniPreview(field)}</div>
                 </div>
-                <div class="section-body">
-                    ${section.text ? `<div class="section-text">${escapeHtml(section.text)}</div>` : ''}
-                    <button class="add-question-btn" onclick="addQuestion(${section.id})">＋ 問を追加</button>
-                    ${questionsHtml}
+                <div class="field-actions">
+                    <button class="move-btn" onclick="moveAnswerFieldUp(${paragraph.id}, ${field.id})" title="上へ">↑</button>
+                    <button class="move-btn" onclick="moveAnswerFieldDown(${paragraph.id}, ${field.id})" title="下へ">↓</button>
+                    <button class="edit-btn" onclick="editAnswerField(${paragraph.id}, ${field.id})">編集</button>
+                    <button class="delete-btn" onclick="deleteAnswerField(${paragraph.id}, ${field.id})">削除</button>
                 </div>
             </div>
         `;
     }).join('');
+
+    // 子段落をレンダリング（この段落のlabelFormatを子に渡す、回答欄の続きから連番）
+    let childrenHtml = '';
+    if (paragraph.children && paragraph.children.length > 0) {
+        // 子段落は回答欄の続きの番号から開始
+        let childNumber = paragraph.answerFields.length + 1;
+        paragraph.children.forEach((child, cIndex) => {
+            const result = renderParagraphCard(child, cIndex, depth + 1, childLabelFormat, childNumber);
+            childrenHtml += result.html;
+            childNumber = result.nextNumber;
+        });
+        currentNumber = childNumber;
+    }
+
+    const html = `
+        <div class="section-card${depthClass}">
+            <div class="section-header">
+                <div class="section-title">
+                    <span class="section-number">${formatNumberEdit(paragraphNum, parentLabelFormat)}</span>
+                </div>
+                <div class="section-actions">
+                    <button class="move-btn" onclick="moveParagraphUp(${paragraph.id})" title="上へ">↑</button>
+                    <button class="move-btn" onclick="moveParagraphDown(${paragraph.id})" title="下へ">↓</button>
+                    <button class="edit-btn" onclick="editParagraph(${paragraph.id})">編集</button>
+                    <button class="delete-btn" onclick="deleteParagraph(${paragraph.id})">削除</button>
+                </div>
+            </div>
+            <div class="section-body">
+                ${paragraph.text ? `<div class="section-text">${escapeHtml(paragraph.text)}</div>` : ''}
+                <div class="section-buttons">
+                    <button class="add-subquestion-btn" onclick="addAnswerField(${paragraph.id})">＋ 回答欄を追加</button>
+                    <button class="add-child-btn" onclick="addParagraph(${paragraph.id})">＋ 子段落を追加</button>
+                </div>
+                <div class="fields-list">
+                    ${fieldsHtml || '<div style="color: #999; font-size: 0.85rem; padding: 10px;">回答欄がありません</div>'}
+                </div>
+                ${childrenHtml ? `<div class="children-list">${childrenHtml}</div>` : ''}
+            </div>
+        </div>
+    `;
+    return { html, nextNumber: currentNumber };
 }
 
 // 国語モード用スケール最適化（1.0以上のみ）
@@ -286,7 +285,7 @@ function renderPreviewContent() {
         </div>
     `;
 
-    if (state.sections.length === 0) {
+    if (state.paragraphs.length === 0) {
         elements.previewContent.innerHTML = headerHtml + '<p style="text-align: center; color: #999;">問題がありません</p>';
         return;
     }
@@ -299,34 +298,11 @@ function renderPreviewContent() {
         let html = headerHtml;
         html += '<div class="preview-questions-flow">';
 
-        state.sections.forEach((section, sIndex) => {
-            const hasText = section.text && section.text.trim();
-
-            html += `<div class="preview-section">`;
-            html += `<div class="preview-section-left"><span class="preview-section-number">${sIndex + 1}</span></div>`;
-            html += `<div class="preview-section-right">`;
-
-            if (hasText) {
-                html += `<div class="preview-section-text">${escapeHtml(section.text)}</div>`;
-            }
-
-            // 全小問を集めてグリッド表示
-            const allSubQuestions = [];
-            section.questions.forEach((question) => {
-                question.subQuestions.forEach((subQ) => {
-                    allSubQuestions.push(subQ);
-                });
-            });
-
-            if (allSubQuestions.length > 0) {
-                html += `<div class="preview-answer-grid">`;
-                allSubQuestions.forEach((subQ, idx) => {
-                    html += renderGridCell(subQ, idx + 1, false);
-                });
-                html += `</div>`;
-            }
-
-            html += `</div></div>`;
+        // トップレベル段落はrootLabelFormatを使用
+        const rootFormat = state.rootLabelFormat || 'boxed';
+        state.paragraphs.forEach((paragraph, pIndex) => {
+            const result = renderPreviewSection(paragraph, pIndex, 0, rootFormat);
+            html += result.html;
         });
 
         html += '</div>';
@@ -334,72 +310,99 @@ function renderPreviewContent() {
     }
 }
 
-// 国語モード：ページ分割を考慮してレンダリング
-function renderQuestionContent(question, qIndex, showLabel) {
-    const hasQText = question.text && question.text.trim();
+// プレビュー用段落セクションを再帰的にレンダリング
+// parentLabelFormat: この段落自身の番号形式（親から継承）
+// startNumber: この段落の開始番号
+// 戻り値: { html, nextNumber }
+function renderPreviewSection(paragraph, index, depth, parentLabelFormat, startNumber = null) {
+    const hasText = paragraph.text && paragraph.text.trim();
+    // startNumberが指定されていればそれを使用、なければindex + 1
+    const paragraphNum = startNumber !== null ? startNumber : (index + 1);
+    let currentNumber = paragraphNum + 1; // 次の番号（回答欄・子段落共通）
+    const depthClass = depth > 0 ? ` preview-section-child depth-${Math.min(depth, 3)}` : '';
+    // この段落の子供用の番号形式
+    const childLabelFormat = paragraph.labelFormat || 'parenthesis';
 
-    let html = '<div class="preview-question-wrapper">';
+    let html = `<div class="preview-section${depthClass}">`;
 
-    // 問ラベル
-    if (showLabel) {
-        html += `<span class="preview-question-label">問${qIndex + 1}</span>`;
-    }
+    // 子段落（depth > 0）でテキストがなく回答欄がある場合のみ、段落番号を回答欄グリッドに含める
+    if (depth > 0 && !hasText && paragraph.answerFields.length > 0) {
+        html += `<div class="preview-answer-grid">`;
+        // 段落番号セル
+        html += `<div class="grid-cell-item cell-number-cell"><span class="cell-number">${formatNumber(paragraphNum, parentLabelFormat)}</span></div>`;
+        // 回答欄セル
+        paragraph.answerFields.forEach((field, idx) => {
+            const innerNum = paragraph.showInnerLabel ? (idx + 1) : null;
+            html += renderGridCell(field, innerNum, false, childLabelFormat);
+        });
+        html += `</div>`;
 
-    html += '<div class="preview-question-content">';
-
-    // 問テキスト
-    if (hasQText) {
-        html += `<div class="preview-question-text">${escapeHtml(question.text)}</div>`;
-    }
-
-    // 小問（回答欄）
-    html += '<div class="preview-question-answers">';
-    question.subQuestions.forEach((subQ, sqIndex) => {
-        const hasSubQText = subQ.text && subQ.text.trim();
-
-        if (hasSubQText) {
-            // テキストがある場合は縦並び
-            html += `
-                <div class="preview-subquestion">
-                    <span class="preview-subquestion-label">(${sqIndex + 1})</span>
-                    <div class="preview-subquestion-content">
-                        <div class="preview-subquestion-text">${escapeHtml(subQ.text)}</div>
-                        <div class="preview-answer-area">
-                            ${renderAnswerArea(subQ)}
-                        </div>
-                    </div>
-                </div>
-            `;
-        } else {
-            // テキストなしはインライン
-            html += `
-                <div class="preview-subquestion-inline">
-                    <span class="preview-subquestion-label">(${sqIndex + 1})</span>
-                    <div class="preview-answer-area">
-                        ${renderAnswerArea(subQ)}
-                    </div>
-                </div>
-            `;
+        // 子段落を再帰的にレンダリング
+        if (paragraph.children && paragraph.children.length > 0) {
+            html += `<div class="preview-children">`;
+            let childNumber = paragraph.answerFields.length + 1;
+            paragraph.children.forEach((child, cIndex) => {
+                const result = renderPreviewSection(child, cIndex, depth + 1, childLabelFormat, childNumber);
+                html += result.html;
+                childNumber = result.nextNumber;
+            });
+            currentNumber = childNumber;
+            html += `</div>`;
         }
-    });
-    html += '</div>';
+    } else {
+        // それ以外は従来通り左に番号
+        html += `<div class="preview-section-left">${formatNumber(paragraphNum, parentLabelFormat)}</div>`;
+        html += `<div class="preview-section-right">`;
 
-    html += '</div></div>';
+        if (hasText) {
+            html += `<div class="preview-section-text">${escapeHtml(paragraph.text)}</div>`;
+        }
 
-    return html;
+        // 回答欄をグリッド表示
+        if (paragraph.answerFields.length > 0) {
+            html += `<div class="preview-answer-grid">`;
+            paragraph.answerFields.forEach((field, idx) => {
+                const innerNum = paragraph.showInnerLabel ? (idx + 1) : null;
+                html += renderGridCell(field, innerNum, false, childLabelFormat);
+            });
+            html += `</div>`;
+        }
+
+        // 子段落を再帰的にレンダリング（preview-section-rightの中に含める）
+        if (paragraph.children && paragraph.children.length > 0) {
+            html += `<div class="preview-children">`;
+            let childNumber = paragraph.answerFields.length + 1;
+            paragraph.children.forEach((child, cIndex) => {
+                const result = renderPreviewSection(child, cIndex, depth + 1, childLabelFormat, childNumber);
+                html += result.html;
+                childNumber = result.nextNumber;
+            });
+            currentNumber = childNumber;
+            html += `</div>`;
+        }
+
+        html += `</div>`;
+    }
+
+    html += `</div>`;
+    return { html, nextNumber: currentNumber };
 }
 
-function renderGridCell(subQ, num, isVertical = false) {
-    const unit = subQ.unit || '';
-    const type = subQ.type;
+function renderGridCell(field, num, isVertical = false, innerLabelFormat = 'circled') {
+    const unit = field.unit || '';
+    const type = field.type;
 
     // 国語モード（縦書き）の場合
     if (isVertical) {
-        return renderVerticalGridCell(subQ, num);
+        return renderVerticalGridCell(field, num, innerLabelFormat);
     }
 
-    // 番号セル
-    const numCell = `<div class="grid-cell-item cell-number-cell"><span class="cell-number">(${num})</span></div>`;
+    // 番号セル（formatNumber関数を使用して全形式に対応）
+    let numCell = '';
+    if (num !== null) {
+        const numLabel = formatNumber(num, innerLabelFormat);
+        numCell = `<div class="grid-cell-item cell-number-cell"><span class="cell-number">${numLabel}</span></div>`;
+    }
 
     // セルの幅クラスを決定
     let widthClass = 'cell-normal';
@@ -407,33 +410,8 @@ function renderGridCell(subQ, num, isVertical = false) {
         widthClass = 'cell-wide';
     }
 
-    // 複数回答欄の場合 - 1つのセル内にまとめて表示
-    if (type === 'multiple') {
-        const subItems = subQ.subItems || [];
-
-        if (subItems.length === 0) {
-            return `${numCell}<div class="grid-cell-item cell-normal"></div>`;
-        }
-
-        let innerHtml = '<div class="cell-multiple-inner">';
-        subItems.forEach((si, index) => {
-            const label = getCircledNumber(index + 1);
-            let boxClass = 'cell-multi-symbol';
-            if (si.type === 'text') boxClass = 'cell-multi-word';
-
-            let unitHtml = si.unit ? `<span class="cell-multi-unit">${escapeHtml(si.unit)}</span>` : '';
-            innerHtml += `<div class="cell-multi-item"><span class="cell-multi-label">${label}</span><div class="${boxClass}"></div>${unitHtml}</div>`;
-        });
-        innerHtml += '</div>';
-
-        return `
-            ${numCell}
-            <div class="grid-cell-item cell-multiple">${innerHtml}</div>
-        `;
-    }
-
     // 時間形式の場合は複数セル（内部罫線なし）
-    if (type === 'number' && subQ.numberFormat === 'time') {
+    if (type === 'number' && field.numberFormat === 'time') {
         return `
             ${numCell}
             <div class="grid-cell-item cell-normal cell-no-right-border">
@@ -446,8 +424,8 @@ function renderGridCell(subQ, num, isVertical = false) {
     }
 
     // 比率形式の場合は複数セル（内部罫線なし）
-    if (type === 'number' && subQ.numberFormat === 'ratio') {
-        const count = subQ.ratioCount || 2;
+    if (type === 'number' && field.numberFormat === 'ratio') {
+        const count = field.ratioCount || 2;
         let cells = numCell;
         for (let i = 0; i < count; i++) {
             const isLast = i === count - 1;
@@ -463,7 +441,7 @@ function renderGridCell(subQ, num, isVertical = false) {
     }
 
     // 後続テキスト（suffixText）
-    const suffixHtml = subQ.suffixText ? `<span class="suffix-text">${escapeHtml(subQ.suffixText)}</span>` : '';
+    const suffixHtml = field.suffixText ? `<span class="suffix-text">${escapeHtml(field.suffixText)}</span>` : '';
 
     return `
         ${numCell}
@@ -475,68 +453,39 @@ function renderGridCell(subQ, num, isVertical = false) {
 }
 
 // セルが短い（積み重ね可能）かどうかを判定
-function isShortCell(subQ) {
-    const type = subQ.type;
+function isShortCell(field) {
+    const type = field.type;
     // 記号、数値は短いセル
     if (type === 'symbol' || type === 'number') {
         return true;
     }
     // 記述式で行数が少ない場合は短いセル扱い
-    if (type === 'text' && subQ.textRows && subQ.textRows <= 2) {
+    if (type === 'text' && field.textRows && field.textRows <= 2) {
         return true;
     }
     // 原稿用紙形式で行数が少ない場合は短いセル扱い
-    if (type === 'grid' && subQ.gridChars && subQ.gridChars <= 10) {
+    if (type === 'grid' && field.gridChars && field.gridChars <= 10) {
         return true;
-    }
-    // 複数回答欄は高さを計算して判定
-    if (type === 'multiple') {
-        const subItems = subQ.subItems || [];
-        if (subItems.length === 0) return true;
-        // 子要素の合計高さを計算
-        const totalHeight = subItems.reduce((sum, si) => {
-            if (si.type === 'grid' && si.gridChars) {
-                return sum + si.gridChars * 36 + 25; // 文字数 × セルサイズ + ラベル
-            }
-            return sum + 55; // 通常の子要素
-        }, 20); // 親ラベル分
-        // 列の高さ制限（550px）の半分以下なら短いセル扱い
-        return totalHeight <= 275;
     }
     return false;
 }
 
 // 連続する短いセルを列にまとめてレンダリング
-function renderStackedCells(cells) {
+function renderStackedCells(cells, innerLabelFormat = 'circled') {
     // 高さに基づいて列を分割
     // 170mm ≈ 643px (at 96dpi), padding-top: 45px, マージンを考慮
     const maxColumnHeight = 550; // px (at scale=1.0) - 確実に収まるように余裕を持たせる
 
     // セルタイプごとの高さ（ラベル含む）
-    function getCellHeight(subQ) {
-        const type = subQ.type;
+    function getCellHeight(field) {
+        const type = field.type;
         if (type === 'text') {
-            const rows = subQ.textRows || 1;
+            const rows = field.textRows || 1;
             return rows * 36 + 13; // 行数 × セルサイズ + ラベル
         }
         if (type === 'number') return 55;         // 数値: 42px + ラベル13px
-        if (type === 'grid' && subQ.gridChars && subQ.gridChars <= 10) {
-            return subQ.gridChars * 36 + 13;  // 文字数 × セルサイズ + ラベル
-        }
-        // 複数回答欄の高さを計算
-        if (type === 'multiple') {
-            const subItems = subQ.subItems || [];
-            if (subItems.length === 0) return 60;
-            const totalHeight = subItems.reduce((sum, si) => {
-                if (si.type === 'grid' && si.gridChars) {
-                    return sum + si.gridChars * 36 + 25; // 原稿用紙: 文字数 × セルサイズ + ラベル
-                }
-                if (si.type === 'text') {
-                    return sum + (si.textRows || 1) * 36 + 25;
-                }
-                return sum + 55; // 記号など
-            }, 13); // 親ラベル分
-            return totalHeight;
+        if (type === 'grid' && field.gridChars && field.gridChars <= 10) {
+            return field.gridChars * 36 + 13;  // 文字数 × セルサイズ + ラベル
         }
         return 49;  // 記号: 36px + ラベル13px（正方形）
     }
@@ -547,10 +496,10 @@ function renderStackedCells(cells) {
     let currentHeight = 0;
 
     cells.forEach((cell) => {
-        const cellHeight = getCellHeight(cell.subQ);
+        const cellHeight = getCellHeight(cell.field);
 
-        // 大問の開始時は新しい列にする
-        if (cell.isFirstInSection && currentColumn.length > 0) {
+        // 段落の開始時は新しい列にする
+        if (cell.isFirstInParagraph && currentColumn.length > 0) {
             columns.push(currentColumn);
             currentColumn = [];
             currentHeight = 0;
@@ -578,60 +527,28 @@ function renderStackedCells(cells) {
         html += `<div class="vertical-stacked-column">`;
 
         // 最初のセルのラベル（固定位置）
-        html += `<div class="stacked-first-label">(${firstCell.sectionIdx})</div>`;
+        const firstLabel = formatNumber(firstCell.innerNum, innerLabelFormat);
+        html += `<div class="stacked-first-label">${firstLabel}</div>`;
 
         // セル群
         html += `<div class="stacked-cells-container">`;
         columnCells.forEach((cell, idx) => {
-            const subQ = cell.subQ;
-            const unit = subQ.unit || '';
-            const type = subQ.type;
+            const field = cell.field;
+            const unit = field.unit || '';
+            const type = field.type;
 
             // 2番目以降のセルには上にラベルを表示
             if (idx > 0) {
+                const laterLabel = formatNumber(cell.innerNum, innerLabelFormat);
                 html += `<div class="stacked-later-item">`;
                 html += `<div class="stacked-later-label">`;
-                html += `<span>(${cell.sectionIdx})</span>`;
+                html += `<span>${laterLabel}</span>`;
                 html += `</div>`;
             }
 
-            // 複数回答欄の場合は特別な処理
-            if (type === 'multiple') {
-                const subItems = subQ.subItems || [];
-                html += `<div class="vertical-multiple-cells stacked${idx === 0 ? ' first-cell' : ''}">`;
-                subItems.forEach((si, siIdx) => {
-                    const label = getCircledNumber(siIdx + 1);
-                    html += `<div class="vertical-multiple-item">`;
-                    html += `<div class="vertical-multiple-item-label">${label}</div>`;
-
-                    if (si.type === 'grid' && si.gridChars) {
-                        // 原稿用紙形式（1行5文字）
-                        const charCount = si.gridChars;
-                        html += `<div class="vertical-grid-paper vertical-multiple-cell">`;
-                        for (let i = 0; i < charCount; i++) {
-                            const showMarker = (i + 1) % 5 === 0 && i < charCount - 1;
-                            html += `<div class="vertical-grid-cell${showMarker ? ' with-marker' : ''}">`;
-                            if (showMarker) {
-                                html += `<span class="vertical-grid-marker">${i + 1}</span>`;
-                            }
-                            html += `</div>`;
-                        }
-                        html += `</div>`;
-                    } else {
-                        // 通常のセル（タイプ別クラス）
-                        const subCellClass = (si.type === 'symbol' || si.type === 'number') ? ' cell-symbol-sub' : '';
-                        html += `<div class="grid-cell-item vertical-multiple-cell${subCellClass}">`;
-                        if (si.unit) {
-                            html += `<span class="cell-unit-bottom">${escapeHtml(si.unit)}</span>`;
-                        }
-                        html += `</div>`;
-                    }
-                    html += `</div>`;
-                });
-                html += `</div>`;
-            } else if (type === 'grid' && subQ.gridChars) {
+            if (type === 'grid' && field.gridChars) {
                 // 原稿用紙形式（1行5文字）
-                const charCount = subQ.gridChars;
+                const charCount = field.gridChars;
                 html += `<div class="stacked-grid-paper${idx === 0 ? ' first-cell' : ''}">`;
                 for (let c = 0; c < charCount; c++) {
                     const showMarker = (c + 1) % 5 === 0 && c < charCount - 1;
@@ -643,8 +560,8 @@ function renderStackedCells(cells) {
                 }
                 html += `</div>`;
                 // 後続テキスト（suffixText）
-                if (subQ.suffixText) {
-                    html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
+                if (field.suffixText) {
+                    html += `<div class="vertical-suffix-text">${escapeHtml(field.suffixText)}</div>`;
                 }
             } else {
                 // 通常のセル（記号、記述式、数値など）
@@ -661,8 +578,8 @@ function renderStackedCells(cells) {
                 }
                 html += `</div>`;
                 // 後続テキスト（suffixText）
-                if (subQ.suffixText) {
-                    html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
+                if (field.suffixText) {
+                    html += `<div class="vertical-suffix-text">${escapeHtml(field.suffixText)}</div>`;
                 }
             }
 
@@ -678,259 +595,141 @@ function renderStackedCells(cells) {
     return html;
 }
 
-// 国語モード用のフラットセルレンダリング（大問番号付き）
-function renderVerticalGridCellFlat(subQ, num, sectionNum, isFirstInSection) {
-    const unit = subQ.unit || '';
-    const type = subQ.type;
+// 国語モード用のフラットセルレンダリング（段落番号付き）
+function renderVerticalGridCellFlat(field, num, paragraphNum, isFirstInParagraph, innerLabelFormat = 'circled') {
+    const unit = field.unit || '';
+    const type = field.type;
 
-    // 大問番号ラベル（最初のセルのみ）
-    const sectionLabel = isFirstInSection ? `<div class="vertical-section-marker">${sectionNum}</div>` : '';
-    const hasMarkerClass = isFirstInSection ? ' has-section-marker' : '';
-
-    // 複数回答欄の場合
-    if (type === 'multiple') {
-        const subItems = subQ.subItems || [];
-
-        if (subItems.length === 0) {
-            let html = `<div class="vertical-cell-group${hasMarkerClass}">`;
-            html += sectionLabel;
-            html += `<div class="vertical-cell-label">(${num})</div>`;
-            html += `<div class="grid-cell-item cell-normal"></div>`;
-            html += `</div>`;
-            return html;
-        }
-
-        // 子回答欄をまとめるコンテナ
-        let html = `<div class="vertical-multiple-container${hasMarkerClass}">`;
-        html += sectionLabel;
-        html += `<div class="vertical-multiple-label">(${num})</div>`;
-        html += `<div class="vertical-multiple-cells">`;
-
-        subItems.forEach((si, index) => {
-            const label = getCircledNumber(index + 1);
-
-            html += `<div class="vertical-multiple-item">`;
-            html += `<div class="vertical-multiple-item-label">${label}</div>`;
-
-            // 原稿用紙形式
-            if (si.type === 'grid' && si.gridChars) {
-                const charCount = si.gridChars;
-                html += `<div class="vertical-grid-paper vertical-multiple-cell">`;
-                for (let i = 0; i < charCount; i++) {
-                    const showMarker = (i + 1) % 5 === 0 && i < charCount - 1;
-                    html += `<div class="vertical-grid-cell${showMarker ? ' with-marker' : ''}">`;
-                    if (showMarker) {
-                        html += `<span class="vertical-grid-marker">${i + 1}</span>`;
-                    }
-                    html += `</div>`;
-                }
-                html += `</div>`;
-            } else {
-                // 通常のセル（タイプ別クラス）
-                const subCellClass = (si.type === 'symbol' || si.type === 'number') ? ' cell-symbol-sub' : '';
-                html += `<div class="grid-cell-item vertical-multiple-cell${subCellClass}">`;
-                if (si.unit) {
-                    html += `<span class="cell-unit-bottom">${escapeHtml(si.unit)}</span>`;
-                }
-                html += `</div>`;
-            }
-
-            html += `</div>`;
-        });
-
-        html += `</div>`;
-        // 後続テキスト（suffixText）
-        if (subQ.suffixText) {
-            html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
-        }
-        html += `</div>`;
-        return html;
-    }
+    // 段落番号ラベル（最初のセルのみ）
+    const paragraphLabel = isFirstInParagraph ? `<div class="vertical-section-marker">${paragraphNum}</div>` : '';
+    const hasMarkerClass = isFirstInParagraph ? ' has-section-marker' : '';
 
     // 原稿用紙形式
-    if (type === 'grid' && subQ.gridChars) {
-        const charCount = subQ.gridChars;
+    if (type === 'grid' && field.gridChars) {
         let html = `<div class="vertical-cell-group${hasMarkerClass}">`;
-        html += sectionLabel;
-        html += `<div class="vertical-cell-label">(${num})</div>`;
-        html += `<div class="vertical-grid-paper">`;
-        for (let i = 0; i < charCount; i++) {
-            const showMarker = (i + 1) % 5 === 0 && i < charCount - 1;
-            html += `<div class="vertical-grid-cell${showMarker ? ' with-marker' : ''}">`;
-            if (showMarker) {
-                html += `<span class="vertical-grid-marker">${i + 1}</span>`;
-            }
-            html += `</div>`;
-        }
-        html += `</div>`;
-        // 後続テキスト（suffixText）
-        if (subQ.suffixText) {
-            html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
+        html += paragraphLabel;
+        const numLabel = num !== null ? formatNumber(num, innerLabelFormat) : '';
+        html += `<div class="vertical-cell-label">${numLabel}</div>`;
+        html += renderVerticalGridPaperHtml(field.gridChars);
+        if (field.suffixText) {
+            html += `<div class="vertical-suffix-text">${escapeHtml(field.suffixText)}</div>`;
         }
         html += `</div>`;
         return html;
     }
 
-    // セルの高さクラスを決定
+    // セルの高さクラスとスタイルを決定
     let heightClass = 'cell-normal';
+    let heightStyle = '';
     if (type === 'symbol') {
         heightClass = 'cell-symbol';
     } else if (type === 'text') {
         heightClass = 'cell-text';
+        // textWidth（文字数）に基づいて高さを計算（1文字 = 36px）
+        const chars = field.textWidth || 3;
+        const height = chars * 36;
+        heightStyle = ` style="min-height: calc(${height}px * var(--scale))"`;
     }
 
     // 縦書き用のセルグループ
     let html = `<div class="vertical-cell-group${hasMarkerClass}">`;
-    html += sectionLabel;
+    html += paragraphLabel;
 
     // 問番号ラベル（上部）
-    html += `<div class="vertical-cell-label">(${num})</div>`;
+    const numLabel = num !== null ? formatNumber(num, innerLabelFormat) : '';
+    html += `<div class="vertical-cell-label">${numLabel}</div>`;
 
     // 回答セル
-    html += `<div class="grid-cell-item ${heightClass}">`;
+    html += `<div class="grid-cell-item ${heightClass}"${heightStyle}>`;
     if (unit) {
         html += `<span class="cell-unit-bottom">${escapeHtml(unit)}</span>`;
     }
     html += `</div>`;
 
     // 後続テキスト（suffixText）
-    if (subQ.suffixText) {
-        html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
+    if (field.suffixText) {
+        html += `<div class="vertical-suffix-text">${escapeHtml(field.suffixText)}</div>`;
     }
 
     html += `</div>`;
     return html;
 }
 
-// 国語モード用のセルレンダリング（従来版 - 互換性のため残す）
-function renderVerticalGridCell(subQ, num) {
-    const unit = subQ.unit || '';
-    const type = subQ.type;
-
-    // 複数回答欄の場合 - 子回答欄をコンテナでまとめて高さを揃える
-    if (type === 'multiple') {
-        const subItems = subQ.subItems || [];
-
-        if (subItems.length === 0) {
-            let html = `<div class="vertical-cell-group">`;
-            html += `<div class="vertical-cell-label">(${num})</div>`;
-            html += `<div class="grid-cell-item cell-normal"></div>`;
-            html += `</div>`;
-            return html;
-        }
-
-        // 子回答欄をまとめるコンテナ
-        let html = `<div class="vertical-multiple-container">`;
-        html += `<div class="vertical-multiple-label">(${num})</div>`;
-        html += `<div class="vertical-multiple-cells">`;
-
-        subItems.forEach((si, index) => {
-            const label = getCircledNumber(index + 1);
-
-            html += `<div class="vertical-multiple-item">`;
-            html += `<div class="vertical-multiple-item-label">${label}</div>`;
-
-            // 原稿用紙形式
-            if (si.type === 'grid' && si.gridChars) {
-                const charCount = si.gridChars;
-                html += `<div class="vertical-grid-paper vertical-multiple-cell">`;
-                for (let i = 0; i < charCount; i++) {
-                    const showMarker = (i + 1) % 5 === 0 && i < charCount - 1;
-                    html += `<div class="vertical-grid-cell${showMarker ? ' with-marker' : ''}">`;
-                    if (showMarker) {
-                        html += `<span class="vertical-grid-marker">${i + 1}</span>`;
-                    }
-                    html += `</div>`;
-                }
-                html += `</div>`;
-            } else {
-                // 通常のセル（タイプ別クラス）
-                const subCellClass = (si.type === 'symbol' || si.type === 'number') ? ' cell-symbol-sub' : '';
-                html += `<div class="grid-cell-item vertical-multiple-cell${subCellClass}">`;
-                if (si.unit) {
-                    html += `<span class="cell-unit-bottom">${escapeHtml(si.unit)}</span>`;
-                }
-                html += `</div>`;
-            }
-
-            html += `</div>`;
-        });
-
-        html += `</div></div>`;
-        return html;
-    }
+// 国語モード用のセルレンダリング
+function renderVerticalGridCell(field, num, innerLabelFormat = 'circled') {
+    const unit = field.unit || '';
+    const type = field.type;
 
     // 原稿用紙形式
-    if (type === 'grid' && subQ.gridChars) {
-        const charCount = subQ.gridChars;
+    if (type === 'grid' && field.gridChars) {
         let html = `<div class="vertical-cell-group">`;
-        html += `<div class="vertical-cell-label">(${num})</div>`;
-        html += `<div class="vertical-grid-paper">`;
-        for (let i = 0; i < charCount; i++) {
-            const showMarker = (i + 1) % 5 === 0 && i < charCount - 1;
-            html += `<div class="vertical-grid-cell${showMarker ? ' with-marker' : ''}">`;
-            if (showMarker) {
-                html += `<span class="vertical-grid-marker">${i + 1}</span>`;
-            }
-            html += `</div>`;
+        const numLabel = num !== null ? formatNumber(num, innerLabelFormat) : '';
+        html += `<div class="vertical-cell-label">${numLabel}</div>`;
+        html += renderVerticalGridPaperHtml(field.gridChars);
+        // 後続テキスト（suffixText）
+        if (field.suffixText) {
+            html += `<div class="vertical-suffix-text">${escapeHtml(field.suffixText)}</div>`;
         }
-        html += `</div></div>`;
+        html += `</div>`;
         return html;
     }
 
-    // セルの高さクラスを決定
+    // セルの高さクラスとスタイルを決定
     let heightClass = 'cell-normal';
+    let heightStyle = '';
     if (type === 'symbol') {
         heightClass = 'cell-symbol';
     } else if (type === 'text') {
         heightClass = 'cell-text';
+        // textWidth（文字数）に基づいて高さを計算（1文字 = 36px）
+        const chars = field.textWidth || 3;
+        const height = chars * 36;
+        heightStyle = ` style="min-height: calc(${height}px * var(--scale))"`;
     }
 
     // 縦書き用のセルグループ
     let html = `<div class="vertical-cell-group">`;
 
     // 問番号ラベル（上部）
-    html += `<div class="vertical-cell-label">(${num})</div>`;
+    const numLabel = num !== null ? formatNumber(num, innerLabelFormat) : '';
+    html += `<div class="vertical-cell-label">${numLabel}</div>`;
 
     // 回答セル
-    html += `<div class="grid-cell-item ${heightClass}">`;
+    html += `<div class="grid-cell-item ${heightClass}"${heightStyle}>`;
     if (unit) {
         html += `<span class="cell-unit-bottom">${escapeHtml(unit)}</span>`;
     }
     html += `</div>`;
 
     // 後続テキスト（suffixText）
-    if (subQ.suffixText) {
-        html += `<div class="vertical-suffix-text">${escapeHtml(subQ.suffixText)}</div>`;
+    if (field.suffixText) {
+        html += `<div class="vertical-suffix-text">${escapeHtml(field.suffixText)}</div>`;
     }
 
     html += `</div>`;
     return html;
 }
 
-function renderAnswerArea(subQ) {
-    switch (subQ.type) {
+function renderAnswerArea(field) {
+    switch (field.type) {
         case 'symbol':
-            return renderAnswerBoxes(subQ.answerCount || 1, 'symbol');
-
-        case 'multiple':
-            return renderMultipleAnswers(subQ);
+            return renderAnswerBoxes(field.answerCount || 1, 'symbol');
 
         case 'number':
-            return renderNumberAnswer(subQ);
+            return renderNumberAnswer(field);
 
         case 'text':
-            const textWidth = subQ.textWidth || 3;
-            const textRows = subQ.textRows || 1;
+            const textWidth = field.textWidth || 3;
+            const textRows = field.textRows || 1;
             return `
                 <div class="preview-textarea" style="width: calc(36px * var(--scale) * ${textWidth}); height: calc(36px * var(--scale) * ${textRows});">
                     ${textRows > 1 ? `<div class="lines">${Array(textRows).fill('<div class="line"></div>').join('')}</div>` : ''}
                 </div>
-                ${renderSuffixText(subQ)}
+                ${renderSuffixText(field)}
             `;
 
         case 'grid':
-            return renderGridPaper(subQ.gridChars || 5) + renderSuffixText(subQ);
+            return renderGridPaper(field.gridChars || 5) + renderSuffixText(field);
 
         default:
             return '';
@@ -968,59 +767,9 @@ function renderAnswerBoxes(count, type) {
     return `<div class="answer-boxes">${boxes.join('')}</div>`;
 }
 
-function renderMultipleAnswers(subQ) {
-    const subItems = subQ.subItems || [];
-
-    if (subItems.length === 0) {
-        return '<div class="multiple-answers"><span style="color: #999;">子回答欄がありません</span></div>';
-    }
-
-    const items = subItems.map((si, index) => {
-        const label = getCircledNumber(index + 1);
-        // 子回答欄を通常の回答欄と同じように描画
-        const boxHtml = renderSubItemAnswerArea(si);
-
-        return `
-            <div class="multiple-answer-item">
-                <span class="multiple-label">${label}</span>
-                <div class="multiple-answer-content">${boxHtml}</div>
-            </div>
-        `;
-    });
-
-    return `<div class="multiple-answers">${items.join('')}</div>`;
-}
-
-// 子回答欄の回答エリアを描画
-function renderSubItemAnswerArea(si) {
-    switch (si.type) {
-        case 'symbol':
-            return renderAnswerBoxes(si.answerCount || 1, 'symbol');
-
-        case 'number':
-            return renderNumberAnswer(si);
-
-        case 'text':
-            const textWidth = si.textWidth || 3;
-            const textRows = si.textRows || 1;
-            return `
-                <div class="preview-textarea" style="width: calc(36px * var(--scale) * ${textWidth}); height: calc(36px * var(--scale) * ${textRows});">
-                    ${textRows > 1 ? `<div class="lines">${Array(textRows).fill('<div class="line"></div>').join('')}</div>` : ''}
-                </div>
-                ${renderSuffixText(si)}
-            `;
-
-        case 'grid':
-            return renderGridPaper(si.gridChars || 5) + renderSuffixText(si);
-
-        default:
-            return '';
-    }
-}
-
-function renderNumberAnswer(subQ) {
-    const format = subQ.numberFormat || 'simple';
-    const unit = subQ.unit ? escapeHtml(subQ.unit) : '';
+function renderNumberAnswer(field) {
+    const format = field.numberFormat || 'simple';
+    const unit = field.unit ? escapeHtml(field.unit) : '';
 
     switch (format) {
         case 'simple':
@@ -1032,7 +781,7 @@ function renderNumberAnswer(subQ) {
             `;
 
         case 'ratio':
-            const count = subQ.ratioCount || 2;
+            const count = field.ratioCount || 2;
             const boxes = [];
             for (let i = 0; i < count; i++) {
                 if (i > 0) boxes.push('<span class="number-separator">：</span>');
@@ -1061,79 +810,47 @@ function renderNumberAnswer(subQ) {
     }
 }
 
-function renderSuffixText(subQ) {
-    if (!subQ.suffixText) return '';
-    return `<span class="suffix-text">${escapeHtml(subQ.suffixText)}</span>`;
-}
-
-function renderCharLimitInfo(subQ) {
-    const parts = [];
-    if (subQ.minChars) parts.push(`${subQ.minChars}文字以上`);
-    if (subQ.maxChars) parts.push(`${subQ.maxChars}文字以内`);
-    if (parts.length === 0) return '';
-    return `<div class="char-limit-info">※ ${parts.join('、')}</div>`;
+function renderSuffixText(field) {
+    if (!field.suffixText) return '';
+    return `<span class="suffix-text">${escapeHtml(field.suffixText)}</span>`;
 }
 
 // 編集モード用ミニプレビュー
-function renderMiniPreview(subQ) {
-    switch (subQ.type) {
+function renderMiniPreview(field) {
+    switch (field.type) {
         case 'symbol':
-            const symCount = Math.min(subQ.answerCount || 1, 5);
+            const symCount = Math.min(field.answerCount || 1, 5);
             return Array(symCount).fill('<div class="mini-box"></div>').join('');
 
-        case 'multiple':
-            const subItems = subQ.subItems || [];
-            if (subItems.length === 0) {
-                return '<span class="mini-label">複数回答欄（空）</span>';
-            }
-            let multiHtml = '';
-            const displayCount = Math.min(subItems.length, 4);
-            for (let i = 0; i < displayCount; i++) {
-                const si = subItems[i];
-                const label = getCircledNumber(i + 1);
-                if (si.type === 'symbol' || si.type === 'number') {
-                    multiHtml += `<span class="mini-label">${label}</span><div class="mini-box"></div>`;
-                } else if (si.type === 'text') {
-                    multiHtml += `<span class="mini-label">${label}</span><div class="mini-textarea" style="width:60px;"></div>`;
-                } else {
-                    multiHtml += `<span class="mini-label">${label}</span><div class="mini-textarea" style="width:60px;"></div>`;
-                }
-            }
-            if (subItems.length > 4) {
-                multiHtml += '<span class="mini-label">...</span>';
-            }
-            return multiHtml;
-
         case 'number':
-            return renderMiniNumberPreview(subQ);
+            return renderMiniNumberPreview(field);
 
         case 'text':
-            const textWidth = subQ.textWidth || 3;
-            const textRows = subQ.textRows || 1;
+            const textWidth = field.textWidth || 3;
             const miniWidth = Math.min(textWidth * 20, 150);
-            return `<div class="mini-textarea" style="width:${miniWidth}px;"></div>${subQ.suffixText ? `<span class="mini-label">${escapeHtml(subQ.suffixText)}</span>` : ''}`;
+            return `<div class="mini-textarea" style="width:${miniWidth}px;"></div>${field.suffixText ? `<span class="mini-label">${escapeHtml(field.suffixText)}</span>` : ''}`;
 
         case 'grid':
-            const gridChars = subQ.gridChars || 5;
+            const gridChars = field.gridChars || 5;
             const totalChars = gridChars;
             const gridCount = Math.min(totalChars, 6);
-            return `<div class="mini-grid">${Array(gridCount).fill('<div class="mini-grid-cell"></div>').join('')}</div>${totalChars > 6 ? '<span class="mini-label">...</span>' : ''}${subQ.suffixText ? `<span class="mini-label">${escapeHtml(subQ.suffixText)}</span>` : ''}`;
+            return `<div class="mini-grid">${Array(gridCount).fill('<div class="mini-grid-cell"></div>').join('')}</div>${totalChars > 6 ? '<span class="mini-label">...</span>' : ''}${field.suffixText ? `<span class="mini-label">${escapeHtml(field.suffixText)}</span>` : ''}`;
 
         default:
             return '';
     }
 }
 
-function renderMiniNumberPreview(subQ) {
-    const format = subQ.numberFormat || 'simple';
-    const unit = subQ.unit ? `<span class="mini-unit">${escapeHtml(subQ.unit)}</span>` : '';
+function renderMiniNumberPreview(field) {
+    const format = field.numberFormat || 'simple';
+    const unit = field.unit ? `<span class="mini-unit">${escapeHtml(field.unit)}</span>` : '';
 
     switch (format) {
         case 'simple':
             return `<div class="mini-number-box"></div>${unit}`;
 
         case 'ratio':
-            const count = Math.min(subQ.ratioCount || 2, 4);
+            const count = Math.min(field.ratioCount || 2, 4);
             const boxes = [];
             for (let i = 0; i < count; i++) {
                 if (i > 0) boxes.push('<span class="mini-separator">：</span>');
@@ -1148,4 +865,3 @@ function renderMiniNumberPreview(subQ) {
             return '';
     }
 }
-

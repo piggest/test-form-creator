@@ -38,16 +38,24 @@
                         国語モード（縦書き解答用紙）
                     </label>
                 </div>
+                <div class="label-format-input">
+                    <label for="rootLabelFormat">段落番号形式：</label>
+                    <select id="rootLabelFormat">
+                        <option value="boxed">□（四角囲み）</option>
+                        <option value="parenthesis">()（カッコ）</option>
+                        <option value="circled">○（丸数字）</option>
+                    </select>
+                </div>
             </section>
 
-            <!-- 大問追加 -->
+            <!-- 段落追加 -->
             <section class="add-section-panel">
-                <button id="addSectionBtn" class="add-section-btn">＋ 大問を追加</button>
+                <button id="addParagraphBtn" class="add-section-btn">＋ 段落を追加</button>
             </section>
 
-            <!-- 大問リスト -->
-            <section id="sectionsContainer">
-                <p class="empty-message">大問がまだありません。上のボタンから追加してください。</p>
+            <!-- 段落リスト -->
+            <section id="paragraphsContainer">
+                <p class="empty-message">段落がまだありません。上のボタンから追加してください。</p>
             </section>
 
             <!-- データ管理 -->
@@ -71,72 +79,54 @@
         </main>
     </div>
 
-    <!-- 大問編集モーダル -->
-    <div id="sectionModal" class="modal" style="display: none;">
+    <!-- 段落編集モーダル -->
+    <div id="paragraphModal" class="modal" style="display: none;">
         <div class="modal-content">
-            <h3 id="sectionModalTitle">大問を追加</h3>
-            <form id="sectionForm">
-                <input type="hidden" id="sectionId">
+            <h3 id="paragraphModalTitle">段落を編集</h3>
+            <form id="paragraphForm">
+                <input type="hidden" id="paragraphId">
                 <div class="form-group">
-                    <label for="sectionText">大問タイトル（任意）</label>
-                    <input type="text" id="sectionText" placeholder="例: 次の文章を読んで答えなさい">
+                    <label for="paragraphText">段落見出し（任意）</label>
+                    <input type="text" id="paragraphText" placeholder="例: 次の文章を読んで答えなさい">
+                </div>
+                <div class="form-group">
+                    <label for="labelFormat">子段落の番号形式</label>
+                    <select id="labelFormat">
+                        <option value="parenthesis">()（カッコ）</option>
+                        <option value="circled">○（丸数字）</option>
+                        <option value="boxed">□（四角囲み）</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label class="checkbox-label">
-                        <input type="checkbox" id="showQuestionLabel" checked>
-                        「問1, 問2...」の表示
+                        <input type="checkbox" id="showInnerLabel" checked>
+                        回答欄の内部ラベル表示（①②...）
                     </label>
                 </div>
                 <div class="modal-buttons">
-                    <button type="button" class="cancel-btn" data-modal="section">キャンセル</button>
+                    <button type="button" class="cancel-btn" data-modal="paragraph">キャンセル</button>
                     <button type="submit" class="submit-btn">保存</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- 問編集モーダル -->
-    <div id="questionModal" class="modal" style="display: none;">
+    <!-- 回答欄編集モーダル -->
+    <div id="answerFieldModal" class="modal" style="display: none;">
         <div class="modal-content">
-            <h3 id="questionModalTitle">問を追加</h3>
-            <form id="questionForm">
-                <input type="hidden" id="questionSectionId">
-                <input type="hidden" id="questionId">
-                <div class="form-group">
-                    <label for="questionText">問題文（任意）</label>
-                    <textarea id="questionText" rows="3" placeholder="問題文を入力"></textarea>
-                </div>
-                <div class="modal-buttons">
-                    <button type="button" class="cancel-btn" data-modal="question">キャンセル</button>
-                    <button type="submit" class="submit-btn">保存</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- 小問（回答欄）編集モーダル -->
-    <div id="subQuestionModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <h3 id="subQuestionModalTitle">回答欄を追加</h3>
-            <form id="subQuestionForm">
-                <input type="hidden" id="subQuestionSectionId">
-                <input type="hidden" id="subQuestionQuestionId">
-                <input type="hidden" id="subQuestionId">
+            <h3 id="answerFieldModalTitle">回答欄を編集</h3>
+            <form id="answerFieldForm">
+                <input type="hidden" id="answerFieldParagraphId">
+                <input type="hidden" id="answerFieldId">
 
                 <div class="form-group">
-                    <label for="subQuestionType">回答欄タイプ</label>
-                    <select id="subQuestionType">
+                    <label for="answerFieldType">回答欄タイプ</label>
+                    <select id="answerFieldType">
                         <option value="symbol">記号回答式</option>
                         <option value="text">記述式</option>
                         <option value="number">数値記述式</option>
                         <option value="grid">原稿用紙形式</option>
-                        <option value="multiple">複数回答欄（①②③...）</option>
                     </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="subQuestionText">小問テキスト（任意）</label>
-                    <textarea id="subQuestionText" rows="2" placeholder="小問のテキスト"></textarea>
                 </div>
 
                 <!-- 記述式オプション -->
@@ -174,11 +164,6 @@
                 <div id="answerCountOptions" class="form-group" style="display: none;">
                     <label for="answerCount">回答欄の数</label>
                     <input type="number" id="answerCount" value="1" min="1" max="20">
-                </div>
-
-                <!-- 複数回答欄オプション -->
-                <div id="multipleOptions" class="form-group" style="display: none;">
-                    <p class="multiple-info">この回答欄の中に①②③...として子回答欄を追加できます。<br>保存後、編集画面から子回答欄を追加してください。</p>
                 </div>
 
                 <!-- 数値記述式オプション -->
@@ -229,129 +214,7 @@
                 </div>
 
                 <div class="modal-buttons">
-                    <button type="button" class="cancel-btn" data-modal="subQuestion">キャンセル</button>
-                    <button type="submit" class="submit-btn">保存</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- 回答欄タイプ選択モーダル -->
-    <div id="typeSelectModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <h3>回答欄のタイプを選択</h3>
-            <input type="hidden" id="typeSelectSectionId">
-            <input type="hidden" id="typeSelectQuestionId">
-            <div class="type-select-buttons">
-                <button class="type-btn" data-type="symbol">記号回答式</button>
-                <button class="type-btn" data-type="text">記述式</button>
-                <button class="type-btn" data-type="number">数値記述式</button>
-                <button class="type-btn" data-type="grid">原稿用紙形式</button>
-                <button class="type-btn" data-type="multiple">複数回答欄</button>
-            </div>
-            <div class="modal-buttons">
-                <button type="button" class="cancel-btn" data-modal="typeSelect">キャンセル</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 子回答欄編集モーダル -->
-    <div id="subItemModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <h3 id="subItemModalTitle">子回答欄を追加</h3>
-            <form id="subItemForm">
-                <input type="hidden" id="subItemSectionId">
-                <input type="hidden" id="subItemQuestionId">
-                <input type="hidden" id="subItemParentId">
-                <input type="hidden" id="subItemId">
-
-                <div class="form-group">
-                    <label for="subItemType">回答欄タイプ</label>
-                    <select id="subItemType">
-                        <option value="symbol">記号回答式</option>
-                        <option value="text">記述式</option>
-                        <option value="number">数値記述式</option>
-                        <option value="grid">原稿用紙形式</option>
-                    </select>
-                </div>
-
-                <!-- 記述式オプション（子回答欄用） -->
-                <div id="subItemTextOptions" class="form-group" style="display: none;">
-                    <div class="text-size-inputs">
-                        <div>
-                            <label for="subItemTextWidth">文字数幅</label>
-                            <input type="number" id="subItemTextWidth" value="3" min="1" max="20">
-                        </div>
-                        <div>
-                            <label for="subItemTextRows">行数</label>
-                            <input type="number" id="subItemTextRows" value="1" min="1" max="20">
-                        </div>
-                    </div>
-                    <div class="suffix-input" style="margin-top: 12px;">
-                        <label for="subItemSuffixText">解答欄の後ろのテキスト（任意）</label>
-                        <input type="text" id="subItemSuffixText" placeholder="例: と考える。">
-                    </div>
-                </div>
-
-                <!-- 原稿用紙形式オプション（子回答欄用） -->
-                <div id="subItemGridOptions" class="form-group" style="display: none;">
-                    <label>文字数</label>
-                    <div class="char-limit-inputs">
-                        <input type="number" id="subItemGridChars" placeholder="文字数" min="1" value="5">
-                        <span>文字</span>
-                    </div>
-                    <div class="suffix-input" style="margin-top: 12px;">
-                        <label for="subItemGridSuffixText">解答欄の後ろのテキスト（任意）</label>
-                        <input type="text" id="subItemGridSuffixText" placeholder="例: と考える。">
-                    </div>
-                </div>
-
-                <!-- 回答欄数オプション（子回答欄用） -->
-                <div id="subItemAnswerCountOptions" class="form-group" style="display: none;">
-                    <label for="subItemAnswerCount">回答欄の数</label>
-                    <input type="number" id="subItemAnswerCount" value="1" min="1" max="20">
-                </div>
-
-                <!-- 数値記述式オプション（子回答欄用） -->
-                <div id="subItemNumberOptions" class="form-group" style="display: none;">
-                    <label>数値形式</label>
-                    <div class="number-format-select">
-                        <label><input type="radio" name="subItemNumberFormat" value="simple" checked> 単純な数値</label>
-                        <label><input type="radio" name="subItemNumberFormat" value="ratio"> 比率（A：B）</label>
-                        <label><input type="radio" name="subItemNumberFormat" value="time"> 時間（分秒）</label>
-                    </div>
-                    <div class="unit-input">
-                        <label for="subItemUnit">単位（任意）</label>
-                        <select id="subItemUnit">
-                            <option value="">なし</option>
-                            <option value="cm">cm</option>
-                            <option value="cm²">cm²</option>
-                            <option value="cm³">cm³</option>
-                            <option value="m">m</option>
-                            <option value="m²">m²</option>
-                            <option value="km">km</option>
-                            <option value="g">g</option>
-                            <option value="kg">kg</option>
-                            <option value="L">L</option>
-                            <option value="mL">mL</option>
-                            <option value="円">円</option>
-                            <option value="個">個</option>
-                            <option value="人">人</option>
-                            <option value="度">度</option>
-                            <option value="%">%</option>
-                            <option value="倍">倍</option>
-                            <option value="__custom__">その他</option>
-                        </select>
-                        <input type="text" id="subItemUnitCustom" placeholder="単位を入力" style="display: none; margin-top: 8px;">
-                    </div>
-                    <div id="subItemRatioCountOption" style="display: none; margin-top: 12px;">
-                        <label for="subItemRatioCount">比率の項目数</label>
-                        <input type="number" id="subItemRatioCount" value="2" min="2" max="5">
-                    </div>
-                </div>
-
-                <div class="modal-buttons">
-                    <button type="button" class="cancel-btn" data-modal="subItem">キャンセル</button>
+                    <button type="button" class="cancel-btn" data-modal="answerField">キャンセル</button>
                     <button type="submit" class="submit-btn">保存</button>
                 </div>
             </form>
@@ -361,11 +224,10 @@
     <!-- JavaScript -->
     <script src="js/utils.js"></script>
     <script src="js/state.js"></script>
+    <script src="js/paragraphs.js"></script>
+    <script src="js/answerFields.js"></script>
     <script src="js/render.js"></script>
     <script src="js/vertical.js"></script>
-    <script src="js/sections.js"></script>
-    <script src="js/questions.js"></script>
-    <script src="js/subitems.js"></script>
     <script src="js/export.js"></script>
     <script src="js/main.js"></script>
 </body>

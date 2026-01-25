@@ -5,30 +5,16 @@ function init() {
     elements.editModeBtn.addEventListener('click', () => switchMode('edit'));
     elements.previewModeBtn.addEventListener('click', () => switchMode('preview'));
 
-    // 大問追加（即追加）
-    elements.addSectionBtn.addEventListener('click', () => addSection());
+    // 段落追加（即追加）
+    elements.addParagraphBtn.addEventListener('click', () => addParagraph());
 
     // フォーム送信
-    elements.sectionForm.addEventListener('submit', saveSection);
-    elements.questionForm.addEventListener('submit', saveQuestion);
-    elements.subQuestionForm.addEventListener('submit', saveSubQuestion);
-    elements.subItemForm.addEventListener('submit', saveSubItem);
+    elements.paragraphForm.addEventListener('submit', saveParagraph);
+    elements.answerFieldForm.addEventListener('submit', saveAnswerField);
 
-    // 子回答欄タイプ変更時
-    elements.subItemType.addEventListener('change', () => {
-        updateSubItemOptions(elements.subItemType.value);
-    });
-
-    // 子回答欄の単位選択
-    elements.subItemUnit.addEventListener('change', () => {
-        elements.subItemUnitCustom.style.display = elements.subItemUnit.value === '__custom__' ? 'block' : 'none';
-    });
-
-    // 子回答欄の数値形式ラジオボタン
-    document.querySelectorAll('input[name="subItemNumberFormat"]').forEach(radio => {
-        radio.addEventListener('change', () => {
-            elements.subItemRatioCountOption.style.display = radio.value === 'ratio' ? 'block' : 'none';
-        });
+    // 回答欄タイプ変更時
+    elements.answerFieldType.addEventListener('change', () => {
+        updateAnswerFieldOptions(elements.answerFieldType.value);
     });
 
     // キャンセルボタン
@@ -36,17 +22,6 @@ function init() {
         btn.addEventListener('click', () => {
             const modalType = btn.dataset.modal;
             closeModal(modalType);
-        });
-    });
-
-    // タイプ選択ボタン
-    document.querySelectorAll('.type-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const type = btn.dataset.type;
-            const sectionId = parseInt(elements.typeSelectSectionId.value);
-            const questionId = parseInt(elements.typeSelectQuestionId.value);
-            closeModal('typeSelect');
-            openSubQuestionModal(sectionId, questionId, type);
         });
     });
 
@@ -60,11 +35,6 @@ function init() {
     // 単位選択で「その他」を選んだ時
     elements.numberUnit.addEventListener('change', () => {
         elements.numberUnitCustom.style.display = elements.numberUnit.value === '__custom__' ? 'block' : 'none';
-    });
-
-    // 回答欄タイプ変更時
-    elements.subQuestionType.addEventListener('change', () => {
-        updateSubQuestionOptions(elements.subQuestionType.value);
     });
 
     // データ管理
@@ -104,15 +74,20 @@ function init() {
         });
     });
 
-    // タイトル・最大点・縦書き変更時に保存
+    // タイトル・最大点・縦書き・段落番号形式変更時に保存
     elements.testTitle.addEventListener('input', saveToStorage);
     elements.testSubtitle.addEventListener('input', saveToStorage);
     elements.maxScore.addEventListener('input', saveToStorage);
     elements.verticalMode.addEventListener('change', saveToStorage);
+    elements.rootLabelFormat.addEventListener('change', () => {
+        state.rootLabelFormat = elements.rootLabelFormat.value;
+        saveToStorage();
+        renderParagraphs();
+    });
 
     // ストレージから復元して描画
     loadFromStorage();
-    renderSections();
+    renderParagraphs();
 }
 
 // モード切り替え
@@ -134,45 +109,32 @@ function switchMode(mode) {
 // モーダルを閉じる
 function closeModal(type) {
     switch(type) {
-        case 'section':
-            elements.sectionModal.style.display = 'none';
+        case 'paragraph':
+            elements.paragraphModal.style.display = 'none';
             break;
-        case 'question':
-            elements.questionModal.style.display = 'none';
-            break;
-        case 'subQuestion':
-            elements.subQuestionModal.style.display = 'none';
-            break;
-        case 'typeSelect':
-            elements.typeSelectModal.style.display = 'none';
-            break;
-        case 'subItem':
-            elements.subItemModal.style.display = 'none';
+        case 'answerField':
+            elements.answerFieldModal.style.display = 'none';
             break;
     }
 }
 
 // グローバル関数として公開（HTMLのonclick属性から呼び出される）
-window.editSection = (id) => openSectionModal(id);
-window.deleteSection = deleteSection;
-window.addQuestion = addQuestion;
-window.editQuestion = (sectionId, questionId) => openQuestionModal(sectionId, questionId);
-window.deleteQuestion = deleteQuestion;
-window.addSubQuestion = addSubQuestion;
-window.editSubQuestion = (sectionId, questionId, subQId) => {
-    const section = state.sections.find(s => s.id === sectionId);
-    const question = section?.questions.find(q => q.id === questionId);
-    const subQ = question?.subQuestions.find(sq => sq.id === subQId);
-    if (subQ) {
-        openSubQuestionModal(sectionId, questionId, subQ.type, subQId);
+window.addParagraph = addParagraph;
+window.editParagraph = (id) => openParagraphModal(id);
+window.deleteParagraph = deleteParagraph;
+window.moveParagraphUp = moveParagraphUp;
+window.moveParagraphDown = moveParagraphDown;
+window.addAnswerField = addAnswerField;
+window.editAnswerField = (paragraphId, fieldId) => {
+    const paragraph = findParagraphById(paragraphId);
+    const field = paragraph?.answerFields.find(f => f.id === fieldId);
+    if (field) {
+        openAnswerFieldModal(paragraphId, field.type, fieldId);
     }
 };
-window.deleteSubQuestion = deleteSubQuestion;
-window.addSubItem = addSubItem;
-window.editSubItem = (sectionId, questionId, parentId, subItemId) => {
-    openSubItemModal(sectionId, questionId, parentId, subItemId);
-};
-window.deleteSubItem = deleteSubItem;
+window.deleteAnswerField = deleteAnswerField;
+window.moveAnswerFieldUp = moveAnswerFieldUp;
+window.moveAnswerFieldDown = moveAnswerFieldDown;
 
 // 初期化実行
 init();

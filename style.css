@@ -180,10 +180,58 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    border: 2px solid #fff;
+    min-width: 22px;
+    height: 22px;
     font-weight: bold;
+    font-size: 0.8rem;
+    padding: 2px 6px;
+}
+
+.section-header .format-badge {
+    font-size: 0.75rem;
+    background: rgba(255,255,255,0.3);
+    padding: 2px 8px;
+    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+/* 編集画面用：四角囲み数字 */
+.boxed-number-edit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    border: 1.5px solid currentColor;
+    font-weight: bold;
+    font-size: inherit;
+    padding: 0 2px;
+}
+
+/* section-number内のboxed-number-editは外枠を非表示に */
+.section-number .boxed-number-edit {
+    border-color: #fff;
+}
+
+/* field-label内のboxed-number-editは紫色 */
+.field-label .boxed-number-edit {
+    border-color: #9b59b6;
+}
+
+/* 番号形式サンプル用：四角囲み数字（小さいサイズ） */
+.boxed-number-sample {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    border: 1px solid #fff;
+    font-weight: bold;
+    font-size: 0.65rem;
+    padding: 0 2px;
+    margin: 0 1px;
 }
 
 .section-header .section-actions {
@@ -305,6 +353,157 @@ body {
 
 .add-subquestion-btn:hover {
     background: #8e44ad;
+}
+
+/* ボタン行 */
+.section-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.section-buttons .add-subquestion-btn,
+.section-buttons .add-child-btn {
+    flex: 1;
+    width: auto;
+    margin-bottom: 0;
+}
+
+/* 子段落追加ボタン */
+.add-child-btn {
+    padding: 8px;
+    background: #27ae60;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.add-child-btn:hover {
+    background: #219a52;
+}
+
+/* 子段落リスト */
+.children-list {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed #ccc;
+}
+
+/* 子段落カード */
+.section-card-child {
+    margin-left: 20px;
+    border-color: #27ae60;
+}
+
+.section-card-child .section-header {
+    background: #27ae60;
+}
+
+.section-card-child.depth-2 {
+    margin-left: 20px;
+    border-color: #1abc9c;
+}
+
+.section-card-child.depth-2 .section-header {
+    background: #1abc9c;
+}
+
+.section-card-child.depth-3 {
+    margin-left: 20px;
+    border-color: #e67e22;
+}
+
+.section-card-child.depth-3 .section-header {
+    background: #e67e22;
+}
+
+/* 回答欄リスト */
+.fields-list {
+    margin-top: 10px;
+}
+
+.field-item {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.field-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.field-label {
+    font-weight: bold;
+    font-size: 0.8rem;
+    color: #9b59b6;
+    min-width: 24px;
+}
+
+.field-label:empty {
+    display: none;
+}
+
+.field-type {
+    font-size: 0.85rem;
+    background: #95a5a6;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 3px;
+}
+
+.field-preview {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 10px;
+}
+
+.field-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.field-actions button {
+    padding: 4px 10px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.field-actions .move-btn {
+    background: #bdc3c7;
+    color: #333;
+}
+
+.field-actions .move-btn:hover {
+    background: #95a5a6;
+}
+
+.field-actions .edit-btn {
+    background: #3498db;
+    color: #fff;
+}
+
+.field-actions .delete-btn {
+    background: #e74c3c;
+    color: #fff;
+}
+
+/* 段落カードの移動ボタン */
+.section-actions .move-btn {
+    background: rgba(255,255,255,0.8);
+    color: #3498db;
 }
 
 /* 小問リスト */
@@ -813,6 +1012,28 @@ body {
     min-width: 0;
 }
 
+/* 子段落コンテナ */
+.preview-children {
+    margin-top: calc(15px * var(--scale));
+}
+
+/* 子段落セクション */
+.preview-section-child {
+    margin-top: calc(10px * var(--scale));
+}
+
+.preview-section-child.depth-1 .preview-section-left .boxed-number {
+    border-color: #27ae60;
+}
+
+.preview-section-child.depth-2 .preview-section-left .boxed-number {
+    border-color: #1abc9c;
+}
+
+.preview-section-child.depth-3 .preview-section-left .boxed-number {
+    border-color: #e67e22;
+}
+
 /* 回答グリッド */
 .preview-answer-grid {
     display: inline-flex;
@@ -845,7 +1066,7 @@ body {
 }
 
 .cell-number {
-    font-size: calc(0.65rem * var(--scale));
+    font-size: calc(0.6rem * var(--scale));
 }
 
 .cell-unit-bottom {
@@ -1483,6 +1704,19 @@ body {
     border: none;
 }
 
+
+/* 四角囲み数字（プレビュー用） */
+.boxed-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: calc(24px * var(--scale));
+    height: calc(24px * var(--scale));
+    border: 1.5px solid #333;
+    font-weight: 600;
+    font-size: calc(0.9rem * var(--scale));
+    padding: 0 4px;
+}
 
 .preview-section-number {
     display: inline-flex;
