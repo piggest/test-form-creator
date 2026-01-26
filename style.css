@@ -1315,13 +1315,19 @@ body {
 .answer-cell-group {
     display: inline-flex;
     align-items: center;
-    gap: calc(4px * var(--scale));
 }
 
 /* 回答欄の番号ラベル */
 .answer-label {
-    font-size: calc(0.85rem * var(--scale));
+    font-size: calc(0.75rem * var(--scale));
     min-width: calc(24px * var(--scale));
+    height: calc(28px * var(--scale));
+    border: 1px solid #333;
+    border-right: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 calc(4px * var(--scale));
 }
 
 /* 回答ボックス */
