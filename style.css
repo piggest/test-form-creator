@@ -1305,18 +1305,71 @@ body {
 
 /* 回答グリッド */
 .preview-answer-grid {
-    display: inline-flex;
+    display: flex;
     flex-wrap: wrap;
-    border: 1px solid #333;
-    border-right: none;
-    border-bottom: none;
+    gap: calc(10px * var(--scale));
+    align-items: flex-end;
 }
 
+/* 個別の回答欄グループ */
+.answer-cell-group {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(4px * var(--scale));
+}
+
+/* 回答欄の番号ラベル */
+.answer-label {
+    font-size: calc(0.85rem * var(--scale));
+    min-width: calc(24px * var(--scale));
+}
+
+/* 回答ボックス */
+.answer-box {
+    min-width: calc(50px * var(--scale));
+    height: calc(28px * var(--scale));
+    border: 1px solid #333;
+    position: relative;
+}
+
+.answer-box.wide {
+    min-width: calc(80px * var(--scale));
+}
+
+.answer-box-group {
+    display: inline-flex;
+    align-items: center;
+}
+
+.answer-box-group .answer-box {
+    margin-left: -1px;
+}
+
+.answer-box-group .answer-box:first-child {
+    margin-left: 0;
+}
+
+.ratio-separator {
+    font-size: calc(1rem * var(--scale));
+    padding: 0 calc(2px * var(--scale));
+}
+
+.box-unit {
+    position: absolute;
+    bottom: calc(2px * var(--scale));
+    right: calc(4px * var(--scale));
+    font-size: calc(0.65rem * var(--scale));
+}
+
+/* 後方互換のため残す */
 .grid-cell-item {
     border-right: 1px solid #333;
-    border-bottom: 1px solid #333;
     min-height: calc(45px * var(--scale));
     position: relative;
+}
+
+.grid-cell-item:last-child {
+    border-right: none;
 }
 
 .grid-cell-item.cell-normal {
@@ -1332,6 +1385,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    border-right: 1px solid #333;
 }
 
 .cell-number {
@@ -1354,6 +1408,12 @@ body {
 
 .cell-no-right-border {
     border-right: none;
+}
+
+/* 原稿用紙形式のマス目（通常モード横書き用） */
+.grid-cell-item.cell-grid-char {
+    min-width: calc(28px * var(--scale));
+    min-height: calc(45px * var(--scale));
 }
 
 /* ページ番号 */
@@ -2254,6 +2314,34 @@ body {
 
 .grid-row .grid-cell:first-child {
     margin-top: 0;
+}
+
+/* 横書き用の原稿用紙（通常モード用） */
+.grid-paper-horizontal {
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+}
+
+.grid-cell-h {
+    width: calc(28px * var(--scale));
+    height: calc(28px * var(--scale));
+    border: 1px solid #333;
+    margin-left: -1px;
+    box-sizing: border-box;
+}
+
+.grid-cell-h:first-child {
+    margin-left: 0;
+}
+
+/* 原稿用紙を含むコンテナ */
+.grid-cell-item.cell-grid-container {
+    display: flex;
+    align-items: center;
+    padding: calc(4px * var(--scale));
+    min-width: auto;
 }
 
 /* 記号・語句回答欄スタイル */
