@@ -31,6 +31,9 @@ body {
     align-items: center;
     flex-wrap: wrap;
     gap: 15px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 .header h1 {
@@ -1391,12 +1394,10 @@ body {
     flex: 1;
     display: flex;
     flex-direction: row-reverse;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: flex-start;
-    align-content: flex-start;
     gap: calc(8px * var(--scale));
     order: 1;
-    max-height: 170mm;
 }
 
 @media print {
@@ -1512,12 +1513,10 @@ body {
     flex: 1;
     display: flex;
     flex-direction: row-reverse;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: flex-start;
-    align-content: flex-start;
     gap: calc(8px * var(--scale));
     order: 1;
-    max-height: 170mm;
 }
 
 /* 国語モード：大問マーカー（セル上部に表示） */
@@ -1553,6 +1552,14 @@ body {
     min-height: calc(50px * var(--scale));
 }
 
+/* 国語モード：段落コンテナ（段落内の要素をまとめる） */
+.preview-content.vertical-mode .vertical-paragraph-container {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: flex-start;
+    gap: calc(8px * var(--scale));
+}
+
 /* 国語モード：大問マーカー独立列 */
 .preview-content.vertical-mode .vertical-section-column {
     display: flex;
@@ -1569,13 +1576,67 @@ body {
     font-size: calc(0.9rem * var(--scale));
 }
 
+/* 子段落のマーカー */
+.preview-content.vertical-mode .vertical-child-marker {
+    padding-top: calc(25px * var(--scale));
+}
+
+.preview-content.vertical-mode .vertical-child-label {
+    font-size: calc(0.8rem * var(--scale));
+    font-weight: normal;
+    writing-mode: horizontal-tb;
+}
+
 /* 国語モード：積み重ねられたセル列 */
 .preview-content.vertical-mode .vertical-stacked-column {
     display: flex;
     flex-direction: column;
     align-items: center;
+    align-self: flex-start;
     position: relative;
-    padding-top: calc(45px * var(--scale));
+}
+
+/* 積み重ねセルのラッパー */
+.preview-content.vertical-mode .vertical-stacked-column .stacked-cell-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* 最初のセルラッパーのラベル位置を揃える */
+.preview-content.vertical-mode .vertical-stacked-column .stacked-cell-wrapper:first-child {
+    padding-top: calc(22px * var(--scale));
+}
+
+/* 積み重ねセルのラベル */
+.preview-content.vertical-mode .vertical-stacked-column .stacked-cell-label {
+    writing-mode: horizontal-tb;
+    font-size: calc(0.7rem * var(--scale));
+    padding: calc(2px * var(--scale)) 0;
+}
+
+/* 積み重ねセル */
+.preview-content.vertical-mode .vertical-stacked-column .stacked-cell {
+    border: 1px solid #333;
+    min-width: calc(36px * var(--scale));
+    position: relative;
+    margin-top: -1px;
+}
+
+.preview-content.vertical-mode .vertical-stacked-column .stacked-cell-wrapper:first-child .stacked-cell {
+    margin-top: 0;
+}
+
+.preview-content.vertical-mode .vertical-stacked-column .stacked-cell.cell-symbol {
+    min-height: calc(36px * var(--scale));
+}
+
+.preview-content.vertical-mode .vertical-stacked-column .stacked-cell.cell-number {
+    min-height: calc(42px * var(--scale));
+}
+
+.preview-content.vertical-mode .vertical-stacked-column .stacked-cell.cell-text {
+    min-height: calc(108px * var(--scale));
 }
 
 .preview-content.vertical-mode .vertical-stacked-column.has-section-marker {
@@ -1812,6 +1873,11 @@ body {
 /* 記述式用 */
 .preview-content.vertical-mode .vertical-cell-group .grid-cell-item.cell-text {
     min-height: calc(108px * var(--scale)); /* デフォルト3文字分: 36px × 3 */
+}
+
+/* 数値用 */
+.preview-content.vertical-mode .vertical-cell-group .grid-cell-item.cell-number {
+    min-height: calc(42px * var(--scale));
 }
 
 .preview-content.vertical-mode .vertical-cell-group .cell-unit-bottom {

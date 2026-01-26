@@ -90,19 +90,39 @@ function init() {
     renderParagraphs();
 }
 
+// スクロール位置を保存する変数
+let editModeScrollPosition = 0;
+let previewModeScrollPosition = 0;
+
 // モード切り替え
 function switchMode(mode) {
     if (mode === 'edit') {
+        // プレビューモードのスクロール位置を保存
+        previewModeScrollPosition = window.scrollY;
+
         elements.editMode.style.display = 'block';
         elements.previewMode.style.display = 'none';
         elements.editModeBtn.classList.add('active');
         elements.previewModeBtn.classList.remove('active');
+
+        // 編集モードのスクロール位置を復元
+        requestAnimationFrame(() => {
+            window.scrollTo(0, editModeScrollPosition);
+        });
     } else {
+        // 編集モードのスクロール位置を保存
+        editModeScrollPosition = window.scrollY;
+
         elements.editMode.style.display = 'none';
         elements.previewMode.style.display = 'block';
         elements.editModeBtn.classList.remove('active');
         elements.previewModeBtn.classList.add('active');
         renderPreview();
+
+        // プレビューモードのスクロール位置を復元
+        requestAnimationFrame(() => {
+            window.scrollTo(0, previewModeScrollPosition);
+        });
     }
 }
 
