@@ -405,59 +405,56 @@ function renderGridCell(field, num, isVertical = false, innerLabelFormat = 'circ
         return renderVerticalGridCell(field, num, innerLabelFormat);
     }
 
-    // 番号セル（formatNumber関数を使用して全形式に対応）
-    let numCell = '';
+    // 番号ラベル
+    let numLabel = '';
     if (num !== null) {
-        const numLabel = formatNumber(num, innerLabelFormat);
-        numCell = `<div class="grid-cell-item cell-number-cell"><span class="cell-number">${numLabel}</span></div>`;
-    }
-
-    // セルの幅クラスを決定
-    let widthClass = 'cell-normal';
-    if (type === 'text') {
-        widthClass = 'cell-wide';
-    }
-
-    // 時間形式の場合は複数セル（内部罫線なし）
-    if (type === 'number' && field.numberFormat === 'time') {
-        return `
-            ${numCell}
-            <div class="grid-cell-item cell-normal cell-no-right-border">
-                <span class="cell-unit-bottom">分</span>
-            </div>
-            <div class="grid-cell-item cell-normal">
-                <span class="cell-unit-bottom">秒</span>
-            </div>
-        `;
-    }
-
-    // 比率形式の場合は複数セル（内部罫線なし）
-    if (type === 'number' && field.numberFormat === 'ratio') {
-        const count = field.ratioCount || 2;
-        let cells = numCell;
-        for (let i = 0; i < count; i++) {
-            const isLast = i === count - 1;
-            cells += `<div class="grid-cell-item cell-normal${isLast ? '' : ' cell-no-right-border'}">`;
-            if (!isLast) {
-                cells += `<span class="cell-unit-center">:</span>`;
-            } else if (unit) {
-                cells += `<span class="cell-unit-bottom">${escapeHtml(unit)}</span>`;
-            }
-            cells += `</div>`;
-        }
-        return cells;
+        numLabel = `<span class="answer-label">${formatNumber(num, innerLabelFormat)}</span>`;
     }
 
     // 後続テキスト（suffixText）
     const suffixHtml = field.suffixText ? `<span class="suffix-text">${escapeHtml(field.suffixText)}</span>` : '';
 
-    return `
-        ${numCell}
-        <div class="grid-cell-item ${widthClass}">
-            ${unit ? `<span class="cell-unit-bottom">${escapeHtml(unit)}</span>` : ''}
-        </div>
+    // 原稿用紙形式（grid）の場合 - 横書きマス目のみ
+    if (type === 'grid' && field.gridChars) {
+        const gridHtml = renderHorizontalGridPaper(field.gridChars);
+        return `<div class="answer-cell-group">${numLabel}${gridHtml}${suffixHtml}</div>`;
+    }
+
+    // 時間形式の場合
+    if (type === 'number' && field.numberFormat === 'time') {
+        return `<div class="answer-cell-group">
+            ${numLabel}
+            <div class="answer-box-group">
+                <div class="answer-box"><span class="box-unit">分</span></div>
+                <div class="answer-box"><span class="box-unit">秒</span></div>
+            </div>
+            ${suffixHtml}
+        </div>`;
+    }
+
+    // 比率形式の場合
+    if (type === 'number' && field.numberFormat === 'ratio') {
+        const count = field.ratioCount || 2;
+        let boxes = '';
+        for (let i = 0; i < count; i++) {
+            const isLast = i === count - 1;
+            boxes += `<div class="answer-box">${isLast && unit ? `<span class="box-unit">${escapeHtml(unit)}</span>` : ''}</div>`;
+            if (!isLast) boxes += `<span class="ratio-separator">:</span>`;
+        }
+        return `<div class="answer-cell-group">${numLabel}<div class="answer-box-group">${boxes}</div>${suffixHtml}</div>`;
+    }
+
+    // 通常のセル（記号、数値、記述式）
+    let boxClass = 'answer-box';
+    if (type === 'text') {
+        boxClass = 'answer-box wide';
+    }
+
+    return `<div class="answer-cell-group">
+        ${numLabel}
+        <div class="${boxClass}">${unit ? `<span class="box-unit">${escapeHtml(unit)}</span>` : ''}</div>
         ${suffixHtml}
-    `;
+    </div>`;
 }
 
 // セルが短い（積み重ね可能）かどうかを判定
@@ -744,6 +741,7 @@ function renderAnswerArea(field) {
     }
 }
 
+// 縦書き用の原稿用紙（国語モード用）
 function renderGridPaper(charCount) {
     const charsPerGroup = 5; // 5文字ごとにグループ化
     const groups = [];
@@ -758,6 +756,16 @@ function renderGridPaper(charCount) {
     }
 
     return `<div class="grid-paper" data-chars="${charCount}">${groups.join('')}</div>`;
+}
+
+// 横書き用の原稿用紙（通常モード用）
+function renderHorizontalGridPaper(charCount) {
+    let html = '<div class="grid-paper-horizontal">';
+    for (let i = 0; i < charCount; i++) {
+        html += '<div class="grid-cell-h"></div>';
+    }
+    html += '</div>';
+    return html;
 }
 
 function renderAnswerBoxes(count, type) {
