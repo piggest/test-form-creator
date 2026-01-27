@@ -1140,6 +1140,23 @@ body {
 .preview-controls {
     display: flex;
     gap: 10px;
+    align-items: center;
+}
+
+/* 答え表示トグル */
+.preview-controls .toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-right: 10px;
+}
+
+.preview-controls .toggle-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
 }
 
 .print-btn, .pdf-btn, .json-btn {
@@ -2780,4 +2797,45 @@ body {
     .type-select-buttons {
         grid-template-columns: 1fr;
     }
+}
+
+/* 答え表示スタイル */
+.answer-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.answer-value {
+    color: #c0392b;
+    font-weight: bold;
+    font-size: calc(0.75rem * var(--scale));
+    white-space: nowrap;
+    max-width: calc(100% - 4px);
+    overflow: hidden;
+    text-overflow: clip;
+    transform: scaleX(var(--answer-scale, 1));
+    transform-origin: center;
+}
+
+.grid-cell-h {
+    position: relative;
+}
+
+.grid-answer-char {
+    color: #c0392b;
+    font-weight: bold;
+    font-size: calc(0.9rem * var(--scale));
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* 答え入力グループ */
+.answer-input-group {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed #ddd;
 }

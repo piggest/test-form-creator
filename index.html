@@ -70,6 +70,10 @@
         <!-- プレビューモード -->
         <main id="previewMode" class="main-content" style="display: none;">
             <div class="preview-controls no-print">
+                <label class="toggle-label">
+                    <input type="checkbox" id="showAnswers">
+                    <span>答えを表示</span>
+                </label>
                 <button id="printBtn" class="print-btn">印刷</button>
                 <button id="pdfBtn" class="pdf-btn">PDF保存</button>
                 <button id="jsonSaveBtn" class="json-btn">JSON保存</button>
@@ -211,6 +215,12 @@
                         <label for="ratioCount">比率の項目数</label>
                         <input type="number" id="ratioCount" value="2" min="2" max="5">
                     </div>
+                </div>
+
+                <!-- 答え入力 -->
+                <div class="form-group answer-input-group">
+                    <label for="answerValue">答え（任意）</label>
+                    <input type="text" id="answerValue" placeholder="正解を入力">
                 </div>
 
                 <div class="modal-buttons">

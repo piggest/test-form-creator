@@ -95,6 +95,9 @@ function openAnswerFieldModal(paragraphId, type, editId = null) {
             const format = field.numberFormat || 'simple';
             document.querySelector(`input[name="numberFormat"][value="${format}"]`).checked = true;
             elements.ratioCountOption.style.display = format === 'ratio' ? 'block' : 'none';
+
+            // 答え
+            elements.answerValue.value = field.answer || '';
         }
     } else {
         resetAnswerFieldForm(type);
@@ -123,6 +126,7 @@ function resetAnswerFieldForm(type) {
     elements.ratioCount.value = '2';
     elements.ratioCountOption.style.display = 'none';
     document.querySelector('input[name="numberFormat"][value="simple"]').checked = true;
+    elements.answerValue.value = '';
 }
 
 function saveAnswerField(e) {
@@ -174,6 +178,10 @@ function saveAnswerField(e) {
             field.ratioCount = parseInt(elements.ratioCount.value) || 2;
         }
     }
+
+    // 答え
+    const answerValue = elements.answerValue.value.trim();
+    if (answerValue) field.answer = answerValue;
 
     if (!paragraph.items) paragraph.items = [];
 

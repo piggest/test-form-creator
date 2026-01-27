@@ -85,6 +85,12 @@ function init() {
         renderParagraphs();
     });
 
+    // 答え表示トグル
+    elements.showAnswers.addEventListener('change', () => {
+        state.showAnswers = elements.showAnswers.checked;
+        renderPreview();
+    });
+
     // ストレージから復元して描画
     loadFromStorage();
     renderParagraphs();

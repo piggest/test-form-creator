@@ -307,7 +307,32 @@ function renderPreviewContent() {
 
         html += '</div>';
         elements.previewContent.innerHTML = html;
+
+        // 答え表示の縮小処理
+        if (state.showAnswers) {
+            adjustAnswerSizes();
+        }
     }
+}
+
+// 答えの表示サイズを調整（はみ出す場合は縮小）
+function adjustAnswerSizes() {
+    const answerValues = document.querySelectorAll('.answer-value');
+    answerValues.forEach(el => {
+        const parent = el.closest('.answer-box');
+        if (!parent) return;
+
+        // 一度スケールをリセット
+        el.style.setProperty('--answer-scale', '1');
+
+        const parentWidth = parent.clientWidth - 4; // padding分を引く
+        const textWidth = el.scrollWidth;
+
+        if (textWidth > parentWidth && textWidth > 0) {
+            const scale = Math.max(0.5, parentWidth / textWidth);
+            el.style.setProperty('--answer-scale', scale.toFixed(2));
+        }
+    });
 }
 
 // プレビュー用段落セクションを再帰的にレンダリング
@@ -414,8 +439,17 @@ function renderGridCell(field, num, isVertical = false, innerLabelFormat = 'circ
     // 後続テキスト（suffixText）
     const suffixHtml = field.suffixText ? `<span class="suffix-text">${escapeHtml(field.suffixText)}</span>` : '';
 
+    // 答え表示
+    const showAnswer = state.showAnswers && field.answer;
+    const answerHtml = showAnswer ? `<span class="answer-value">${escapeHtml(field.answer)}</span>` : '';
+
     // 原稿用紙形式（grid）の場合 - 横書きマス目のみ
     if (type === 'grid' && field.gridChars) {
+        if (showAnswer) {
+            // 答え表示時はマス目に1文字ずつ表示
+            const gridHtml = renderHorizontalGridPaperWithAnswer(field.gridChars, field.answer);
+            return `<div class="answer-cell-group">${numLabel}${gridHtml}${suffixHtml}</div>`;
+        }
         const gridHtml = renderHorizontalGridPaper(field.gridChars);
         return `<div class="answer-cell-group">${numLabel}${gridHtml}${suffixHtml}</div>`;
     }
@@ -425,7 +459,7 @@ function renderGridCell(field, num, isVertical = false, innerLabelFormat = 'circ
         return `<div class="answer-cell-group">
             ${numLabel}
             <div class="answer-box-group">
-                <div class="answer-box"><span class="box-unit">分</span></div>
+                <div class="answer-box">${answerHtml}<span class="box-unit">分</span></div>
                 <div class="answer-box"><span class="box-unit">秒</span></div>
             </div>
             ${suffixHtml}
@@ -452,7 +486,7 @@ function renderGridCell(field, num, isVertical = false, innerLabelFormat = 'circ
 
     return `<div class="answer-cell-group">
         ${numLabel}
-        <div class="${boxClass}">${unit ? `<span class="box-unit">${escapeHtml(unit)}</span>` : ''}</div>
+        <div class="${boxClass}">${answerHtml}${unit ? `<span class="box-unit">${escapeHtml(unit)}</span>` : ''}</div>
         ${suffixHtml}
     </div>`;
 }
@@ -763,6 +797,18 @@ function renderHorizontalGridPaper(charCount) {
     let html = '<div class="grid-paper-horizontal">';
     for (let i = 0; i < charCount; i++) {
         html += '<div class="grid-cell-h"></div>';
+    }
+    html += '</div>';
+    return html;
+}
+
+// 答え付きの横書き原稿用紙
+function renderHorizontalGridPaperWithAnswer(charCount, answer) {
+    const chars = answer ? answer.split('') : [];
+    let html = '<div class="grid-paper-horizontal">';
+    for (let i = 0; i < charCount; i++) {
+        const char = chars[i] || '';
+        html += `<div class="grid-cell-h">${char ? `<span class="grid-answer-char">${escapeHtml(char)}</span>` : ''}</div>`;
     }
     html += '</div>';
     return html;
