@@ -45,7 +45,7 @@ function init() {
 
     // 印刷
     elements.printBtn.addEventListener('click', () => {
-        // 国語モードの場合はA4横向きに設定
+        // 縦書きモードの場合はA4横向きに設定
         if (elements.verticalMode.checked) {
             const style = document.createElement('style');
             style.id = 'print-landscape';

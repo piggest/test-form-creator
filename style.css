@@ -1448,7 +1448,7 @@ body {
     padding: calc(3px * var(--scale));
 }
 
-/* 国語モード（縦書き解答用紙） */
+/* 縦書きモード（縦書き解答用紙） */
 .preview-content.vertical-mode {
     display: flex;
     flex-direction: column;
@@ -1459,7 +1459,7 @@ body {
     gap: 20px;
 }
 
-/* 国語モード：ページコンテナ */
+/* 縦書きモード：ページコンテナ */
 .preview-content.vertical-mode .preview-page {
     display: flex;
     flex-direction: row;
@@ -1490,7 +1490,7 @@ body {
     }
 }
 
-/* 国語モード：ヘッダー（右端に縦書き） */
+/* 縦書きモード：ヘッダー（右端に縦書き） */
 .preview-content.vertical-mode .preview-header {
     writing-mode: vertical-rl;
     text-orientation: upright;
@@ -1566,7 +1566,7 @@ body {
     font-size: calc(0.55rem * var(--scale));
 }
 
-/* 国語モード：2ページ目以降のヘッダー（横書き・簡易版） */
+/* 縦書きモード：2ページ目以降のヘッダー（横書き・簡易版） */
 .preview-content.vertical-mode .preview-header-subsequent {
     writing-mode: horizontal-tb;
     text-orientation: mixed;
@@ -1591,7 +1591,7 @@ body {
     font-size: calc(0.8rem * var(--scale));
 }
 
-/* 国語モード：問題エリア */
+/* 縦書きモード：問題エリア */
 .preview-content.vertical-mode .preview-questions-flow {
     flex: 1;
     display: flex;
@@ -1602,7 +1602,7 @@ body {
     order: 1;
 }
 
-/* 国語モード：大問マーカー（セル上部に表示） */
+/* 縦書きモード：大問マーカー（セル上部に表示） */
 .preview-content.vertical-mode .vertical-section-marker {
     position: absolute;
     top: calc(8px * var(--scale));
@@ -1620,7 +1620,7 @@ body {
     z-index: 1;
 }
 
-/* 国語モード：後続テキスト（suffixText） */
+/* 縦書きモード：後続テキスト（suffixText） */
 .preview-content.vertical-mode .vertical-suffix-text {
     writing-mode: vertical-rl;
     text-orientation: upright;
@@ -1629,13 +1629,13 @@ body {
     text-align: center;
 }
 
-/* 国語モード：大問間の空白列 */
+/* 縦書きモード：大問間の空白列 */
 .preview-content.vertical-mode .vertical-spacer-column {
     width: calc(20px * var(--scale));
     min-height: calc(50px * var(--scale));
 }
 
-/* 国語モード：段落コンテナ（段落内の要素をまとめる） */
+/* 縦書きモード：段落コンテナ（段落内の要素をまとめる） */
 .preview-content.vertical-mode .vertical-paragraph-container {
     display: flex;
     flex-direction: row-reverse;
@@ -1643,7 +1643,7 @@ body {
     gap: calc(8px * var(--scale));
 }
 
-/* 国語モード：大問マーカー独立列 */
+/* 縦書きモード：大問マーカー独立列 */
 .preview-content.vertical-mode .vertical-section-column {
     display: flex;
     flex-direction: column;
@@ -1670,7 +1670,7 @@ body {
     writing-mode: horizontal-tb;
 }
 
-/* 国語モード：積み重ねられたセル列 */
+/* 縦書きモード：積み重ねられたセル列 */
 .preview-content.vertical-mode .vertical-stacked-column {
     display: flex;
     flex-direction: column;
@@ -1884,7 +1884,7 @@ body {
     font-size: calc(0.75rem * var(--scale));
 }
 
-/* 国語モード：回答グリッド */
+/* 縦書きモード：回答グリッド */
 .preview-content.vertical-mode .preview-answer-grid {
     display: flex;
     flex-direction: row-reverse;
@@ -1894,7 +1894,7 @@ body {
     align-items: flex-start;
 }
 
-/* 国語モード：縦セルグループ */
+/* 縦書きモード：縦セルグループ */
 .preview-content.vertical-mode .vertical-cell-group {
     display: flex;
     flex-direction: column;
@@ -1972,7 +1972,7 @@ body {
     font-size: calc(0.5rem * var(--scale));
 }
 
-/* 国語モード：原稿用紙形式（縦書き文字数制限） */
+/* 縦書きモード：原稿用紙形式（縦書き文字数制限） */
 .preview-content.vertical-mode .vertical-grid-paper {
     display: flex;
     flex-direction: column;
@@ -2036,7 +2036,7 @@ body {
     border-bottom: 2px solid #333 !important;
 }
 
-/* 国語モード：複数回答欄コンテナ */
+/* 縦書きモード：複数回答欄コンテナ */
 .preview-content.vertical-mode .vertical-multiple-container {
     display: flex;
     flex-direction: column;
@@ -2498,7 +2498,7 @@ body {
     margin-left: calc(2px * var(--scale));
 }
 
-/* 国語モード用の複数回答欄 */
+/* 縦書きモード用の複数回答欄 */
 .preview-content.vertical-mode .grid-cell-item.cell-multiple-vertical {
     min-height: auto;
     padding: calc(4px * var(--scale));
@@ -2763,7 +2763,7 @@ body {
         page-break-inside: auto;
     }
 
-    /* 国語モード印刷設定 - プレビューと同じスタイルを使用 */
+    /* 縦書きモード印刷設定 - プレビューと同じスタイルを使用 */
     .preview-content.vertical-mode {
         padding: 0;
     }

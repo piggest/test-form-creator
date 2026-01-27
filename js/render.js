@@ -93,7 +93,7 @@ function renderTreeItem(paragraph, index, depth, parentLabelFormat, startNumber)
     return html;
 }
 
-// 国語モード用スケール最適化（1.0以上のみ）
+// 縦書きモード用スケール最適化（1.0以上のみ）
 async function optimizeVerticalModeScale() {
     // 初期スケール1.0でコンテンツサイズを測定
     elements.previewContent.style.setProperty('--scale', '1');
@@ -101,7 +101,7 @@ async function optimizeVerticalModeScale() {
 
     const questionsFlow = elements.previewContent.querySelector('.preview-questions-flow');
     if (!questionsFlow) {
-        console.log('[国語モード最適化] questions-flow が見つかりません');
+        console.log('[縦書きモード最適化] questions-flow が見つかりません');
         return;
     }
 
@@ -124,10 +124,10 @@ async function optimizeVerticalModeScale() {
     const pageWidth = flowRect.width;
     const pageHeight = 170 * 3.78; // 170mm in pixels
 
-    console.log(`[国語モード最適化] scale=1.0 時: コンテンツ=${contentWidth.toFixed(0)}x${contentHeight.toFixed(0)}px, ページ=${pageWidth.toFixed(0)}x${pageHeight.toFixed(0)}px`);
+    console.log(`[縦書きモード最適化] scale=1.0 時: コンテンツ=${contentWidth.toFixed(0)}x${contentHeight.toFixed(0)}px, ページ=${pageWidth.toFixed(0)}x${pageHeight.toFixed(0)}px`);
 
     if (contentWidth <= 0 || contentHeight <= 0) {
-        console.log('[国語モード最適化] コンテンツなし');
+        console.log('[縦書きモード最適化] コンテンツなし');
         return;
     }
 
@@ -144,7 +144,7 @@ async function optimizeVerticalModeScale() {
     // 1.0以上を保証（縮小しない）
     targetScale = Math.max(targetScale, 1.0);
 
-    console.log(`[国語モード最適化] 幅スケール=${widthScale.toFixed(3)}, 高さスケール=${heightScale.toFixed(3)}, 目標=${targetScale.toFixed(3)}`);
+    console.log(`[縦書きモード最適化] 幅スケール=${widthScale.toFixed(3)}, 高さスケール=${heightScale.toFixed(3)}, 目標=${targetScale.toFixed(3)}`);
 
     // 二分探索で最適スケールを見つける
     let low = 1.0;
@@ -166,7 +166,7 @@ async function optimizeVerticalModeScale() {
         }
 
         const fits = newMaxX <= newFlowRect.width * 1.01 && newMaxY <= pageHeight * 1.01;
-        console.log(`[国語モード最適化] 反復${iteration + 1}: scale=${testScale.toFixed(3)}, 収まる=${fits}`);
+        console.log(`[縦書きモード最適化] 反復${iteration + 1}: scale=${testScale.toFixed(3)}, 収まる=${fits}`);
 
         if (fits) {
             bestScale = testScale;
@@ -179,7 +179,7 @@ async function optimizeVerticalModeScale() {
     }
 
     elements.previewContent.style.setProperty('--scale', String(bestScale));
-    console.log(`[国語モード最適化] 最終スケール: ${bestScale.toFixed(3)}`);
+    console.log(`[縦書きモード最適化] 最終スケール: ${bestScale.toFixed(3)}`);
 }
 
 // 反復的に最適化を行う
@@ -187,7 +187,7 @@ async function optimizePreviewScale() {
     // まず内容をレンダリング
     renderPreviewContent();
 
-    // 国語モード（縦書き）の場合は別の最適化ロジック
+    // 縦書きモード（縦書き）の場合は別の最適化ロジック
     if (elements.verticalMode.checked) {
         elements.previewContent.style.maxWidth = 'none';
         await optimizeVerticalModeScale();
@@ -291,7 +291,7 @@ function renderPreviewContent() {
     }
 
     if (isVertical) {
-        // 国語モード：ページ分割を考慮してレンダリング
+        // 縦書きモード：ページ分割を考慮してレンダリング
         renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore);
     } else {
         // 通常モード：従来の構造
@@ -425,7 +425,7 @@ function renderGridCell(field, num, isVertical = false, innerLabelFormat = 'circ
     const unit = field.unit || '';
     const type = field.type;
 
-    // 国語モード（縦書き）の場合
+    // 縦書きモード（縦書き）の場合
     if (isVertical) {
         return renderVerticalGridCell(field, num, innerLabelFormat);
     }
@@ -634,7 +634,7 @@ function renderStackedCells(cells, innerLabelFormat = 'circled') {
     return html;
 }
 
-// 国語モード用のフラットセルレンダリング（段落番号付き）
+// 縦書きモード用のフラットセルレンダリング（段落番号付き）
 function renderVerticalGridCellFlat(field, num, paragraphNum, isFirstInParagraph, innerLabelFormat = 'circled') {
     const unit = field.unit || '';
     const type = field.type;
@@ -694,7 +694,7 @@ function renderVerticalGridCellFlat(field, num, paragraphNum, isFirstInParagraph
     return html;
 }
 
-// 国語モード用のセルレンダリング
+// 縦書きモード用のセルレンダリング
 function renderVerticalGridCell(field, num, innerLabelFormat = 'circled') {
     const unit = field.unit || '';
     const type = field.type;
@@ -775,7 +775,7 @@ function renderAnswerArea(field) {
     }
 }
 
-// 縦書き用の原稿用紙（国語モード用）
+// 縦書き用の原稿用紙（縦書きモード用）
 function renderGridPaper(charCount) {
     const charsPerGroup = 5; // 5文字ごとにグループ化
     const groups = [];

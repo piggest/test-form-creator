@@ -1,6 +1,6 @@
-// ====== 国語モード専用 ======
+// ====== 縦書きモード専用 ======
 
-// 国語モード用の原稿用紙をレンダリング
+// 縦書きモード用の原稿用紙をレンダリング
 function renderVerticalGridPaperHtml(charCount) {
     let html = '<div class="vertical-grid-paper">';
     for (let i = 0; i < charCount; i++) {
@@ -24,10 +24,10 @@ function isShortCellVertical(field) {
     return false;
 }
 
-// 国語モードのメインレンダリング関数
+// 縦書きモードのメインレンダリング関数
 function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
-    console.log('[国語モード] レンダリング開始');
-    console.log('[国語モード] state.paragraphs:', state.paragraphs);
+    console.log('[縦書きモード] レンダリング開始');
+    console.log('[縦書きモード] state.paragraphs:', state.paragraphs);
 
     // Step 1: 全ての回答欄を収集
     const allCells = [];
@@ -72,7 +72,7 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
         collectFromParagraph(p, idx + 1, rootFormat, 0);
     });
 
-    console.log('[国語モード] 収集されたセル数:', allCells.length);
+    console.log('[縦書きモード] 収集されたセル数:', allCells.length);
 
     // セルがない場合は空のプレビューを表示
     if (allCells.length === 0) {
@@ -165,7 +165,7 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
 
     html += '</div></div>';
 
-    console.log('[国語モード] HTML生成完了');
+    console.log('[縦書きモード] HTML生成完了');
     elements.previewContent.innerHTML = html;
 }
 
