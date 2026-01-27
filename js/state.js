@@ -7,7 +7,8 @@ let state = {
     nextAnswerFieldId: 1,
     maxScore: 100,
     verticalMode: false,
-    rootLabelFormat: 'boxed'  // トップレベル段落の番号形式
+    rootLabelFormat: 'boxed',  // トップレベル段落の番号形式
+    showAnswers: false  // 答え表示フラグ
 };
 
 // DOM要素の取得
@@ -61,7 +62,9 @@ const elements = {
     saveBtn: document.getElementById('saveBtn'),
     loadBtn: document.getElementById('loadBtn'),
     fileInput: document.getElementById('fileInput'),
-    printBtn: document.getElementById('printBtn')
+    printBtn: document.getElementById('printBtn'),
+    showAnswers: document.getElementById('showAnswers'),
+    answerValue: document.getElementById('answerValue')
 };
 
 // 旧形式から新形式へのマイグレーション
