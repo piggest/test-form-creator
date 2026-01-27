@@ -18,17 +18,55 @@ function getCircledNumber(num) {
     return circledNumbers[num - 1] || `(${num})`;
 }
 
+// アルファベットを生成 (a, b, c, ...)
+function getAlphabet(num) {
+    if (num < 1 || num > 26) return `(${num})`;
+    return String.fromCharCode(96 + num) + '.';
+}
+
+// あいうえお順カタカナ
+function getKatakanaAiueo(num) {
+    const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+    return chars[num - 1] || `(${num})`;
+}
+
+// いろは順カタカナ
+function getKatakanaIroha(num) {
+    const chars = 'イロハニホヘトチリヌルヲワカヨタレソツネナラムウヰノオクヤマケフコエテアサキユメミシヱヒモセス';
+    return chars[num - 1] || `(${num})`;
+}
+
+// あいうえお順ひらがな
+function getHiraganaAiueo(num) {
+    const chars = 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん';
+    return chars[num - 1] || `(${num})`;
+}
+
+// いろは順ひらがな
+function getHiraganaIroha(num) {
+    const chars = 'いろはにほへとちりぬるをわかよたれそつねならむうゐのおくやまけふこえてあさきゆめみしゑひもせす';
+    return chars[num - 1] || `(${num})`;
+}
+
 // 番号をフォーマット
-// format: 'boxed' | 'parenthesis' | 'circled'
 function formatNumber(num, format) {
     switch (format) {
         case 'boxed':
-            // 四角囲み数字（HTMLで表現）
             return `<span class="boxed-number">${num}</span>`;
         case 'parenthesis':
             return `(${num})`;
         case 'circled':
             return getCircledNumber(num);
+        case 'alphabet':
+            return getAlphabet(num);
+        case 'katakana-aiueo':
+            return getKatakanaAiueo(num);
+        case 'katakana-iroha':
+            return getKatakanaIroha(num);
+        case 'hiragana-aiueo':
+            return getHiraganaAiueo(num);
+        case 'hiragana-iroha':
+            return getHiraganaIroha(num);
         default:
             return `(${num})`;
     }
@@ -43,6 +81,16 @@ function formatNumberEdit(num, format) {
             return `(${num})`;
         case 'circled':
             return getCircledNumber(num);
+        case 'alphabet':
+            return getAlphabet(num);
+        case 'katakana-aiueo':
+            return getKatakanaAiueo(num);
+        case 'katakana-iroha':
+            return getKatakanaIroha(num);
+        case 'hiragana-aiueo':
+            return getHiraganaAiueo(num);
+        case 'hiragana-iroha':
+            return getHiraganaIroha(num);
         default:
             return `(${num})`;
     }
@@ -57,6 +105,16 @@ function getFormatSample(format) {
             return '(1)(2)';
         case 'circled':
             return '①②';
+        case 'alphabet':
+            return 'a. b.';
+        case 'katakana-aiueo':
+            return 'アイ';
+        case 'katakana-iroha':
+            return 'イロ';
+        case 'hiragana-aiueo':
+            return 'あい';
+        case 'hiragana-iroha':
+            return 'いろ';
         default:
             return '(1)(2)';
     }
