@@ -126,14 +126,14 @@
                 <div class="form-group">
                     <label for="answerFieldType">回答欄タイプ</label>
                     <select id="answerFieldType">
-                        <option value="symbol">記号回答式</option>
-                        <option value="text">記述式</option>
-                        <option value="number">数値記述式</option>
-                        <option value="grid">原稿用紙形式</option>
+                        <option value="symbol">記号</option>
+                        <option value="text">記述</option>
+                        <option value="number">数値</option>
+                        <option value="grid">文字数指定</option>
                     </select>
                 </div>
 
-                <!-- 記述式オプション -->
+                <!-- 記述オプション -->
                 <div id="textOptions" class="form-group" style="display: none;">
                     <div class="text-size-inputs">
                         <div>
@@ -151,7 +151,7 @@
                     </div>
                 </div>
 
-                <!-- 原稿用紙形式オプション -->
+                <!-- 文字数指定オプション -->
                 <div id="gridOptions" class="form-group" style="display: none;">
                     <label>文字数</label>
                     <div class="char-limit-inputs">
@@ -170,7 +170,7 @@
                     <input type="number" id="answerCount" value="1" min="1" max="20">
                 </div>
 
-                <!-- 数値記述式オプション -->
+                <!-- 数値オプション -->
                 <div id="numberOptions" class="form-group" style="display: none;">
                     <label>数値形式</label>
                     <div class="number-format-select">

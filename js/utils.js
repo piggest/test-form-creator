@@ -65,10 +65,10 @@ function getFormatSample(format) {
 // 子回答欄タイプのラベル
 function getSubItemTypeLabel(type) {
     const labels = {
-        'symbol': '記号回答式',
-        'text': '記述式',
-        'number': '数値記述式',
-        'grid': '原稿用紙形式'
+        'symbol': '記号',
+        'text': '記述',
+        'number': '数値',
+        'grid': '文字数指定'
     };
     return labels[type] || type;
 }
