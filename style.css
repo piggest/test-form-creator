@@ -1199,7 +1199,7 @@ body {
     --box-size: 40px;
     --small-box-size: 24px;
     --grid-cell-size: 28px;
-    --number-box-width: 80px;
+    --number-box-width: 120px;
     --word-box-width: 130px;
     --gap-size: 12px;
 
@@ -2698,7 +2698,7 @@ body {
 }
 
 .time-answer .time-box {
-    width: calc(60px * var(--scale));
+    width: calc(80px * var(--scale));
     height: calc(var(--box-size) * var(--scale));
     border: 1px solid #333;
     border-radius: 2px;
