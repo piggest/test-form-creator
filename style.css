@@ -857,7 +857,7 @@ body {
 
 .subq-preview .mini-number-box,
 .tree-field-preview .mini-number-box {
-    width: 60px;
+    width: 36px;
     height: 24px;
     border: 1.5px solid #666;
     border-radius: 2px;
