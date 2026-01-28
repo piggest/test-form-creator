@@ -1360,7 +1360,7 @@ body {
 }
 
 .answer-box.number {
-    min-width: calc(100px * var(--scale));
+    min-width: calc(80px * var(--scale));
 }
 
 .answer-box-group {
