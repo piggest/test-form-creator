@@ -469,8 +469,8 @@ function renderGridCell(field, num, isVertical = false, innerLabelFormat = 'circ
         return `<div class="answer-cell-group">
             ${numLabel}
             <div class="answer-box-group">
-                <div class="answer-box number">${minAnswer}<span class="box-unit">分</span></div>
-                <div class="answer-box number">${secAnswer}<span class="box-unit">秒</span></div>
+                <div class="answer-box number-small">${minAnswer}<span class="box-unit">分</span></div>
+                <div class="answer-box number-small">${secAnswer}<span class="box-unit">秒</span></div>
             </div>
             ${suffixHtml}
         </div>`;
@@ -488,7 +488,7 @@ function renderGridCell(field, num, isVertical = false, innerLabelFormat = 'circ
         for (let i = 0; i < count; i++) {
             const isLast = i === count - 1;
             const partAnswer = answerParts[i] ? `<span class="answer-value">${escapeHtml(answerParts[i].trim())}</span>` : '';
-            boxes += `<div class="answer-box number">${partAnswer}${isLast && unit ? `<span class="box-unit">${escapeHtml(unit)}</span>` : ''}</div>`;
+            boxes += `<div class="answer-box number-small">${partAnswer}${isLast && unit ? `<span class="box-unit">${escapeHtml(unit)}</span>` : ''}</div>`;
             if (!isLast) boxes += `<span class="ratio-separator">:</span>`;
         }
         return `<div class="answer-cell-group">${numLabel}<div class="answer-box-group">${boxes}</div>${suffixHtml}</div>`;

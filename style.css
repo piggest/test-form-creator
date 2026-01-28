@@ -1363,6 +1363,10 @@ body {
     min-width: calc(80px * var(--scale));
 }
 
+.answer-box.number-small {
+    min-width: calc(50px * var(--scale));
+}
+
 .answer-box-group {
     display: inline-flex;
     align-items: center;
