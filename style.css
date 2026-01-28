@@ -1359,6 +1359,10 @@ body {
     min-width: calc(80px * var(--scale));
 }
 
+.answer-box.number {
+    min-width: calc(100px * var(--scale));
+}
+
 .answer-box-group {
     display: inline-flex;
     align-items: center;

@@ -482,6 +482,8 @@ function renderGridCell(field, num, isVertical = false, innerLabelFormat = 'circ
     let boxClass = 'answer-box';
     if (type === 'text') {
         boxClass = 'answer-box wide';
+    } else if (type === 'number') {
+        boxClass = 'answer-box number';
     }
 
     return `<div class="answer-cell-group">
