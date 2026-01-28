@@ -456,11 +456,21 @@ function renderGridCell(field, num, isVertical = false, innerLabelFormat = 'circ
 
     // 時間形式の場合
     if (type === 'number' && field.numberFormat === 'time') {
+        let minAnswer = '';
+        let secAnswer = '';
+        if (showAnswer && field.answer) {
+            // 「2分30秒」や「2:30」などの形式を解析
+            const match = field.answer.match(/(\d+)\s*[分:]\s*(\d+)/);
+            if (match) {
+                minAnswer = `<span class="answer-value">${match[1]}</span>`;
+                secAnswer = `<span class="answer-value">${match[2]}</span>`;
+            }
+        }
         return `<div class="answer-cell-group">
             ${numLabel}
             <div class="answer-box-group">
-                <div class="answer-box">${answerHtml}<span class="box-unit">分</span></div>
-                <div class="answer-box"><span class="box-unit">秒</span></div>
+                <div class="answer-box number">${minAnswer}<span class="box-unit">分</span></div>
+                <div class="answer-box number">${secAnswer}<span class="box-unit">秒</span></div>
             </div>
             ${suffixHtml}
         </div>`;
@@ -469,10 +479,16 @@ function renderGridCell(field, num, isVertical = false, innerLabelFormat = 'circ
     // 比率形式の場合
     if (type === 'number' && field.numberFormat === 'ratio') {
         const count = field.ratioCount || 2;
+        let answerParts = [];
+        if (showAnswer && field.answer) {
+            // 「3：4」や「3:4」などの形式を解析
+            answerParts = field.answer.split(/[：:]/);
+        }
         let boxes = '';
         for (let i = 0; i < count; i++) {
             const isLast = i === count - 1;
-            boxes += `<div class="answer-box">${isLast && unit ? `<span class="box-unit">${escapeHtml(unit)}</span>` : ''}</div>`;
+            const partAnswer = answerParts[i] ? `<span class="answer-value">${escapeHtml(answerParts[i].trim())}</span>` : '';
+            boxes += `<div class="answer-box number">${partAnswer}${isLast && unit ? `<span class="box-unit">${escapeHtml(unit)}</span>` : ''}</div>`;
             if (!isLast) boxes += `<span class="ratio-separator">:</span>`;
         }
         return `<div class="answer-cell-group">${numLabel}<div class="answer-box-group">${boxes}</div>${suffixHtml}</div>`;
