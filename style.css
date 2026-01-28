@@ -2820,11 +2820,15 @@ body {
     font-weight: bold;
     font-size: calc(0.75rem * var(--scale));
     white-space: nowrap;
-    max-width: calc(100% - 4px);
     overflow: hidden;
     text-overflow: clip;
     transform: scaleX(var(--answer-scale, 1));
     transform-origin: center;
+}
+
+/* 単位がある場合、答えを単位の左側に表示 */
+.answer-box:has(.box-unit) .answer-value {
+    padding-right: calc(20px * var(--scale));
 }
 
 .grid-cell-h {
