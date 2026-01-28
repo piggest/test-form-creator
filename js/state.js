@@ -200,28 +200,133 @@ function copyFieldProperties(src, dest) {
     if (src.ratioCount) dest.ratioCount = src.ratioCount;
 }
 
+// サンプルデータ（初回アクセス時に表示）
+function getSampleData() {
+    return {
+        version: 3,
+        title: 'サンプルテスト',
+        subtitle: '回答欄の種類一覧',
+        maxScore: 100,
+        verticalMode: false,
+        rootLabelFormat: 'boxed',
+        paragraphs: [
+            {
+                id: 1,
+                itemType: 'paragraph',
+                labelFormat: 'parenthesis',
+                startNumber: 1,
+                showInnerLabel: true,
+                text: '記号で答えなさい。',
+                items: [
+                    { id: 1, itemType: 'field', type: 'symbol', answerCount: 1, answer: 'ア' },
+                    { id: 2, itemType: 'field', type: 'symbol', answerCount: 4, answer: 'イ、ウ、エ、オ' }
+                ]
+            },
+            {
+                id: 2,
+                itemType: 'paragraph',
+                labelFormat: 'circled',
+                startNumber: 1,
+                showInnerLabel: true,
+                text: '次の問いに答えなさい。',
+                items: [
+                    { id: 3, itemType: 'field', type: 'text', textWidth: 5, textRows: 1, answer: '東京都' },
+                    { id: 4, itemType: 'field', type: 'text', textWidth: 8, textRows: 2, answer: '日本国憲法' },
+                    { id: 5, itemType: 'field', type: 'text', textWidth: 4, textRows: 1, suffixText: 'と考える。', answer: '平和' }
+                ]
+            },
+            {
+                id: 3,
+                itemType: 'paragraph',
+                labelFormat: 'parenthesis',
+                startNumber: 1,
+                showInnerLabel: true,
+                text: '計算して答えなさい。',
+                items: [
+                    { id: 6, itemType: 'field', type: 'number', numberFormat: 'simple', unit: 'cm', answer: '12' },
+                    { id: 7, itemType: 'field', type: 'number', numberFormat: 'simple', unit: 'cm²', answer: '36' },
+                    { id: 8, itemType: 'field', type: 'number', numberFormat: 'ratio', ratioCount: 2, answer: '3：4' },
+                    { id: 9, itemType: 'field', type: 'number', numberFormat: 'time', answer: '2分30秒' }
+                ]
+            },
+            {
+                id: 4,
+                itemType: 'paragraph',
+                labelFormat: 'katakana-aiueo',
+                startNumber: 1,
+                showInnerLabel: false,
+                text: '漢字で答えなさい。',
+                items: [
+                    { id: 10, itemType: 'field', type: 'grid', gridChars: 3, answer: '地球儀' },
+                    { id: 11, itemType: 'field', type: 'grid', gridChars: 5, answer: '社会科見学' },
+                    { id: 12, itemType: 'field', type: 'grid', gridChars: 4, suffixText: 'という。', answer: '公民館' }
+                ]
+            },
+            {
+                id: 5,
+                itemType: 'paragraph',
+                labelFormat: 'alphabet',
+                startNumber: 1,
+                showInnerLabel: true,
+                text: '子段落を含む大問の例',
+                items: [
+                    {
+                        id: 6,
+                        itemType: 'paragraph',
+                        labelFormat: 'circled',
+                        startNumber: 1,
+                        showInnerLabel: true,
+                        text: '小問1',
+                        items: [
+                            { id: 13, itemType: 'field', type: 'symbol', answerCount: 1, answer: 'ウ' },
+                            { id: 14, itemType: 'field', type: 'text', textWidth: 3, textRows: 1, answer: '回答' }
+                        ]
+                    },
+                    {
+                        id: 7,
+                        itemType: 'paragraph',
+                        labelFormat: 'circled',
+                        startNumber: 1,
+                        showInnerLabel: true,
+                        text: '小問2',
+                        items: [
+                            { id: 15, itemType: 'field', type: 'number', numberFormat: 'simple', unit: '個', answer: '15' }
+                        ]
+                    }
+                ]
+            }
+        ],
+        nextParagraphId: 8,
+        nextAnswerFieldId: 16
+    };
+}
+
 // ローカルストレージから復元
 function loadFromStorage() {
     try {
         const saved = localStorage.getItem('testFormCreator');
-        if (saved) {
-            let data = JSON.parse(saved);
+        let data;
 
+        if (saved) {
+            data = JSON.parse(saved);
             // 旧形式の場合はマイグレーション
             data = migrateFromOldFormat(data);
-
-            state.paragraphs = data.paragraphs || [];
-            state.nextParagraphId = data.nextParagraphId || 1;
-            state.nextAnswerFieldId = data.nextAnswerFieldId || 1;
-            state.maxScore = data.maxScore || 100;
-            state.verticalMode = data.verticalMode || false;
-            state.rootLabelFormat = data.rootLabelFormat || 'boxed';
-            elements.testTitle.value = data.title || 'テスト';
-            elements.testSubtitle.value = data.subtitle || '';
-            elements.maxScore.value = state.maxScore;
-            elements.verticalMode.checked = state.verticalMode;
-            elements.rootLabelFormat.value = state.rootLabelFormat;
+        } else {
+            // 初回アクセス時はサンプルデータを表示
+            data = getSampleData();
         }
+
+        state.paragraphs = data.paragraphs || [];
+        state.nextParagraphId = data.nextParagraphId || 1;
+        state.nextAnswerFieldId = data.nextAnswerFieldId || 1;
+        state.maxScore = data.maxScore || 100;
+        state.verticalMode = data.verticalMode || false;
+        state.rootLabelFormat = data.rootLabelFormat || 'boxed';
+        elements.testTitle.value = data.title || 'テスト';
+        elements.testSubtitle.value = data.subtitle || '';
+        elements.maxScore.value = state.maxScore;
+        elements.verticalMode.checked = state.verticalMode;
+        elements.rootLabelFormat.value = state.rootLabelFormat;
     } catch (e) {
         console.error('Failed to load from storage:', e);
     }
