@@ -2852,6 +2852,24 @@ body {
     border-top: 1px dashed #ddd;
 }
 
+/* 記述式回答欄: 複数行の罫線 */
+.answer-box .answer-lines {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+}
+
+.answer-box .answer-line {
+    flex: 1;
+    border-bottom: 1px dashed #bbb;
+}
+
+.answer-box .answer-line:last-child {
+    border-bottom: none;
+}
+
 /* 問題文入力（モーダル textarea） */
 #paragraphProblemText,
 #answerFieldProblemText {
