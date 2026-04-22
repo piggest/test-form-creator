@@ -44,6 +44,7 @@ function addAnswerFieldWithType(paragraphId, template) {
     if (template.unit) newField.unit = template.unit;
     if (template.ratioCount) newField.ratioCount = template.ratioCount;
     if (template.gridChars) newField.gridChars = template.gridChars;
+    // 問題文はテンプレートから引き継がない（個別入力）
 
     if (!paragraph.items) paragraph.items = [];
     paragraph.items.push(newField);
@@ -98,6 +99,9 @@ function openAnswerFieldModal(paragraphId, type, editId = null) {
 
             // 答え
             elements.answerValue.value = field.answer || '';
+
+            // 問題文
+            elements.answerFieldProblemText.value = field.problemText || '';
         }
     } else {
         resetAnswerFieldForm(type);
@@ -127,6 +131,7 @@ function resetAnswerFieldForm(type) {
     elements.ratioCountOption.style.display = 'none';
     document.querySelector('input[name="numberFormat"][value="simple"]').checked = true;
     elements.answerValue.value = '';
+    elements.answerFieldProblemText.value = '';
 }
 
 function saveAnswerField(e) {
@@ -182,6 +187,10 @@ function saveAnswerField(e) {
     // 答え
     const answerValue = elements.answerValue.value.trim();
     if (answerValue) field.answer = answerValue;
+
+    // 問題文
+    const problemText = elements.answerFieldProblemText.value.trim();
+    if (problemText) field.problemText = problemText;
 
     if (!paragraph.items) paragraph.items = [];
 

@@ -64,10 +64,12 @@ function openParagraphModal(editId) {
     const paragraph = findParagraphById(editId);
     if (paragraph) {
         elements.paragraphText.value = paragraph.text || '';
+        elements.paragraphProblemText.value = paragraph.problemText || '';
         elements.labelFormat.value = paragraph.labelFormat || 'parenthesis';
         elements.showInnerLabel.checked = paragraph.showInnerLabel !== false;
     } else {
         elements.paragraphText.value = '';
+        elements.paragraphProblemText.value = '';
         elements.labelFormat.value = 'parenthesis';
         elements.showInnerLabel.checked = true;
     }
@@ -77,12 +79,14 @@ function saveParagraph(e) {
     e.preventDefault();
     const editId = parseInt(elements.paragraphId.value);
     const text = elements.paragraphText.value.trim();
+    const problemText = elements.paragraphProblemText.value.trim();
     const labelFormat = elements.labelFormat.value;
     const showInnerLabel = elements.showInnerLabel.checked;
 
     const paragraph = findParagraphById(editId);
     if (paragraph) {
         paragraph.text = text;
+        paragraph.problemText = problemText;
         paragraph.labelFormat = labelFormat;
         paragraph.showInnerLabel = showInnerLabel;
     }
