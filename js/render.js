@@ -514,15 +514,25 @@ function renderGridCell(field, num, isVertical = false, innerLabelFormat = 'circ
 
     // 通常のセル（記号、数値、記述式）
     let boxClass = 'answer-box';
+    let boxStyle = '';
+    let innerHtml = '';
     if (type === 'text') {
         boxClass = 'answer-box wide';
+        const tw = field.textWidth || 3;
+        const tr = field.textRows || 1;
+        // 1文字=36px 基準で幅・高さを確保
+        boxStyle = ` style="width: calc(36px * var(--scale) * ${tw}); height: calc(36px * var(--scale) * ${tr}); min-width: 0;"`;
+        if (tr > 1 && !showAnswer) {
+            const lines = Array(tr).fill('<div class="answer-line"></div>').join('');
+            innerHtml = `<div class="answer-lines">${lines}</div>`;
+        }
     } else if (type === 'number') {
         boxClass = 'answer-box number';
     }
 
     return `<div class="answer-cell-group">
         ${numLabel}
-        <div class="${boxClass}">${answerHtml}${unit ? `<span class="box-unit">${escapeHtml(unit)}</span>` : ''}</div>
+        <div class="${boxClass}"${boxStyle}>${innerHtml}${answerHtml}${unit ? `<span class="box-unit">${escapeHtml(unit)}</span>` : ''}</div>
         ${suffixHtml}
     </div>`;
 }
