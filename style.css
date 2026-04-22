@@ -2851,3 +2851,74 @@ body {
     padding-top: 15px;
     border-top: 1px dashed #ddd;
 }
+
+/* 問題文入力（モーダル textarea） */
+#paragraphProblemText,
+#answerFieldProblemText {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    resize: vertical;
+    min-height: 60px;
+}
+
+/* 編集モード: 問題文バッジ */
+.tree-problem-badge {
+    display: inline-block;
+    background: #fff4d6;
+    color: #8a6d00;
+    border: 1px solid #e7c96a;
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-size: 0.75rem;
+    margin-left: 6px;
+    cursor: help;
+}
+
+/* プレビュー: 段落問題文 */
+.preview-problem-text {
+    font-size: calc(0.95rem * var(--scale));
+    line-height: 1.8;
+    margin-bottom: calc(10px * var(--scale));
+    padding: calc(8px * var(--scale)) calc(12px * var(--scale));
+    background: #fafafa;
+    border-left: calc(3px * var(--scale)) solid #888;
+    white-space: pre-wrap;
+}
+
+/* プレビュー: 回答欄ごとの問題文 */
+.field-with-problem {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: calc(4px * var(--scale));
+    margin-bottom: calc(4px * var(--scale));
+}
+
+.field-problem-text {
+    font-size: calc(0.9rem * var(--scale));
+    line-height: 1.6;
+    padding: calc(4px * var(--scale)) calc(8px * var(--scale));
+    color: #333;
+    white-space: pre-wrap;
+}
+
+/* 縦書きモード: 問題文列 */
+.preview-content.vertical-mode .vertical-problem-column {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    padding: calc(6px * var(--scale)) calc(4px * var(--scale));
+    max-height: 170mm;
+}
+
+.preview-content.vertical-mode .vertical-problem-text {
+    font-size: calc(0.95rem * var(--scale));
+    line-height: 1.8;
+    white-space: pre-wrap;
+}
+
+/* 縦書きモードの問題文 textarea は縦書き表示にしない（編集用） */

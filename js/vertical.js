@@ -46,6 +46,7 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
                 allCells.push({
                     field: item,
                     paragraphNum: paragraphNum,
+                    paragraphProblemText: isFirst ? (paragraph.problemText || '') : '',
                     labelFormat: labelFormat,
                     innerLabelFormat: childLabelFormat,
                     isFirstInParagraph: isFirst,
@@ -134,7 +135,17 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
                 </div>`;
             }
 
+            // 段落の問題文（縦書き）
+            if (cell.paragraphProblemText) {
+                html += `<div class="vertical-problem-column"><div class="vertical-problem-text">${escapeHtml(cell.paragraphProblemText)}</div></div>`;
+            }
+
             isFirstParagraph = false;
+        }
+
+        // 回答欄の問題文（縦書き）
+        if (cell.field.problemText) {
+            html += `<div class="vertical-problem-column vertical-field-problem"><div class="vertical-problem-text">${escapeHtml(cell.field.problemText)}</div></div>`;
         }
 
         // 短いセルを集めて積み重ねる

@@ -27,12 +27,14 @@ function renderTreeItem(paragraph, index, depth, parentLabelFormat, startNumber)
     const childLabelFormat = paragraph.labelFormat || 'parenthesis';
     const paragraphLabel = formatNumberEdit(paragraphNum, parentLabelFormat);
     const textPreview = paragraph.text ? `<span class="tree-text">${escapeHtml(paragraph.text.substring(0, 40))}${paragraph.text.length > 40 ? '...' : ''}</span>` : '';
+    const problemBadge = paragraph.problemText ? `<span class="tree-problem-badge" title="${escapeHtml(paragraph.problemText)}">📄問題文</span>` : '';
 
     let html = `
         <li class="tree-item tree-paragraph depth-${Math.min(depth, 3)}">
             <div class="tree-row">
                 <span class="tree-label">${paragraphLabel}</span>
                 ${textPreview}
+                ${problemBadge}
                 <span class="tree-actions">
                     <button class="tree-btn" onclick="moveParagraphUp(${paragraph.id})" title="上へ">↑</button>
                     <button class="tree-btn" onclick="moveParagraphDown(${paragraph.id})" title="下へ">↓</button>
@@ -57,12 +59,14 @@ function renderTreeItem(paragraph, index, depth, parentLabelFormat, startNumber)
                 const typeLabel = getAnswerFieldTypeLabel(item.type);
                 const unitLabel = item.unit ? ` (${item.unit})` : '';
                 const miniPreview = renderMiniPreview(item);
+                const fieldProblemBadge = item.problemText ? `<span class="tree-problem-badge" title="${escapeHtml(item.problemText)}">📄</span>` : '';
 
                 html += `
                     <li class="tree-item tree-field">
                         <div class="tree-row">
                             <span class="tree-field-label">${innerNum}</span>
                             <span class="tree-field-type">${typeLabel}${unitLabel}</span>
+                            ${fieldProblemBadge}
                             <span class="tree-field-preview">${miniPreview}</span>
                             <span class="tree-actions">
                                 <button class="tree-btn" onclick="moveAnswerFieldUp(${paragraph.id}, ${item.id})" title="上へ">↑</button>
@@ -352,8 +356,10 @@ function renderPreviewSection(paragraph, index, depth, parentLabelFormat, startN
 
     let html = `<div class="preview-section${depthClass}">`;
 
-    // 子段落（depth > 0）でテキストがなく回答欄がある場合のみ、段落番号を回答欄グリッドに含める
-    if (depth > 0 && !hasText && hasAnswerFields) {
+    const hasProblem = paragraph.problemText && paragraph.problemText.trim();
+
+    // 子段落（depth > 0）でテキスト・問題文がなく回答欄がある場合のみ、段落番号を回答欄グリッドに含める
+    if (depth > 0 && !hasText && !hasProblem && hasAnswerFields) {
         html += `<div class="preview-answer-grid">`;
         // 段落番号セル
         html += `<div class="grid-cell-item cell-number-cell"><span class="cell-number">${formatNumber(paragraphNum, parentLabelFormat)}</span></div>`;
@@ -363,7 +369,7 @@ function renderPreviewSection(paragraph, index, depth, parentLabelFormat, startN
             itemNumber++;
             if (item.itemType === 'field') {
                 const innerNum = paragraph.showInnerLabel ? itemNumber : null;
-                html += renderGridCell(item, innerNum, false, childLabelFormat);
+                html += renderGridCellWithProblem(item, innerNum, false, childLabelFormat);
             }
         });
         html += `</div>`;
@@ -388,6 +394,10 @@ function renderPreviewSection(paragraph, index, depth, parentLabelFormat, startN
             html += `<div class="preview-section-text">${escapeHtml(paragraph.text)}</div>`;
         }
 
+        if (hasProblem) {
+            html += `<div class="preview-problem-text">${escapeHtml(paragraph.problemText).replace(/\n/g, '<br>')}</div>`;
+        }
+
         // 回答欄をグリッド表示（共通連番）
         if (hasAnswerFields) {
             html += `<div class="preview-answer-grid">`;
@@ -396,7 +406,7 @@ function renderPreviewSection(paragraph, index, depth, parentLabelFormat, startN
                 itemNumber++;
                 if (item.itemType === 'field') {
                     const innerNum = paragraph.showInnerLabel ? itemNumber : null;
-                    html += renderGridCell(item, innerNum, false, childLabelFormat);
+                    html += renderGridCellWithProblem(item, innerNum, false, childLabelFormat);
                 }
             });
             html += `</div>`;
@@ -419,6 +429,14 @@ function renderPreviewSection(paragraph, index, depth, parentLabelFormat, startN
 
     html += `</div>`;
     return { html, nextNumber: currentNumber };
+}
+
+// 問題文付き回答欄（通常モード用ラッパー）
+function renderGridCellWithProblem(field, num, isVertical, innerLabelFormat) {
+    const cellHtml = renderGridCell(field, num, isVertical, innerLabelFormat);
+    if (!field.problemText) return cellHtml;
+    const problemHtml = `<div class="field-problem-text">${escapeHtml(field.problemText).replace(/\n/g, '<br>')}</div>`;
+    return `<div class="field-with-problem">${problemHtml}${cellHtml}</div>`;
 }
 
 function renderGridCell(field, num, isVertical = false, innerLabelFormat = 'circled') {

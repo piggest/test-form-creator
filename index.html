@@ -107,6 +107,10 @@
                     <input type="text" id="paragraphText" placeholder="例: 次の文章を読んで答えなさい">
                 </div>
                 <div class="form-group">
+                    <label for="paragraphProblemText">問題文（任意）</label>
+                    <textarea id="paragraphProblemText" rows="5" placeholder="例: 次の文章を読んで、後の問いに答えなさい。&#10;（本文を入力）"></textarea>
+                </div>
+                <div class="form-group">
                     <label for="labelFormat">子段落の番号形式</label>
                     <select id="labelFormat">
                         <option value="parenthesis">()（カッコ）</option>
@@ -140,6 +144,11 @@
             <form id="answerFieldForm">
                 <input type="hidden" id="answerFieldParagraphId">
                 <input type="hidden" id="answerFieldId">
+
+                <div class="form-group">
+                    <label for="answerFieldProblemText">問題文（任意）</label>
+                    <textarea id="answerFieldProblemText" rows="3" placeholder="例: 下線部について、理由を答えなさい。"></textarea>
+                </div>
 
                 <div class="form-group">
                     <label for="answerFieldType">回答欄タイプ</label>
