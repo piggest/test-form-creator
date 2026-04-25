@@ -27,14 +27,13 @@ function renderTreeItem(paragraph, index, depth, parentLabelFormat, startNumber)
     const childLabelFormat = paragraph.labelFormat || 'parenthesis';
     const paragraphLabel = formatNumberEdit(paragraphNum, parentLabelFormat);
     const textPreview = paragraph.text ? `<span class="tree-text">${escapeHtml(paragraph.text.substring(0, 40))}${paragraph.text.length > 40 ? '...' : ''}</span>` : '';
-    const problemBadge = paragraph.problemText ? `<span class="tree-problem-badge" title="${escapeHtml(paragraph.problemText)}">📄問題文</span>` : '';
+    const problemBlock = paragraph.problemText ? `<div class="tree-problem-text">${escapeHtml(paragraph.problemText).replace(/\n/g, '<br>')}</div>` : '';
 
     let html = `
         <li class="tree-item tree-paragraph depth-${Math.min(depth, 3)}">
             <div class="tree-row">
                 <span class="tree-label">${paragraphLabel}</span>
                 ${textPreview}
-                ${problemBadge}
                 <span class="tree-actions">
                     <button class="tree-btn" onclick="moveParagraphUp(${paragraph.id})" title="上へ">↑</button>
                     <button class="tree-btn" onclick="moveParagraphDown(${paragraph.id})" title="下へ">↓</button>
@@ -42,6 +41,7 @@ function renderTreeItem(paragraph, index, depth, parentLabelFormat, startNumber)
                     <button class="tree-btn delete" onclick="deleteParagraph(${paragraph.id})">削除</button>
                 </span>
             </div>
+            ${problemBlock}
     `;
 
     // 子要素があれば入れ子のリスト
@@ -59,14 +59,14 @@ function renderTreeItem(paragraph, index, depth, parentLabelFormat, startNumber)
                 const typeLabel = getAnswerFieldTypeLabel(item.type);
                 const unitLabel = item.unit ? ` (${item.unit})` : '';
                 const miniPreview = renderMiniPreview(item);
-                const fieldProblemBadge = item.problemText ? `<span class="tree-problem-badge" title="${escapeHtml(item.problemText)}">📄</span>` : '';
+                const fieldProblemBlock = item.problemText ? `<div class="tree-problem-text">${escapeHtml(item.problemText).replace(/\n/g, '<br>')}</div>` : '';
+                const fieldAnswerBlock = item.answer ? `<div class="tree-answer-text">答え: ${escapeHtml(item.answer)}</div>` : '';
 
                 html += `
                     <li class="tree-item tree-field">
                         <div class="tree-row">
                             <span class="tree-field-label">${innerNum}</span>
                             <span class="tree-field-type">${typeLabel}${unitLabel}</span>
-                            ${fieldProblemBadge}
                             <span class="tree-field-preview">${miniPreview}</span>
                             <span class="tree-actions">
                                 <button class="tree-btn" onclick="moveAnswerFieldUp(${paragraph.id}, ${item.id})" title="上へ">↑</button>
@@ -75,6 +75,8 @@ function renderTreeItem(paragraph, index, depth, parentLabelFormat, startNumber)
                                 <button class="tree-btn delete" onclick="deleteAnswerField(${paragraph.id}, ${item.id})">削除</button>
                             </span>
                         </div>
+                        ${fieldProblemBlock}
+                        ${fieldAnswerBlock}
                     </li>
                 `;
             } else if (item.itemType === 'paragraph') {
