@@ -99,93 +99,101 @@ function renderTreeItem(paragraph, index, depth, parentLabelFormat, startNumber)
     return html;
 }
 
-// 縦書きモード用スケール最適化（1.0以上のみ）
+// 縦書きモード用スケール最適化（複数ページ対応、各ページ独立最適化）
 async function optimizeVerticalModeScale() {
-    // 初期スケール1.0でコンテンツサイズを測定
-    elements.previewContent.style.setProperty('--scale', '1');
-    await new Promise(resolve => requestAnimationFrame(resolve));
-
-    const questionsFlow = elements.previewContent.querySelector('.preview-questions-flow');
-    if (!questionsFlow) {
-        console.log('[縦書きモード最適化] questions-flow が見つかりません');
+    const pages = elements.previewContent.querySelectorAll('.preview-page');
+    if (pages.length === 0) {
+        console.log('[縦書きモード最適化] preview-page が見つかりません');
         return;
     }
 
-    // 実際のコンテンツ範囲を計算（子要素のbounding boxから）
-    const children = questionsFlow.children;
-    let minX = Infinity, maxX = -Infinity;
-    let minY = Infinity, maxY = -Infinity;
-    const flowRect = questionsFlow.getBoundingClientRect();
+    // .preview-content の --scale はリセット（各ページ個別設定するため）
+    elements.previewContent.style.removeProperty('--scale');
 
-    for (const child of children) {
-        const rect = child.getBoundingClientRect();
-        minX = Math.min(minX, rect.left - flowRect.left);
-        maxX = Math.max(maxX, rect.right - flowRect.left);
-        minY = Math.min(minY, rect.top - flowRect.top);
-        maxY = Math.max(maxY, rect.bottom - flowRect.top);
-    }
+    const pageHeight = 170 * 3.78; // 170mm in pixels (A4横向き内寸)
 
-    const contentWidth = maxX - minX;
-    const contentHeight = maxY - minY;
-    const pageWidth = flowRect.width;
-    const pageHeight = 170 * 3.78; // 170mm in pixels
+    for (let p = 0; p < pages.length; p++) {
+        const page = pages[p];
+        const questionsFlow = page.querySelector('.preview-questions-flow');
+        if (!questionsFlow) continue;
 
-    console.log(`[縦書きモード最適化] scale=1.0 時: コンテンツ=${contentWidth.toFixed(0)}x${contentHeight.toFixed(0)}px, ページ=${pageWidth.toFixed(0)}x${pageHeight.toFixed(0)}px`);
-
-    if (contentWidth <= 0 || contentHeight <= 0) {
-        console.log('[縦書きモード最適化] コンテンツなし');
-        return;
-    }
-
-    // 幅と高さの両方を考慮してスケールを計算
-    const widthScale = pageWidth / contentWidth;
-    const heightScale = pageHeight / contentHeight;
-
-    // 両方に収まる最大スケールを選択（少し余裕を持たせる）
-    let targetScale = Math.min(widthScale, heightScale) * 0.95;
-
-    // 上限を設定（最大2.5倍）
-    targetScale = Math.min(targetScale, 2.5);
-
-    // 1.0以上を保証（縮小しない）
-    targetScale = Math.max(targetScale, 1.0);
-
-    console.log(`[縦書きモード最適化] 幅スケール=${widthScale.toFixed(3)}, 高さスケール=${heightScale.toFixed(3)}, 目標=${targetScale.toFixed(3)}`);
-
-    // 二分探索で最適スケールを見つける
-    let low = 1.0;
-    let high = targetScale;
-    let bestScale = 1.0;
-
-    for (let iteration = 0; iteration < 8; iteration++) {
-        const testScale = (low + high) / 2;
-        elements.previewContent.style.setProperty('--scale', String(testScale));
+        // 初期スケール1.0で測定
+        page.style.setProperty('--scale', '1');
         await new Promise(resolve => requestAnimationFrame(resolve));
 
-        // 再測定
-        let newMaxX = -Infinity, newMaxY = -Infinity;
-        const newFlowRect = questionsFlow.getBoundingClientRect();
+        const flowRect = questionsFlow.getBoundingClientRect();
+        let minX = Infinity, maxX = -Infinity;
+        let minY = Infinity, maxY = -Infinity;
         for (const child of questionsFlow.children) {
             const rect = child.getBoundingClientRect();
-            newMaxX = Math.max(newMaxX, rect.right - newFlowRect.left);
-            newMaxY = Math.max(newMaxY, rect.bottom - newFlowRect.top);
+            minX = Math.min(minX, rect.left - flowRect.left);
+            maxX = Math.max(maxX, rect.right - flowRect.left);
+            minY = Math.min(minY, rect.top - flowRect.top);
+            maxY = Math.max(maxY, rect.bottom - flowRect.top);
         }
 
-        const fits = newMaxX <= newFlowRect.width * 1.01 && newMaxY <= pageHeight * 1.01;
-        console.log(`[縦書きモード最適化] 反復${iteration + 1}: scale=${testScale.toFixed(3)}, 収まる=${fits}`);
+        const contentWidth = maxX - minX;
+        const contentHeight = maxY - minY;
+        const pageWidth = flowRect.width;
 
-        if (fits) {
-            bestScale = testScale;
-            low = testScale;
+        console.log(`[縦書きモード最適化] ページ${p + 1} scale=1.0時: コンテンツ=${contentWidth.toFixed(0)}x${contentHeight.toFixed(0)}px, 領域=${pageWidth.toFixed(0)}x${pageHeight.toFixed(0)}px`);
+
+        if (contentWidth <= 0 || contentHeight <= 0) {
+            console.log(`[縦書きモード最適化] ページ${p + 1} コンテンツなし`);
+            continue;
+        }
+
+        const widthScale = pageWidth / contentWidth;
+        const heightScale = pageHeight / contentHeight;
+        const fitScale = Math.min(widthScale, heightScale) * 0.95;
+
+        // 収まらない場合は1.0未満も許容（はみ出し防止）
+        // 収まる場合は最大2.5倍まで拡大
+        const targetScale = Math.max(0.4, Math.min(fitScale, 2.5));
+
+        console.log(`[縦書きモード最適化] ページ${p + 1} 幅スケール=${widthScale.toFixed(3)}, 高さスケール=${heightScale.toFixed(3)}, 目標=${targetScale.toFixed(3)}`);
+
+        // 二分探索で最適スケールを見つける
+        // 拡大方向(targetScale > 1)と縮小方向(targetScale < 1)で範囲を変える
+        let low, high;
+        if (targetScale >= 1.0) {
+            low = 1.0;
+            high = targetScale;
         } else {
-            high = testScale;
+            low = targetScale * 0.9;
+            high = 1.0;
+        }
+        let bestScale = targetScale;
+
+        for (let iteration = 0; iteration < 8; iteration++) {
+            const testScale = (low + high) / 2;
+            page.style.setProperty('--scale', String(testScale));
+            await new Promise(resolve => requestAnimationFrame(resolve));
+
+            let newMaxX = -Infinity, newMaxY = -Infinity;
+            const newFlowRect = questionsFlow.getBoundingClientRect();
+            for (const child of questionsFlow.children) {
+                const rect = child.getBoundingClientRect();
+                newMaxX = Math.max(newMaxX, rect.right - newFlowRect.left);
+                newMaxY = Math.max(newMaxY, rect.bottom - newFlowRect.top);
+            }
+
+            const fits = newMaxX <= newFlowRect.width * 1.01 && newMaxY <= pageHeight * 1.01;
+            console.log(`[縦書きモード最適化] ページ${p + 1} 反復${iteration + 1}: scale=${testScale.toFixed(3)}, 収まる=${fits}`);
+
+            if (fits) {
+                bestScale = testScale;
+                low = testScale;
+            } else {
+                high = testScale;
+            }
+
+            if (high - low < 0.02) break;
         }
 
-        if (high - low < 0.02) break;
+        page.style.setProperty('--scale', String(bestScale));
+        console.log(`[縦書きモード最適化] ページ${p + 1} 最終: scale=${bestScale.toFixed(3)}`);
     }
-
-    elements.previewContent.style.setProperty('--scale', String(bestScale));
-    console.log(`[縦書きモード最適化] 最終スケール: ${bestScale.toFixed(3)}`);
 }
 
 // 反復的に最適化を行う

@@ -1574,29 +1574,28 @@ body {
     font-size: calc(0.55rem * var(--scale));
 }
 
-/* 縦書きモード：2ページ目以降のヘッダー（横書き・簡易版） */
+/* 縦書きモード：2ページ目以降のヘッダー（縦書き・簡易版） */
 .preview-content.vertical-mode .preview-header-subsequent {
-    writing-mode: horizontal-tb;
-    text-orientation: mixed;
-    border-left: none;
-    border-bottom: 1px solid #333;
-    padding: calc(5px * var(--scale)) calc(10px * var(--scale));
+    /* preview-header の縦書きレイアウトを継承しつつ、widthを縮める */
+    width: auto;
+    flex-shrink: 0;
+}
+
+.preview-content.vertical-mode .preview-header-subsequent .preview-title-row {
     margin: 0;
-    margin-bottom: calc(10px * var(--scale));
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
+    padding-left: calc(5px * var(--scale));
 }
 
 .preview-content.vertical-mode .preview-header-subsequent h2 {
     font-size: calc(1rem * var(--scale));
-    letter-spacing: 0;
+    letter-spacing: 0.2em;
+    margin: 0;
 }
 
 .preview-content.vertical-mode .preview-header-subsequent .page-number {
     font-size: calc(0.8rem * var(--scale));
+    color: #666;
+    margin-top: calc(10px * var(--scale));
 }
 
 /* 縦書きモード：問題エリア */
