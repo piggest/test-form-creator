@@ -2844,11 +2844,20 @@ body {
     /* 縦書きモード印刷設定 - プレビューと同じスタイルを使用 */
     .preview-content.vertical-mode {
         padding: 0;
+        /* flex子要素ではpage-breakが効かないブラウザがあるためblock化 */
+        display: block;
+        gap: 0;
     }
 
     .preview-content.vertical-mode .preview-page {
         page-break-after: always;
         break-after: page;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        margin: 0;
+        padding: 0;
+        border: none;
+        min-height: auto;
     }
 
     .preview-content.vertical-mode .preview-page:last-child {
