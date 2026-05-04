@@ -99,7 +99,7 @@ function renderTreeItem(paragraph, index, depth, parentLabelFormat, startNumber)
     return html;
 }
 
-// 縦書きモード用スケール最適化（複数ページ対応、各ページ独立最適化）
+// 縦書きモード用スケール最適化（複数ページ対応、全ページ共通スケール）
 async function optimizeVerticalModeScale() {
     const pages = elements.previewContent.querySelectorAll('.preview-page');
     if (pages.length === 0) {
@@ -111,6 +111,7 @@ async function optimizeVerticalModeScale() {
     elements.previewContent.style.removeProperty('--scale');
 
     const pageHeight = 170 * 3.78; // 170mm in pixels (A4横向き内寸)
+    const perPageScales = [];
 
     for (let p = 0; p < pages.length; p++) {
         const page = pages[p];
@@ -191,8 +192,17 @@ async function optimizeVerticalModeScale() {
             if (high - low < 0.02) break;
         }
 
-        page.style.setProperty('--scale', String(bestScale));
-        console.log(`[縦書きモード最適化] ページ${p + 1} 最終: scale=${bestScale.toFixed(3)}`);
+        perPageScales.push(bestScale);
+        console.log(`[縦書きモード最適化] ページ${p + 1} 候補スケール: ${bestScale.toFixed(3)}`);
+    }
+
+    // 全ページ共通スケールとして最小値を採用（最も厳しいページに合わせる）
+    if (perPageScales.length > 0) {
+        const commonScale = Math.min(...perPageScales);
+        for (const page of pages) {
+            page.style.setProperty('--scale', String(commonScale));
+        }
+        console.log(`[縦書きモード最適化] 共通スケール適用: ${commonScale.toFixed(3)} (${pages.length}ページ)`);
     }
 }
 
@@ -268,10 +278,12 @@ async function optimizePreviewScale() {
     console.log(`[A4最適化] 最終: scale=${bestScale.toFixed(3)}`);
 }
 
-// 横書き複数ページの各ページを個別にスケール最適化
+// 横書き複数ページのスケール最適化（全ページ共通スケール）
 async function optimizeHorizontalPagesScale(pages) {
     const targetHeight = mmToPx(TARGET_HEIGHT_MM);
     console.log(`[A4最適化:複数ページ] ${pages.length}ページ, 目標高さ: ${targetHeight.toFixed(0)}px`);
+
+    const perPageScales = [];
 
     for (let p = 0; p < pages.length; p++) {
         const page = pages[p];
@@ -294,8 +306,17 @@ async function optimizeHorizontalPagesScale(pages) {
             else if (ratio > 1.1) bestScale = Math.max(0.5, bestScale * 0.9);
             else if (ratio > 1.05) bestScale = Math.max(0.5, bestScale * 0.95);
         }
-        page.style.setProperty('--scale', String(bestScale));
-        console.log(`[A4最適化:複数ページ] ページ${p + 1} 最終: scale=${bestScale.toFixed(3)}`);
+        perPageScales.push(bestScale);
+        console.log(`[A4最適化:複数ページ] ページ${p + 1} 候補スケール: ${bestScale.toFixed(3)}`);
+    }
+
+    // 全ページ共通スケールとして最小値を採用
+    if (perPageScales.length > 0) {
+        const commonScale = Math.min(...perPageScales);
+        for (const page of pages) {
+            page.style.setProperty('--scale', String(commonScale));
+        }
+        console.log(`[A4最適化:複数ページ] 共通スケール適用: ${commonScale.toFixed(3)} (${pages.length}ページ)`);
     }
 }
 
