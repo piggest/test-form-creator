@@ -29,7 +29,58 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
     console.log('[縦書きモード] レンダリング開始');
     console.log('[縦書きモード] state.paragraphs:', state.paragraphs);
 
-    // Step 1: 全ての回答欄を収集
+    const requestedPageCount = parseInt(elements.pageCount?.value) || 1;
+    const totalParagraphs = state.paragraphs.length;
+    const pageCount = Math.max(1, Math.min(requestedPageCount, totalParagraphs || 1));
+
+    // 段落が空の場合
+    if (totalParagraphs === 0) {
+        elements.previewContent.innerHTML = `
+            <div class="preview-page">
+                ${headerHtml}
+                <div class="preview-questions-flow">
+                    <div style="padding: 20px; color: #666;">回答欄がありません</div>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    // ページ分割
+    const pages = splitParagraphsToPages(state.paragraphs, pageCount);
+
+    let totalHtml = '';
+    let globalParagraphIdx = 0;
+
+    pages.forEach((pageParagraphs, pageIdx) => {
+        const pageHeaderHtml = pageIdx === 0
+            ? headerHtml
+            : renderVerticalPageHeaderSubsequent(title, subtitle, pageIdx + 1, pages.length);
+        const pageHtml = renderVerticalPageContent(pageParagraphs, pageHeaderHtml, globalParagraphIdx);
+        totalHtml += pageHtml;
+        globalParagraphIdx += pageParagraphs.length;
+    });
+
+    console.log('[縦書きモード] HTML生成完了 (ページ数=' + pages.length + ')');
+    elements.previewContent.innerHTML = totalHtml;
+}
+
+// 縦書き複数ページ用 2ページ目以降のヘッダー
+function renderVerticalPageHeaderSubsequent(title, subtitle, pageNum, totalPages) {
+    const subtitleHtml = subtitle ? `<span class="preview-subtitle">（${escapeHtml(subtitle)}）</span>` : '';
+    return `
+        <div class="preview-header preview-header-subsequent">
+            <div class="preview-title-row">
+                <h2>${escapeHtml(title)}${subtitleHtml}</h2>
+            </div>
+            <span class="page-number">${pageNum} / ${totalPages}</span>
+        </div>
+    `;
+}
+
+// 1ページ分の縦書きHTML生成
+function renderVerticalPageContent(paragraphs, headerHtml, paragraphOffset) {
+    // セル収集
     const allCells = [];
 
     function collectFromParagraph(paragraph, paragraphNum, labelFormat, depth) {
@@ -39,7 +90,6 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
         let isFirst = true;
         let itemNumber = 0;
 
-        // 直接の回答欄を収集
         items.forEach(item => {
             itemNumber++;
             if (item.itemType === 'field') {
@@ -57,41 +107,28 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
             }
         });
 
-        // 子段落を処理（深さを増やす）
         let childIndex = 0;
         items.forEach(item => {
             if (item.itemType === 'paragraph') {
                 childIndex++;
-                // 子段落の番号形式は親の childLabelFormat を使用
                 collectFromParagraph(item, childIndex, childLabelFormat, depth + 1);
             }
         });
     }
 
     const rootFormat = state.rootLabelFormat || 'boxed';
-    state.paragraphs.forEach((p, idx) => {
-        collectFromParagraph(p, idx + 1, rootFormat, 0);
+    paragraphs.forEach((p, idx) => {
+        // 全体での連番（paragraphOffset を加算）
+        collectFromParagraph(p, paragraphOffset + idx + 1, rootFormat, 0);
     });
 
-    console.log('[縦書きモード] 収集されたセル数:', allCells.length);
-
-    // セルがない場合は空のプレビューを表示
+    // セルがないページ
     if (allCells.length === 0) {
-        elements.previewContent.innerHTML = `
-            <div class="preview-page">
-                ${headerHtml}
-                <div class="preview-questions-flow">
-                    <div style="padding: 20px; color: #666;">回答欄がありません</div>
-                </div>
-            </div>
-        `;
-        return;
+        return `<div class="preview-page">${headerHtml}<div class="preview-questions-flow"></div></div>`;
     }
 
-    // Step 2: セルをグループ化（短いセルは同じ列に積み重ね）
     const MAX_COLUMN_HEIGHT = 500; // px（縦の最大高さ）
 
-    // セルの高さを計算
     function getCellHeight(field) {
         const type = field.type;
         if (type === 'symbol') return 50;
@@ -106,7 +143,6 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
         return 50;
     }
 
-    // Step 3: HTMLを生成
     let html = `<div class="preview-page">`;
     html += headerHtml;
     html += '<div class="preview-questions-flow">';
@@ -117,13 +153,11 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
     while (i < allCells.length) {
         const cell = allCells[i];
 
-        // 新しい段落の開始
         if (cell.isFirstInParagraph) {
             if (!isFirstParagraph) {
                 html += '<div class="vertical-spacer-column"></div>';
             }
 
-            // 段落マーカーを追加
             if (cell.depth === 0) {
                 html += `<div class="vertical-section-column">
                     <div class="vertical-section-marker">${cell.paragraphNum}</div>
@@ -135,7 +169,6 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
                 </div>`;
             }
 
-            // 段落の問題文（縦書き）
             if (cell.paragraphProblemText) {
                 html += `<div class="vertical-problem-column"><div class="vertical-problem-text">${escapeHtml(cell.paragraphProblemText)}</div></div>`;
             }
@@ -143,18 +176,15 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
             isFirstParagraph = false;
         }
 
-        // 回答欄の問題文（縦書き）
         if (cell.field.problemText) {
             html += `<div class="vertical-problem-column vertical-field-problem"><div class="vertical-problem-text">${escapeHtml(cell.field.problemText)}</div></div>`;
         }
 
-        // 短いセルを集めて積み重ねる
         if (isShortCellVertical(cell.field)) {
             const stackedCells = [cell];
             let totalHeight = getCellHeight(cell.field);
             let j = i + 1;
 
-            // 同じ段落内の連続する短いセルを集める
             while (j < allCells.length &&
                    !allCells[j].isFirstInParagraph &&
                    isShortCellVertical(allCells[j].field) &&
@@ -164,20 +194,16 @@ function renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore) {
                 j++;
             }
 
-            // 積み重ねたセルをレンダリング
             html += renderStackedColumn(stackedCells);
             i = j;
         } else {
-            // 長いセルは単独でレンダリング
             html += renderSingleCell(cell);
             i++;
         }
     }
 
     html += '</div></div>';
-
-    console.log('[縦書きモード] HTML生成完了');
-    elements.previewContent.innerHTML = html;
+    return html;
 }
 
 // 積み重ねた列をレンダリング
