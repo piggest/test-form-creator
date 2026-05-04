@@ -2718,6 +2718,57 @@ body {
     top: calc(0.5em * var(--scale));
 }
 
+/* 横書き複数ページ */
+.preview-page-h {
+    width: 100%;
+    margin: 0 auto;
+}
+
+.preview-page-h + .preview-page-h {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px dashed #ccc;
+}
+
+.preview-page-h .preview-header-subsequent {
+    border-bottom: 1px solid #333;
+    padding-bottom: calc(8px * var(--scale));
+    margin-bottom: calc(15px * var(--scale));
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.preview-page-h .preview-header-subsequent .preview-title-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.preview-page-h .preview-header-subsequent h2 {
+    font-size: calc(1.2rem * var(--scale));
+    font-weight: 500;
+}
+
+.preview-page-h .preview-header-subsequent .page-number {
+    font-size: calc(0.8rem * var(--scale));
+    color: #666;
+}
+
+/* ページ番号入力 */
+.page-count-input {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.page-count-input input {
+    width: 56px;
+}
+
 /* 印刷スタイル - A4縦向き */
 @media print {
     @page {
@@ -2769,6 +2820,26 @@ body {
 
     .preview-questions-flow {
         page-break-inside: auto;
+    }
+
+    /* 横書き複数ページ印刷設定 */
+    .preview-page-h {
+        page-break-after: always;
+        break-after: page;
+        margin: 0;
+        padding: 0;
+        border-top: none;
+    }
+
+    .preview-page-h:last-child {
+        page-break-after: avoid;
+        break-after: avoid;
+    }
+
+    .preview-page-h + .preview-page-h {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: none;
     }
 
     /* 縦書きモード印刷設定 - プレビューと同じスタイルを使用 */
