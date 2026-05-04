@@ -8,6 +8,7 @@ let state = {
     maxScore: 100,
     verticalMode: false,
     rootLabelFormat: 'boxed',  // トップレベル段落の番号形式
+    pageCount: 1,  // ページ分割数（1=単一ページ）
     showAnswers: false  // 答え表示フラグ
 };
 
@@ -20,6 +21,7 @@ const elements = {
     testTitle: document.getElementById('testTitle'),
     testSubtitle: document.getElementById('testSubtitle'),
     maxScore: document.getElementById('maxScore'),
+    pageCount: document.getElementById('pageCount'),
     verticalMode: document.getElementById('verticalMode'),
     rootLabelFormat: document.getElementById('rootLabelFormat'),
     paragraphsContainer: document.getElementById('paragraphsContainer'),
@@ -324,11 +326,13 @@ function loadFromStorage() {
         state.maxScore = data.maxScore || 100;
         state.verticalMode = data.verticalMode || false;
         state.rootLabelFormat = data.rootLabelFormat || 'boxed';
+        state.pageCount = data.pageCount || 1;
         elements.testTitle.value = data.title || 'テスト';
         elements.testSubtitle.value = data.subtitle || '';
         elements.maxScore.value = state.maxScore;
         elements.verticalMode.checked = state.verticalMode;
         elements.rootLabelFormat.value = state.rootLabelFormat;
+        elements.pageCount.value = state.pageCount;
     } catch (e) {
         console.error('Failed to load from storage:', e);
     }
@@ -344,6 +348,7 @@ function saveToStorage() {
             maxScore: parseInt(elements.maxScore.value) || 100,
             verticalMode: elements.verticalMode.checked,
             rootLabelFormat: elements.rootLabelFormat.value || 'boxed',
+            pageCount: parseInt(elements.pageCount.value) || 1,
             paragraphs: state.paragraphs,
             nextParagraphId: state.nextParagraphId,
             nextAnswerFieldId: state.nextAnswerFieldId

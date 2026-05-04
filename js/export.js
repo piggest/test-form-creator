@@ -12,6 +12,7 @@ function createNew() {
     state.maxScore = 100;
     state.verticalMode = false;
     state.rootLabelFormat = 'boxed';
+    state.pageCount = 1;
 
     // フォームをリセット
     elements.testTitle.value = 'テスト';
@@ -19,6 +20,7 @@ function createNew() {
     elements.maxScore.value = 100;
     elements.verticalMode.checked = false;
     elements.rootLabelFormat.value = 'boxed';
+    elements.pageCount.value = 1;
 
     // 再描画と保存
     renderParagraphs();
@@ -62,6 +64,7 @@ function saveToJson() {
         maxScore: parseInt(elements.maxScore.value) || 100,
         verticalMode: elements.verticalMode.checked,
         rootLabelFormat: state.rootLabelFormat || 'boxed',
+        pageCount: parseInt(elements.pageCount.value) || 1,
         paragraphs: state.paragraphs,
         nextParagraphId: state.nextParagraphId,
         nextAnswerFieldId: state.nextAnswerFieldId
@@ -96,12 +99,14 @@ function loadFromJson(e) {
             elements.maxScore.value = data.maxScore || 100;
             elements.verticalMode.checked = data.verticalMode || false;
             elements.rootLabelFormat.value = data.rootLabelFormat || 'boxed';
+            elements.pageCount.value = data.pageCount || 1;
             state.paragraphs = data.paragraphs || [];
             state.nextParagraphId = data.nextParagraphId || 1;
             state.nextAnswerFieldId = data.nextAnswerFieldId || 1;
             state.maxScore = data.maxScore || 100;
             state.verticalMode = data.verticalMode || false;
             state.rootLabelFormat = data.rootLabelFormat || 'boxed';
+            state.pageCount = data.pageCount || 1;
 
             renderParagraphs();
             saveToStorage();

@@ -200,6 +200,14 @@ async function optimizePreviewScale() {
         return;
     }
 
+    // 横書きの複数ページの場合は各ページ個別に最適化
+    const horizontalPages = elements.previewContent.querySelectorAll('.preview-page-h');
+    if (horizontalPages.length > 0) {
+        elements.previewContent.style.maxWidth = `${TARGET_WIDTH_MM}mm`;
+        await optimizeHorizontalPagesScale(horizontalPages);
+        return;
+    }
+
     // 幅は常にA4フルサイズを維持
     const fixedWidth = TARGET_WIDTH_MM;
     elements.previewContent.style.maxWidth = `${fixedWidth}mm`;
@@ -252,6 +260,37 @@ async function optimizePreviewScale() {
     console.log(`[A4最適化] 最終: scale=${bestScale.toFixed(3)}`);
 }
 
+// 横書き複数ページの各ページを個別にスケール最適化
+async function optimizeHorizontalPagesScale(pages) {
+    const targetHeight = mmToPx(TARGET_HEIGHT_MM);
+    console.log(`[A4最適化:複数ページ] ${pages.length}ページ, 目標高さ: ${targetHeight.toFixed(0)}px`);
+
+    for (let p = 0; p < pages.length; p++) {
+        const page = pages[p];
+        let bestScale = 1;
+        for (let iteration = 0; iteration < 8; iteration++) {
+            page.style.setProperty('--scale', String(bestScale));
+            await new Promise(resolve => requestAnimationFrame(resolve));
+
+            const contentHeight = page.scrollHeight;
+            const ratio = contentHeight / targetHeight;
+
+            console.log(`[A4最適化:複数ページ] ページ${p + 1} 反復${iteration + 1}: scale=${bestScale.toFixed(3)}, height=${contentHeight.toFixed(0)}px, ratio=${ratio.toFixed(3)}`);
+
+            if (ratio > 0.90 && ratio < 1.05) break;
+
+            if (ratio < 0.5) bestScale = Math.min(2.0, bestScale * 1.3);
+            else if (ratio < 0.7) bestScale = Math.min(1.8, bestScale * 1.15);
+            else if (ratio < 0.9) bestScale = Math.min(1.6, bestScale * 1.08);
+            else if (ratio > 1.3) bestScale = Math.max(0.4, bestScale * 0.75);
+            else if (ratio > 1.1) bestScale = Math.max(0.5, bestScale * 0.9);
+            else if (ratio > 1.05) bestScale = Math.max(0.5, bestScale * 0.95);
+        }
+        page.style.setProperty('--scale', String(bestScale));
+        console.log(`[A4最適化:複数ページ] ページ${p + 1} 最終: scale=${bestScale.toFixed(3)}`);
+    }
+}
+
 function renderPreview() {
     // 縦書きモードのクラスを適用
     if (elements.verticalMode.checked) {
@@ -300,25 +339,79 @@ function renderPreviewContent() {
         // 縦書きモード：ページ分割を考慮してレンダリング
         renderVerticalModeWithPages(headerHtml, title, subtitle, maxScore);
     } else {
-        // 通常モード：従来の構造
-        let html = headerHtml;
-        html += '<div class="preview-questions-flow">';
-
-        // トップレベル段落はrootLabelFormatを使用
+        // 通常モード（横書き）
         const rootFormat = state.rootLabelFormat || 'boxed';
-        state.paragraphs.forEach((paragraph, pIndex) => {
-            const result = renderPreviewSection(paragraph, pIndex, 0, rootFormat);
-            html += result.html;
-        });
+        const requestedPageCount = parseInt(elements.pageCount?.value) || 1;
+        const pageCount = Math.max(1, Math.min(requestedPageCount, state.paragraphs.length || 1));
 
-        html += '</div>';
-        elements.previewContent.innerHTML = html;
+        if (pageCount <= 1) {
+            // 単一ページ：従来構造
+            let html = headerHtml;
+            html += '<div class="preview-questions-flow">';
+            state.paragraphs.forEach((paragraph, pIndex) => {
+                const result = renderPreviewSection(paragraph, pIndex, 0, rootFormat);
+                html += result.html;
+            });
+            html += '</div>';
+            elements.previewContent.innerHTML = html;
+        } else {
+            // 複数ページ：トップレベル段落を均等分割
+            const pages = splitParagraphsToPages(state.paragraphs, pageCount);
+            let html = '';
+            let globalIdx = 0;
+            pages.forEach((pageParagraphs, pageIdx) => {
+                html += `<div class="preview-page-h">`;
+                if (pageIdx === 0) {
+                    html += headerHtml;
+                } else {
+                    html += renderHorizontalPageHeaderSubsequent(title, subtitle, pageIdx + 1, pages.length);
+                }
+                html += '<div class="preview-questions-flow">';
+                pageParagraphs.forEach((paragraph) => {
+                    const result = renderPreviewSection(paragraph, globalIdx, 0, rootFormat);
+                    html += result.html;
+                    globalIdx++;
+                });
+                html += '</div>';
+                html += '</div>';
+            });
+            elements.previewContent.innerHTML = html;
+        }
 
         // 答え表示の縮小処理
         if (state.showAnswers) {
             adjustAnswerSizes();
         }
     }
+}
+
+// トップレベル段落をN個のページに均等分割
+function splitParagraphsToPages(paragraphs, n) {
+    if (n <= 1 || paragraphs.length === 0) return [paragraphs];
+    n = Math.min(n, paragraphs.length);
+    const pages = [];
+    const baseCount = Math.floor(paragraphs.length / n);
+    const remainder = paragraphs.length % n;
+    let idx = 0;
+    for (let i = 0; i < n; i++) {
+        const count = baseCount + (i < remainder ? 1 : 0);
+        pages.push(paragraphs.slice(idx, idx + count));
+        idx += count;
+    }
+    return pages;
+}
+
+// 横書き複数ページ用の2ページ目以降ヘッダー（タイトル+ページ番号）
+function renderHorizontalPageHeaderSubsequent(title, subtitle, pageNum, totalPages) {
+    const subtitleHtml = subtitle ? `<span class="preview-subtitle">（${escapeHtml(subtitle)}）</span>` : '';
+    return `
+        <div class="preview-header preview-header-subsequent">
+            <div class="preview-title-row">
+                <h2>${escapeHtml(title)}${subtitleHtml}</h2>
+                <span class="page-number">${pageNum} / ${totalPages}</span>
+            </div>
+        </div>
+    `;
 }
 
 // 答えの表示サイズを調整（はみ出す場合は縮小）

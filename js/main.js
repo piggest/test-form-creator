@@ -79,6 +79,14 @@ function init() {
     elements.testSubtitle.addEventListener('input', saveToStorage);
     elements.maxScore.addEventListener('input', saveToStorage);
     elements.verticalMode.addEventListener('change', saveToStorage);
+    elements.pageCount.addEventListener('input', () => {
+        state.pageCount = parseInt(elements.pageCount.value) || 1;
+        saveToStorage();
+        // プレビューモード表示中なら再描画
+        if (elements.previewMode.style.display !== 'none' && elements.previewMode.style.display !== '') {
+            renderPreview();
+        }
+    });
     elements.rootLabelFormat.addEventListener('change', () => {
         state.rootLabelFormat = elements.rootLabelFormat.value;
         saveToStorage();
