@@ -119,7 +119,14 @@ function renderVerticalPageContent(paragraphs, headerHtml, paragraphOffset) {
     const rootFormat = state.rootLabelFormat || 'boxed';
     paragraphs.forEach((p, idx) => {
         // 全体での連番（paragraphOffset を加算）
-        collectFromParagraph(p, paragraphOffset + idx + 1, rootFormat, 0);
+        const num = paragraphOffset + idx + 1;
+        const beforeLen = allCells.length;
+        collectFromParagraph(p, num, rootFormat, 0);
+        // トップレベル段落が直接fieldを持たない場合、最初の子セルに親マーカー情報を付与
+        if (allCells.length > beforeLen && allCells[beforeLen].depth > 0) {
+            allCells[beforeLen].topLevelSectionNum = num;
+            allCells[beforeLen].topLevelProblemText = p.problemText || '';
+        }
     });
 
     // セルがないページ
@@ -153,8 +160,22 @@ function renderVerticalPageContent(paragraphs, headerHtml, paragraphOffset) {
     while (i < allCells.length) {
         const cell = allCells[i];
 
-        if (cell.isFirstInParagraph) {
+        // トップレベル段落マーカー（親が直接fieldを持たない場合に注入）
+        if (cell.topLevelSectionNum !== undefined) {
             if (!isFirstParagraph) {
+                html += '<div class="vertical-spacer-column"></div>';
+            }
+            html += `<div class="vertical-section-column">
+                <div class="vertical-section-marker">${cell.topLevelSectionNum}</div>
+            </div>`;
+            if (cell.topLevelProblemText) {
+                html += `<div class="vertical-problem-column"><div class="vertical-problem-text">${escapeHtml(cell.topLevelProblemText)}</div></div>`;
+            }
+            isFirstParagraph = false;
+        }
+
+        if (cell.isFirstInParagraph) {
+            if (!isFirstParagraph && cell.topLevelSectionNum === undefined) {
                 html += '<div class="vertical-spacer-column"></div>';
             }
 
@@ -187,6 +208,7 @@ function renderVerticalPageContent(paragraphs, headerHtml, paragraphOffset) {
 
             while (j < allCells.length &&
                    !allCells[j].isFirstInParagraph &&
+                   !allCells[j].field.problemText &&
                    isShortCellVertical(allCells[j].field) &&
                    totalHeight + getCellHeight(allCells[j].field) <= MAX_COLUMN_HEIGHT) {
                 stackedCells.push(allCells[j]);
