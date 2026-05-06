@@ -30,8 +30,35 @@
             </div>
         </header>
 
+        <!-- アクティブデッキ表示バナー -->
+        <div class="deck-banner" id="deck-banner"></div>
+
         <!-- 作成タブ -->
         <main id="createTab" class="main-content">
+            <!-- テスト基本情報 -->
+            <section class="test-info">
+                <input type="text" id="testTitle" placeholder="テストタイトル" value="テスト">
+                <input type="text" id="testSubtitle" placeholder="サブタイトル（任意）">
+                <div class="max-score-input">
+                    <label for="maxScore">最大点：</label>
+                    <input type="number" id="maxScore" value="100" min="1">
+                    <span>点</span>
+                </div>
+                <div class="label-format-input">
+                    <label for="rootLabelFormat">段落番号形式：</label>
+                    <select id="rootLabelFormat">
+                        <option value="boxed">□（四角囲み）</option>
+                        <option value="parenthesis">()（カッコ）</option>
+                        <option value="circled">○（丸数字）</option>
+                        <option value="alphabet">a. b. c.（アルファベット）</option>
+                        <option value="katakana-aiueo">アイウ（カタカナ五十音）</option>
+                        <option value="katakana-iroha">イロハ（カタカナいろは）</option>
+                        <option value="hiragana-aiueo">あいう（ひらがな五十音）</option>
+                        <option value="hiragana-iroha">いろは（ひらがないろは）</option>
+                    </select>
+                </div>
+            </section>
+
             <!-- 段落追加 -->
             <section class="add-section-panel">
                 <button id="addParagraphBtn" class="add-section-btn">＋ 段落を追加</button>
@@ -50,6 +77,16 @@
                     <input type="checkbox" id="showAnswers">
                     <span>答えを表示</span>
                 </label>
+                <div class="page-count-input">
+                    <label for="pageCount">ページ数：</label>
+                    <input type="number" id="pageCount" value="1" min="1" max="10">
+                </div>
+                <div class="vertical-toggle">
+                    <label>
+                        <input type="checkbox" id="verticalMode">
+                        縦書きモード
+                    </label>
+                </div>
                 <button id="printBtn" class="print-btn">印刷</button>
                 <button id="pdfBtn" class="pdf-btn">PDF保存</button>
             </div>
@@ -59,45 +96,18 @@
 
         <!-- 設定タブ -->
         <main id="settingsTab" class="main-content" style="display: none;">
-            <section class="test-info">
-                <input type="text" id="testTitle" placeholder="テストタイトル" value="テスト">
-                <input type="text" id="testSubtitle" placeholder="サブタイトル（任意）">
-                <div class="max-score-input">
-                    <label for="maxScore">最大点：</label>
-                    <input type="number" id="maxScore" value="100" min="1">
-                    <span>点</span>
+            <!-- デッキ管理 -->
+            <section class="deck-section">
+                <h3 class="settings-heading">デッキ</h3>
+                <div class="deck-actions">
+                    <button class="io-btn primary" id="deckCreateBtn">＋ 新規デッキ作成</button>
+                    <button class="io-btn" id="loadBtn">読み込み</button>
+                    <button class="io-btn" id="pasteBtn">ペースト</button>
+                    <input type="file" id="fileInput" accept=".json" style="display: none;">
                 </div>
-                <div class="page-count-input">
-                    <label for="pageCount">ページ数：</label>
-                    <input type="number" id="pageCount" value="1" min="1" max="10">
-                </div>
-                <div class="vertical-toggle">
-                    <label>
-                        <input type="checkbox" id="verticalMode">
-                        縦書きモード（縦書き解答用紙）
-                    </label>
-                </div>
-                <div class="label-format-input">
-                    <label for="rootLabelFormat">段落番号形式：</label>
-                    <select id="rootLabelFormat">
-                        <option value="boxed">□（四角囲み）</option>
-                        <option value="parenthesis">()（カッコ）</option>
-                        <option value="circled">○（丸数字）</option>
-                        <option value="alphabet">a. b. c.（アルファベット）</option>
-                        <option value="katakana-aiueo">アイウ（カタカナ五十音）</option>
-                        <option value="katakana-iroha">イロハ（カタカナいろは）</option>
-                        <option value="hiragana-aiueo">あいう（ひらがな五十音）</option>
-                        <option value="hiragana-iroha">いろは（ひらがないろは）</option>
-                    </select>
-                </div>
-            </section>
-
-            <!-- データ管理 -->
-            <section class="data-management">
-                <button id="newBtn" class="data-btn new-btn">新規作成</button>
-                <button id="saveBtn" class="data-btn">JSONで保存</button>
-                <button id="loadBtn" class="data-btn">JSONを読み込み</button>
-                <input type="file" id="fileInput" accept=".json" style="display: none;">
+                <div id="deck-active"></div>
+                <h4 class="settings-subheading">他のデッキ</h4>
+                <div id="deck-others"></div>
             </section>
         </main>
     </div>
@@ -267,6 +277,7 @@
     <!-- JavaScript -->
     <script src="js/utils.js"></script>
     <script src="js/state.js"></script>
+    <script src="js/deck.js"></script>
     <script src="js/paragraphs.js"></script>
     <script src="js/answerFields.js"></script>
     <script src="js/render.js"></script>

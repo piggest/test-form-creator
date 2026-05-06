@@ -39,10 +39,12 @@ function init() {
     });
 
     // データ管理
-    document.getElementById('newBtn').addEventListener('click', createNew);
-    elements.saveBtn.addEventListener('click', saveToJson);
     elements.loadBtn.addEventListener('click', () => elements.fileInput.click());
     elements.fileInput.addEventListener('change', loadFromJson);
+
+    // デッキ管理
+    document.getElementById('deckCreateBtn').addEventListener('click', createDeck);
+    document.getElementById('pasteBtn').addEventListener('click', pasteDeckFromClipboard);
 
     // 印刷
     elements.printBtn.addEventListener('click', () => {
@@ -73,10 +75,20 @@ function init() {
     });
 
     // タイトル・最大点・縦書き・段落番号形式変更時に保存
-    elements.testTitle.addEventListener('input', saveToStorage);
+    elements.testTitle.addEventListener('input', () => {
+        saveToStorage();
+        updateDeckBanner();
+        renderDeckList();
+    });
     elements.testSubtitle.addEventListener('input', saveToStorage);
     elements.maxScore.addEventListener('input', saveToStorage);
-    elements.verticalMode.addEventListener('change', saveToStorage);
+    elements.verticalMode.addEventListener('change', () => {
+        saveToStorage();
+        // 印刷タブ表示中なら再描画
+        if (elements.printTab.style.display !== 'none' && elements.printTab.style.display !== '') {
+            renderPreview();
+        }
+    });
     elements.pageCount.addEventListener('input', () => {
         state.pageCount = parseInt(elements.pageCount.value) || 1;
         saveToStorage();
@@ -100,6 +112,8 @@ function init() {
     // ストレージから復元して描画
     loadFromStorage();
     renderParagraphs();
+    updateDeckBanner();
+    renderDeckList();
 }
 
 // 各タブのスクロール位置を保存
@@ -126,6 +140,8 @@ function switchTab(name) {
 
     if (name === 'print') {
         renderPreview();
+    } else if (name === 'settings') {
+        renderDeckList();
     }
 
     currentTab = name;
