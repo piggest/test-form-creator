@@ -41,12 +41,14 @@ body {
     color: #2c3e50;
 }
 
-.mode-toggle {
+.mode-toggle,
+.tab-toggle {
     display: flex;
     gap: 10px;
 }
 
-.mode-btn {
+.mode-btn,
+.tab-btn {
     padding: 10px 20px;
     border: 2px solid #3498db;
     background: #fff;
@@ -57,11 +59,13 @@ body {
     transition: all 0.3s;
 }
 
-.mode-btn:hover {
+.mode-btn:hover,
+.tab-btn:hover {
     background: #ecf0f1;
 }
 
-.mode-btn.active {
+.mode-btn.active,
+.tab-btn.active {
     background: #3498db;
     color: #fff;
 }
