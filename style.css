@@ -2719,6 +2719,156 @@ body {
     top: calc(0.5em * var(--scale));
 }
 
+/* デッキ */
+.deck-banner {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+}
+
+.deck-banner:empty {
+    display: none;
+}
+
+.settings-heading {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    color: #2d3748;
+}
+
+.settings-subheading {
+    font-size: 0.9rem;
+    color: #718096;
+    margin: 16px 0 8px;
+}
+
+.deck-section {
+    margin-bottom: 24px;
+}
+
+.deck-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.io-btn {
+    padding: 10px 16px;
+    border: none;
+    background: #edf2f7;
+    color: #2d3748;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.io-btn:hover {
+    background: #e2e8f0;
+}
+
+.io-btn.primary {
+    background: #667eea;
+    color: #fff;
+}
+
+.io-btn.primary:hover {
+    background: #5a6fd8;
+}
+
+.deck-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    margin-bottom: 8px;
+}
+
+.deck-card.active {
+    border-color: #667eea;
+    background: #f7faff;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.15);
+}
+
+.deck-card .deck-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.deck-card .deck-title {
+    font-weight: 600;
+    color: #2d3748;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.deck-card .deck-meta {
+    font-size: 0.8rem;
+    color: #a0aec0;
+    margin-top: 2px;
+}
+
+.deck-card .deck-btns {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.deck-mini-btn {
+    padding: 6px 10px;
+    background: #edf2f7;
+    color: #2d3748;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.deck-mini-btn:hover {
+    background: #e2e8f0;
+}
+
+.deck-mini-btn.primary {
+    background: #667eea;
+    color: #fff;
+}
+
+.deck-mini-btn.primary:hover {
+    background: #5a6fd8;
+}
+
+.deck-mini-btn.danger {
+    background: #fed7d7;
+    color: #c53030;
+}
+
+.deck-mini-btn.danger:hover {
+    background: #feb2b2;
+}
+
+.deck-empty {
+    color: #a0aec0;
+    padding: 12px 0;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+/* 印刷時はバナー非表示 */
+@media print {
+    .deck-banner {
+        display: none !important;
+    }
+}
+
 /* 横書き複数ページ */
 .preview-page-h {
     width: 100%;

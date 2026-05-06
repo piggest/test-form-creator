@@ -307,55 +307,103 @@ function getSampleData() {
     };
 }
 
+// デッキ用キー
+const DECKS_KEY = 'testFormCreator-decks';
+const ACTIVE_DECK_KEY = 'testFormCreator-active-deck-id';
+const LEGACY_KEY = 'testFormCreator';
+
+let decks = [];
+let activeDeckId = null;
+
+function genDeckId() {
+    return 'd' + Date.now() + Math.floor(Math.random() * 1000);
+}
+
+// 現在のフォーム値からデッキデータを構築
+function buildDeckDataFromForm() {
+    return {
+        version: 3,
+        title: elements.testTitle.value,
+        subtitle: elements.testSubtitle.value,
+        maxScore: parseInt(elements.maxScore.value) || 100,
+        verticalMode: elements.verticalMode.checked,
+        rootLabelFormat: elements.rootLabelFormat.value || 'boxed',
+        pageCount: parseInt(elements.pageCount.value) || 1,
+        paragraphs: state.paragraphs,
+        nextParagraphId: state.nextParagraphId,
+        nextAnswerFieldId: state.nextAnswerFieldId
+    };
+}
+
+// データをフォーム/stateに反映
+function applyDeckData(data) {
+    data = migrateFromOldFormat(data);
+    state.paragraphs = data.paragraphs || [];
+    state.nextParagraphId = data.nextParagraphId || 1;
+    state.nextAnswerFieldId = data.nextAnswerFieldId || 1;
+    state.maxScore = data.maxScore || 100;
+    state.verticalMode = data.verticalMode || false;
+    state.rootLabelFormat = data.rootLabelFormat || 'boxed';
+    state.pageCount = data.pageCount || 1;
+    elements.testTitle.value = data.title || 'テスト';
+    elements.testSubtitle.value = data.subtitle || '';
+    elements.maxScore.value = state.maxScore;
+    elements.verticalMode.checked = state.verticalMode;
+    elements.rootLabelFormat.value = state.rootLabelFormat;
+    elements.pageCount.value = state.pageCount;
+}
+
+function getActiveDeck() {
+    return decks.find(d => d.id === activeDeckId) || decks[0];
+}
+
 // ローカルストレージから復元
 function loadFromStorage() {
     try {
-        const saved = localStorage.getItem('testFormCreator');
-        let data;
-
-        if (saved) {
-            data = JSON.parse(saved);
-            // 旧形式の場合はマイグレーション
-            data = migrateFromOldFormat(data);
-        } else {
-            // 初回アクセス時はサンプルデータを表示
-            data = getSampleData();
+        const decksRaw = localStorage.getItem(DECKS_KEY);
+        if (decksRaw) {
+            decks = JSON.parse(decksRaw) || [];
         }
 
-        state.paragraphs = data.paragraphs || [];
-        state.nextParagraphId = data.nextParagraphId || 1;
-        state.nextAnswerFieldId = data.nextAnswerFieldId || 1;
-        state.maxScore = data.maxScore || 100;
-        state.verticalMode = data.verticalMode || false;
-        state.rootLabelFormat = data.rootLabelFormat || 'boxed';
-        state.pageCount = data.pageCount || 1;
-        elements.testTitle.value = data.title || 'テスト';
-        elements.testSubtitle.value = data.subtitle || '';
-        elements.maxScore.value = state.maxScore;
-        elements.verticalMode.checked = state.verticalMode;
-        elements.rootLabelFormat.value = state.rootLabelFormat;
-        elements.pageCount.value = state.pageCount;
+        // 旧形式（単一state）からマイグレーション
+        if (!decks.length) {
+            const legacy = localStorage.getItem(LEGACY_KEY);
+            let data;
+            if (legacy) {
+                data = JSON.parse(legacy);
+            } else {
+                data = getSampleData();
+            }
+            decks = [{
+                id: genDeckId(),
+                deckName: data.title || 'マイテスト',
+                data: data
+            }];
+            localStorage.setItem(DECKS_KEY, JSON.stringify(decks));
+        }
+
+        activeDeckId = localStorage.getItem(ACTIVE_DECK_KEY);
+        const active = getActiveDeck();
+        activeDeckId = active.id;
+        localStorage.setItem(ACTIVE_DECK_KEY, activeDeckId);
+
+        applyDeckData(active.data);
     } catch (e) {
         console.error('Failed to load from storage:', e);
     }
 }
 
-// ローカルストレージに保存
+// ローカルストレージに保存（アクティブデッキを更新）
 function saveToStorage() {
     try {
-        const data = {
-            version: 3,
-            title: elements.testTitle.value,
-            subtitle: elements.testSubtitle.value,
-            maxScore: parseInt(elements.maxScore.value) || 100,
-            verticalMode: elements.verticalMode.checked,
-            rootLabelFormat: elements.rootLabelFormat.value || 'boxed',
-            pageCount: parseInt(elements.pageCount.value) || 1,
-            paragraphs: state.paragraphs,
-            nextParagraphId: state.nextParagraphId,
-            nextAnswerFieldId: state.nextAnswerFieldId
-        };
-        localStorage.setItem('testFormCreator', JSON.stringify(data));
+        const active = getActiveDeck();
+        if (!active) return;
+        active.data = buildDeckDataFromForm();
+        // タイトル変更が deckName 未変更の場合に追従しやすいよう、deckNameが空なら同期
+        if (!active.deckName || active.deckName === '') {
+            active.deckName = active.data.title || 'マイテスト';
+        }
+        localStorage.setItem(DECKS_KEY, JSON.stringify(decks));
     } catch (e) {
         console.error('Failed to save to storage:', e);
     }

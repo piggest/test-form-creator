@@ -25,6 +25,8 @@ function createNew() {
     // 再描画と保存
     renderParagraphs();
     saveToStorage();
+    if (typeof updateDeckBanner === 'function') updateDeckBanner();
+    if (typeof renderDeckList === 'function') renderDeckList();
 }
 
 function getFilename() {
@@ -90,27 +92,27 @@ function loadFromJson(e) {
     reader.onload = (event) => {
         try {
             let data = JSON.parse(event.target.result);
-
-            // 旧形式の場合はマイグレーション
             data = migrateFromOldFormat(data);
 
-            elements.testTitle.value = data.title || '';
-            elements.testSubtitle.value = data.subtitle || '';
-            elements.maxScore.value = data.maxScore || 100;
-            elements.verticalMode.checked = data.verticalMode || false;
-            elements.rootLabelFormat.value = data.rootLabelFormat || 'boxed';
-            elements.pageCount.value = data.pageCount || 1;
-            state.paragraphs = data.paragraphs || [];
-            state.nextParagraphId = data.nextParagraphId || 1;
-            state.nextAnswerFieldId = data.nextAnswerFieldId || 1;
-            state.maxScore = data.maxScore || 100;
-            state.verticalMode = data.verticalMode || false;
-            state.rootLabelFormat = data.rootLabelFormat || 'boxed';
-            state.pageCount = data.pageCount || 1;
+            // 新規デッキとして読み込み
+            const baseName = file.name.replace(/\.json$/i, '') || data.title || 'マイテスト';
+            const newDeck = {
+                id: genDeckId(),
+                deckName: baseName,
+                data: data
+            };
+            // 切替前に現在のフォーム状態を保存
+            saveToStorage();
+            decks.push(newDeck);
+            activeDeckId = newDeck.id;
+            localStorage.setItem(DECKS_KEY, JSON.stringify(decks));
+            localStorage.setItem(ACTIVE_DECK_KEY, activeDeckId);
+            applyDeckData(data);
 
             renderParagraphs();
-            saveToStorage();
-            alert('読み込みが完了しました');
+            renderDeckList();
+            updateDeckBanner();
+            alert(`新規デッキ「${baseName}」として読み込みました`);
         } catch (err) {
             alert('ファイルの読み込みに失敗しました');
             console.error(err);
