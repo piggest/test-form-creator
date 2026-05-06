@@ -14,10 +14,12 @@ let state = {
 
 // DOM要素の取得
 const elements = {
-    editModeBtn: document.getElementById('editModeBtn'),
-    previewModeBtn: document.getElementById('previewModeBtn'),
-    editMode: document.getElementById('editMode'),
-    previewMode: document.getElementById('previewMode'),
+    createTabBtn: document.getElementById('createTabBtn'),
+    printTabBtn: document.getElementById('printTabBtn'),
+    settingsTabBtn: document.getElementById('settingsTabBtn'),
+    createTab: document.getElementById('createTab'),
+    printTab: document.getElementById('printTab'),
+    settingsTab: document.getElementById('settingsTab'),
     testTitle: document.getElementById('testTitle'),
     testSubtitle: document.getElementById('testSubtitle'),
     maxScore: document.getElementById('maxScore'),

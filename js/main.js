@@ -1,9 +1,10 @@
 // ====== 初期化・イベントリスナー ======
 
 function init() {
-    // モード切り替え
-    elements.editModeBtn.addEventListener('click', () => switchMode('edit'));
-    elements.previewModeBtn.addEventListener('click', () => switchMode('preview'));
+    // タブ切り替え
+    elements.createTabBtn.addEventListener('click', () => switchTab('create'));
+    elements.printTabBtn.addEventListener('click', () => switchTab('print'));
+    elements.settingsTabBtn.addEventListener('click', () => switchTab('settings'));
 
     // 段落追加（即追加）
     elements.addParagraphBtn.addEventListener('click', () => addParagraph());
@@ -62,9 +63,6 @@ function init() {
     // PDF保存
     document.getElementById('pdfBtn').addEventListener('click', saveToPdf);
 
-    // JSON保存（プレビュー画面）
-    document.getElementById('jsonSaveBtn').addEventListener('click', saveToJson);
-
     // モーダル外クリックで閉じる
     document.querySelectorAll('.modal').forEach(modal => {
         modal.addEventListener('click', (e) => {
@@ -82,8 +80,8 @@ function init() {
     elements.pageCount.addEventListener('input', () => {
         state.pageCount = parseInt(elements.pageCount.value) || 1;
         saveToStorage();
-        // プレビューモード表示中なら再描画
-        if (elements.previewMode.style.display !== 'none' && elements.previewMode.style.display !== '') {
+        // 印刷タブ表示中なら再描画
+        if (elements.printTab.style.display !== 'none' && elements.printTab.style.display !== '') {
             renderPreview();
         }
     });
@@ -104,40 +102,38 @@ function init() {
     renderParagraphs();
 }
 
-// スクロール位置を保存する変数
-let editModeScrollPosition = 0;
-let previewModeScrollPosition = 0;
+// 各タブのスクロール位置を保存
+const tabScrollPositions = { create: 0, print: 0, settings: 0 };
+let currentTab = 'create';
 
-// モード切り替え
-function switchMode(mode) {
-    if (mode === 'edit') {
-        // プレビューモードのスクロール位置を保存
-        previewModeScrollPosition = window.scrollY;
+// タブ切り替え
+function switchTab(name) {
+    // 現在のタブのスクロール位置を保存
+    tabScrollPositions[currentTab] = window.scrollY;
 
-        elements.editMode.style.display = 'block';
-        elements.previewMode.style.display = 'none';
-        elements.editModeBtn.classList.add('active');
-        elements.previewModeBtn.classList.remove('active');
+    const tabs = ['create', 'print', 'settings'];
+    tabs.forEach(t => {
+        const tabEl = elements[t + 'Tab'];
+        const btnEl = elements[t + 'TabBtn'];
+        if (t === name) {
+            tabEl.style.display = 'block';
+            btnEl.classList.add('active');
+        } else {
+            tabEl.style.display = 'none';
+            btnEl.classList.remove('active');
+        }
+    });
 
-        // 編集モードのスクロール位置を復元
-        requestAnimationFrame(() => {
-            window.scrollTo(0, editModeScrollPosition);
-        });
-    } else {
-        // 編集モードのスクロール位置を保存
-        editModeScrollPosition = window.scrollY;
-
-        elements.editMode.style.display = 'none';
-        elements.previewMode.style.display = 'block';
-        elements.editModeBtn.classList.remove('active');
-        elements.previewModeBtn.classList.add('active');
+    if (name === 'print') {
         renderPreview();
-
-        // プレビューモードのスクロール位置を復元
-        requestAnimationFrame(() => {
-            window.scrollTo(0, previewModeScrollPosition);
-        });
     }
+
+    currentTab = name;
+
+    // 切り替え先のスクロール位置を復元
+    requestAnimationFrame(() => {
+        window.scrollTo(0, tabScrollPositions[name] || 0);
+    });
 }
 
 // モーダルを閉じる
