@@ -38,6 +38,7 @@ function renderTreeItem(paragraph, index, depth, parentLabelFormat, startNumber)
                     <button class="tree-btn" onclick="moveParagraphUp(${paragraph.id})" title="上へ">↑</button>
                     <button class="tree-btn" onclick="moveParagraphDown(${paragraph.id})" title="下へ">↓</button>
                     <button class="tree-btn edit" onclick="editParagraph(${paragraph.id})">編集</button>
+                    <button class="tree-btn" onclick="flattenParagraph(${paragraph.id})" title="段落のみ削除（中身を上に展開）">解除</button>
                     <button class="tree-btn delete" onclick="deleteParagraph(${paragraph.id})">削除</button>
                 </span>
             </div>

@@ -156,6 +156,7 @@ function closeModal(type) {
 window.addParagraph = addParagraph;
 window.editParagraph = (id) => openParagraphModal(id);
 window.deleteParagraph = deleteParagraph;
+window.flattenParagraph = flattenParagraph;
 window.moveParagraphUp = moveParagraphUp;
 window.moveParagraphDown = moveParagraphDown;
 window.addAnswerField = addAnswerField;

@@ -108,6 +108,31 @@ function deleteParagraph(id) {
     saveToStorage();
 }
 
+// 段落のみ削除（中身は親に展開）
+function flattenParagraph(id) {
+    const container = findParagraphContainer(id);
+    if (!container) return;
+
+    const paragraph = container.array[container.index];
+    const children = paragraph.items || [];
+
+    // トップレベルでfield子要素を含む場合はNG（state.paragraphsはparagraphsのみ）
+    if (!container.isItems) {
+        const hasFields = children.some(c => c.itemType === 'field');
+        if (hasFields) {
+            alert('トップレベル段落で回答欄を直接含むものは平坦化できません。先に回答欄を別段落に移動してください。');
+            return;
+        }
+    }
+
+    if (!confirm('この段落のみ削除して中身を上に展開しますか？')) return;
+
+    container.array.splice(container.index, 1, ...children);
+
+    renderParagraphs();
+    saveToStorage();
+}
+
 // 段落の移動（上へ）
 function moveParagraphUp(id) {
     const container = findParagraphContainer(id);
