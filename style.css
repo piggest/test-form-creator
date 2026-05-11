@@ -3126,6 +3126,18 @@ body {
     color: #444;
     white-space: pre-wrap;
     word-break: break-word;
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+}
+
+.tree-problem-num {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.tree-problem-content {
+    flex: 1;
 }
 
 /* 編集モード: 答えブロック */
@@ -3166,6 +3178,18 @@ body {
     padding: calc(4px * var(--scale)) calc(8px * var(--scale));
     color: #333;
     white-space: pre-wrap;
+    display: flex;
+    gap: calc(6px * var(--scale));
+    align-items: baseline;
+}
+
+.field-problem-num {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.field-problem-content {
+    flex: 1;
 }
 
 /* 縦書きモード: 問題文列 */

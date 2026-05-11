@@ -60,7 +60,7 @@ function renderTreeItem(paragraph, index, depth, parentLabelFormat, startNumber)
                 const typeLabel = getAnswerFieldTypeLabel(item.type);
                 const unitLabel = item.unit ? ` (${item.unit})` : '';
                 const miniPreview = renderMiniPreview(item);
-                const fieldProblemBlock = item.problemText ? `<div class="tree-problem-text">${innerNum} ${escapeHtmlExceptUTag(item.problemText).replace(/\n/g, '<br>')}</div>` : '';
+                const fieldProblemBlock = item.problemText ? `<div class="tree-problem-text">${innerNum ? `<span class="tree-problem-num">${innerNum}</span>` : ''}<span class="tree-problem-content">${escapeHtmlExceptUTag(item.problemText).replace(/\n/g, '<br>')}</span></div>` : '';
                 const fieldAnswerBlock = item.answer ? `<div class="tree-answer-text">答え: ${escapeHtml(item.answer)}</div>` : '';
 
                 html += `
@@ -560,8 +560,8 @@ function renderPreviewSection(paragraph, index, depth, parentLabelFormat, startN
 function renderGridCellWithProblem(field, num, isVertical, innerLabelFormat) {
     const cellHtml = renderGridCell(field, field.problemText ? null : num, isVertical, innerLabelFormat);
     if (!field.problemText) return cellHtml;
-    const numLabel = num !== null ? formatNumber(num, innerLabelFormat) + ' ' : '';
-    const problemHtml = `<div class="field-problem-text">${numLabel}${escapeHtmlExceptUTag(field.problemText).replace(/\n/g, '<br>')}</div>`;
+    const numLabel = num !== null ? formatNumber(num, innerLabelFormat) : '';
+    const problemHtml = `<div class="field-problem-text">${numLabel ? `<span class="field-problem-num">${numLabel}</span>` : ''}<span class="field-problem-content">${escapeHtmlExceptUTag(field.problemText).replace(/\n/g, '<br>')}</span></div>`;
     return `<div class="field-with-problem">${problemHtml}${cellHtml}</div>`;
 }
 
