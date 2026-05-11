@@ -60,13 +60,13 @@ function renderTreeItem(paragraph, index, depth, parentLabelFormat, startNumber)
                 const typeLabel = getAnswerFieldTypeLabel(item.type);
                 const unitLabel = item.unit ? ` (${item.unit})` : '';
                 const miniPreview = renderMiniPreview(item);
-                const fieldProblemBlock = item.problemText ? `<div class="tree-problem-text">${escapeHtmlExceptUTag(item.problemText).replace(/\n/g, '<br>')}</div>` : '';
+                const fieldProblemBlock = item.problemText ? `<div class="tree-problem-text">${innerNum} ${escapeHtmlExceptUTag(item.problemText).replace(/\n/g, '<br>')}</div>` : '';
                 const fieldAnswerBlock = item.answer ? `<div class="tree-answer-text">答え: ${escapeHtml(item.answer)}</div>` : '';
 
                 html += `
                     <li class="tree-item tree-field">
                         <div class="tree-row">
-                            <span class="tree-field-label">${innerNum}</span>
+                            <span class="tree-field-label">${!item.problemText ? innerNum : ''}</span>
                             <span class="tree-field-type">${typeLabel}${unitLabel}</span>
                             <span class="tree-field-preview">${miniPreview}</span>
                             <span class="tree-actions">
@@ -558,9 +558,10 @@ function renderPreviewSection(paragraph, index, depth, parentLabelFormat, startN
 
 // 問題文付き回答欄（通常モード用ラッパー）
 function renderGridCellWithProblem(field, num, isVertical, innerLabelFormat) {
-    const cellHtml = renderGridCell(field, num, isVertical, innerLabelFormat);
+    const cellHtml = renderGridCell(field, field.problemText ? null : num, isVertical, innerLabelFormat);
     if (!field.problemText) return cellHtml;
-    const problemHtml = `<div class="field-problem-text">${escapeHtmlExceptUTag(field.problemText).replace(/\n/g, '<br>')}</div>`;
+    const numLabel = num !== null ? formatNumber(num, innerLabelFormat) + ' ' : '';
+    const problemHtml = `<div class="field-problem-text">${numLabel}${escapeHtmlExceptUTag(field.problemText).replace(/\n/g, '<br>')}</div>`;
     return `<div class="field-with-problem">${problemHtml}${cellHtml}</div>`;
 }
 
