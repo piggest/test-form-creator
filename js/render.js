@@ -27,7 +27,7 @@ function renderTreeItem(paragraph, index, depth, parentLabelFormat, startNumber)
     const childLabelFormat = paragraph.labelFormat || 'parenthesis';
     const paragraphLabel = formatNumberEdit(paragraphNum, parentLabelFormat);
     const textPreview = paragraph.text ? `<span class="tree-text">${escapeHtml(paragraph.text.substring(0, 40))}${paragraph.text.length > 40 ? '...' : ''}</span>` : '';
-    const problemBlock = paragraph.problemText ? `<div class="tree-problem-text">${escapeHtml(paragraph.problemText).replace(/\n/g, '<br>')}</div>` : '';
+    const problemBlock = paragraph.problemText ? `<div class="tree-problem-text">${escapeHtmlExceptUTag(paragraph.problemText).replace(/\n/g, '<br>')}</div>` : '';
 
     let html = `
         <li class="tree-item tree-paragraph depth-${Math.min(depth, 3)}">
@@ -60,7 +60,7 @@ function renderTreeItem(paragraph, index, depth, parentLabelFormat, startNumber)
                 const typeLabel = getAnswerFieldTypeLabel(item.type);
                 const unitLabel = item.unit ? ` (${item.unit})` : '';
                 const miniPreview = renderMiniPreview(item);
-                const fieldProblemBlock = item.problemText ? `<div class="tree-problem-text">${escapeHtml(item.problemText).replace(/\n/g, '<br>')}</div>` : '';
+                const fieldProblemBlock = item.problemText ? `<div class="tree-problem-text">${escapeHtmlExceptUTag(item.problemText).replace(/\n/g, '<br>')}</div>` : '';
                 const fieldAnswerBlock = item.answer ? `<div class="tree-answer-text">答え: ${escapeHtml(item.answer)}</div>` : '';
 
                 html += `
@@ -520,7 +520,7 @@ function renderPreviewSection(paragraph, index, depth, parentLabelFormat, startN
         }
 
         if (hasProblem) {
-            html += `<div class="preview-problem-text">${escapeHtml(paragraph.problemText).replace(/\n/g, '<br>')}</div>`;
+            html += `<div class="preview-problem-text">${escapeHtmlExceptUTag(paragraph.problemText).replace(/\n/g, '<br>')}</div>`;
         }
 
         // 回答欄をグリッド表示（共通連番）
@@ -560,7 +560,7 @@ function renderPreviewSection(paragraph, index, depth, parentLabelFormat, startN
 function renderGridCellWithProblem(field, num, isVertical, innerLabelFormat) {
     const cellHtml = renderGridCell(field, num, isVertical, innerLabelFormat);
     if (!field.problemText) return cellHtml;
-    const problemHtml = `<div class="field-problem-text">${escapeHtml(field.problemText).replace(/\n/g, '<br>')}</div>`;
+    const problemHtml = `<div class="field-problem-text">${escapeHtmlExceptUTag(field.problemText).replace(/\n/g, '<br>')}</div>`;
     return `<div class="field-with-problem">${problemHtml}${cellHtml}</div>`;
 }
 

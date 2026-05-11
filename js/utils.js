@@ -11,6 +11,37 @@ function escapeHtml(str) {
         .replace(/'/g, '&#039;');
 }
 
+// HTMLエスケープ（<u>, <b> タグのみ許可）
+function escapeHtmlExceptUTag(str) {
+    if (!str) return '';
+    // <u> と <b> タグを一時的に置き換え（ユニークなプレースホルダー）
+    const uStartMarker = '￰UTAGSTART￱';
+    const uEndMarker = '￰UTAGEND￱';
+    const bStartMarker = '￰BTAGSTART￱';
+    const bEndMarker = '￰BTAGEND￱';
+
+    const withMarkers = str
+        .replace(/<u>/g, uStartMarker)
+        .replace(/<\/u>/g, uEndMarker)
+        .replace(/<b>/g, bStartMarker)
+        .replace(/<\/b>/g, bEndMarker);
+
+    // 通常のHTMLエスケープ
+    const escaped = withMarkers
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+
+    // マーカーを復元
+    return escaped
+        .replace(uStartMarker, '<u>')
+        .replace(uEndMarker, '</u>')
+        .replace(bStartMarker, '<b>')
+        .replace(bEndMarker, '</b>');
+}
+
 // 丸数字を生成
 function getCircledNumber(num) {
     const circledNumbers = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩',

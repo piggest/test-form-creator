@@ -3183,3 +3183,12 @@ body {
 }
 
 /* 縦書きモードの問題文 textarea は縦書き表示にしない（編集用） */
+
+/* テキスト装飾タグスタイル */
+u {
+    text-decoration: underline;
+}
+
+b {
+    font-weight: bold;
+}
