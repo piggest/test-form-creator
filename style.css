@@ -3245,3 +3245,26 @@ b {
     transition: transform 0.15s ease;
 }
 .support-link:hover { transform: translateY(-1px); }
+
+/* BambooForest 戻りボタン */
+.bamboo-home {
+    position: fixed;
+    right: 16px;
+    top: 16px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.08);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.14);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    z-index: 9999;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.bamboo-home img { width: 76%; height: 76%; object-fit: contain; }
+.bamboo-home:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(0,0,0,0.18);
+}
