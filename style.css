@@ -3268,3 +3268,8 @@ b {
     transform: translateY(-2px);
     box-shadow: 0 10px 22px rgba(0,0,0,0.18);
 }
+
+/* 印刷時はたけのこ戻りボタンを非表示 */
+@media print {
+    .bamboo-home { display: none !important; }
+}
