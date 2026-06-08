@@ -19,8 +19,8 @@ function renderVerticalGridPaperHtml(charCount) {
 function isShortCellVertical(field) {
     const type = field.type;
     if (type === 'symbol' || type === 'number') return true;
-    if (type === 'text' && field.textWidth && field.textWidth <= 5) return true;
-    if (type === 'grid' && field.gridChars && field.gridChars <= 10) return true;
+    if (type === 'text' && field.textWidth && field.textWidth <= 12) return true;
+    if (type === 'grid' && field.gridChars && field.gridChars <= 12) return true;
     return false;
 }
 
@@ -134,15 +134,14 @@ function renderVerticalPageContent(paragraphs, headerHtml, paragraphOffset) {
         return `<div class="preview-page">${headerHtml}<div class="preview-questions-flow"></div></div>`;
     }
 
-    const MAX_COLUMN_HEIGHT = 500; // px（縦の最大高さ）
-
     function getCellHeight(field) {
         const type = field.type;
         if (type === 'symbol') return 50;
         if (type === 'number') return 55;
         if (type === 'text') {
             const chars = field.textWidth || 3;
-            return chars * 36 + 20;
+            const rows = field.textRows || 1;
+            return chars * 36 + 20 + (rows - 1) * 24;
         }
         if (type === 'grid' && field.gridChars) {
             return field.gridChars * 36 + 20;
@@ -150,81 +149,284 @@ function renderVerticalPageContent(paragraphs, headerHtml, paragraphOffset) {
         return 50;
     }
 
-    let html = `<div class="preview-page">`;
-    html += headerHtml;
-    html += '<div class="preview-questions-flow">';
-
-    let isFirstParagraph = true;
-    let i = 0;
-
-    while (i < allCells.length) {
-        const cell = allCells[i];
-
-        // トップレベル段落マーカー（親が直接fieldを持たない場合に注入）
-        if (cell.topLevelSectionNum !== undefined) {
-            if (!isFirstParagraph) {
-                html += '<div class="vertical-spacer-column"></div>';
-            }
-            html += `<div class="vertical-section-column">
-                <div class="vertical-section-marker">${cell.topLevelSectionNum}</div>
-            </div>`;
-            if (cell.topLevelProblemText) {
-                html += `<div class="vertical-problem-column"><div class="vertical-problem-text">${escapeHtml(cell.topLevelProblemText)}</div></div>`;
-            }
-            isFirstParagraph = false;
+    // 各cellの「縦の高さ」見積り（縦並びなので 問題文 + ラベル + 解答欄 + suffix の合算）
+    function estimateCellHeight(c) {
+        const answerH = getCellHeight(c.field);
+        let problemH = 0;
+        if (c.field.problemText) {
+            // 縦書き問題文 1文字 約24px
+            problemH = (c.field.problemText.length || 0) * 24 + 20;
         }
+        // 大問の最初なら paragraph marker や problemText の見積りも加味
+        let extraH = 0;
+        if (c.isFirstInParagraph) {
+            extraH += 40;
+            if (c.paragraphProblemText) extraH += (c.paragraphProblemText.length || 0) * 20;
+        }
+        if (c.topLevelSectionNum !== undefined) {
+            extraH += 40;
+            if (c.topLevelProblemText) extraH += (c.topLevelProblemText.length || 0) * 20;
+        }
+        return problemH + answerH + 30 + extraH;
+    }
 
-        if (cell.isFirstInParagraph) {
-            if (!isFirstParagraph && cell.topLevelSectionNum === undefined) {
-                html += '<div class="vertical-spacer-column"></div>';
+    // 最適な列数 N と各列の目標高さを探索 → 配置→ scale 計算で最大化
+    function findBestLayout() {
+        const cellHs = allCells.map(estimateCellHeight);
+        const totalH = cellHs.reduce((a, b) => a + b, 0);
+        // 用紙の想定内寸（scale=1基準）
+        const pageW = 900;
+        const pageH = 642;
+        const estCellW = 130;
+
+        let best = { cols: 1, scale: 0, maxColumnHeight: totalH * 1.5 };
+        const maxCols = Math.min(allCells.length, 12);
+        for (let cols = 1; cols <= maxCols; cols++) {
+            const target = totalH / cols;
+            // greedy で列分割（目標高さ超えた時のみ折り返し、ガッツリ詰める）
+            const colHs = [0];
+            for (const h of cellHs) {
+                const last = colHs[colHs.length - 1];
+                // 「いまの列に追加すると目標を大幅に超える」かつ「列数が cols 未満」なら次の列へ
+                if (last >= target && colHs.length < cols) {
+                    colHs.push(0);
+                }
+                colHs[colHs.length - 1] += h;
             }
+            const realCols = colHs.length;
+            const maxColH = Math.max(...colHs);
+            const totalW = realCols * estCellW;
+            const widthScale = pageW / totalW;
+            const heightScale = pageH / maxColH;
+            const fit = Math.min(widthScale, heightScale);
+            // 同 scale なら列数少ない（縦に詰める）方を優先
+            if (fit > best.scale + 0.01) {
+                best = {
+                    cols: realCols,
+                    scale: fit,
+                    maxColumnHeight: maxColH * 1.05,
+                };
+            }
+        }
+        return best;
+    }
 
-            if (cell.depth === 0) {
-                html += `<div class="vertical-section-column">
-                    <div class="vertical-section-marker">${cell.paragraphNum}</div>
-                </div>`;
+    // ----- アイテム化（問題文と解答欄を別の列としてリスト化）-----
+    const items = [];
+    for (let idx = 0; idx < allCells.length; idx++) {
+        const c = allCells[idx];
+        // トップレベル大問マーカー（小段落内に大問の頭が来る特殊ケース）
+        if (c.topLevelSectionNum !== undefined) {
+            items.push({ kind: 'section', sectionNum: c.topLevelSectionNum, depth: 0, labelFormat: 'boxed' });
+            if (c.topLevelProblemText) {
+                items.push({ kind: 'paragraph-problem', text: c.topLevelProblemText });
+            }
+        }
+        // 段落の頭でマーカーを差し込む
+        if (c.isFirstInParagraph) {
+            if (c.depth === 0) {
+                items.push({ kind: 'section', sectionNum: c.paragraphNum, depth: 0, labelFormat: 'boxed' });
             } else {
-                const markerHtml = formatNumber(cell.paragraphNum, cell.labelFormat);
-                html += `<div class="vertical-section-column vertical-child-marker">
-                    <div class="vertical-child-label">${markerHtml}</div>
-                </div>`;
+                items.push({ kind: 'section', sectionNum: c.paragraphNum, depth: c.depth, labelFormat: c.labelFormat });
             }
-
-            if (cell.paragraphProblemText) {
-                html += `<div class="vertical-problem-column"><div class="vertical-problem-text">${escapeHtml(cell.paragraphProblemText)}</div></div>`;
+            if (c.paragraphProblemText) {
+                items.push({ kind: 'paragraph-problem', text: c.paragraphProblemText });
             }
-
-            isFirstParagraph = false;
         }
-
-        if (cell.field.problemText) {
-            html += `<div class="vertical-problem-column vertical-field-problem"><div class="vertical-problem-text">${escapeHtml(cell.field.problemText)}</div></div>`;
-        }
-
-        if (isShortCellVertical(cell.field)) {
-            const stackedCells = [cell];
-            let totalHeight = getCellHeight(cell.field);
-            let j = i + 1;
-
-            while (j < allCells.length &&
-                   !allCells[j].isFirstInParagraph &&
-                   !allCells[j].field.problemText &&
-                   isShortCellVertical(allCells[j].field) &&
-                   totalHeight + getCellHeight(allCells[j].field) <= MAX_COLUMN_HEIGHT) {
-                stackedCells.push(allCells[j]);
-                totalHeight += getCellHeight(allCells[j].field);
-                j++;
-            }
-
-            html += renderStackedColumn(stackedCells);
-            i = j;
+        // 問題文付きセルは 問題文列 + 解答欄列 の2列に分割
+        if (c.field.problemText) {
+            items.push({ kind: 'cell-problem', cell: c });
+            items.push({ kind: 'cell-answer', cell: c });
         } else {
-            html += renderSingleCell(cell);
-            i++;
+            items.push({ kind: 'cell-answer', cell: c });
         }
     }
 
+    // 表示文字数（<u> 等のタグを除く）
+    function visualLength(text) {
+        if (!text) return 0;
+        return text.replace(/<[^>]+>/g, '').length;
+    }
+
+    // ----- アイテムサイズ見積もり（scale=1基準） -----
+    const PROBLEM_MAX_H = 280;
+    const CHAR_H = 20; // 縦書き 1文字 ≒ 20px (font-size 0.85rem * line-height 1.5)
+    function itemSize(it) {
+        if (it.kind === 'section') return { w: 40, h: 50 };
+        if (it.kind === 'paragraph-problem') return { w: 30, h: Math.min(PROBLEM_MAX_H, Math.max(80, visualLength(it.text) * CHAR_H)) };
+        if (it.kind === 'cell-problem') {
+            const c = it.cell;
+            const len = visualLength(c.field.problemText || '');
+            return { w: 30, h: Math.min(PROBLEM_MAX_H, len * CHAR_H + 16) };
+        }
+        if (it.kind === 'cell-answer') {
+            const c = it.cell;
+            return { w: 60, h: getCellHeight(c.field) + 40 };
+        }
+        return { w: 30, h: 50 };
+    }
+
+    // ----- N行モードで最適なscaleを計算 -----
+    const sizes = items.map(itemSize);
+    const totalItemCount = items.length;
+    const PAGE_W = 900;
+    const PAGE_H = 642;
+    const GAP_X = 8;
+    const GAP_Y = 16;
+
+    function planForRows(N) {
+        // N行に均等振り分け（greedy: 各行が平均itemCount/N個を持つように）
+        const perRow = Math.ceil(totalItemCount / N);
+        const rows = [];
+        for (let r = 0; r < N; r++) {
+            const start = r * perRow;
+            const end = Math.min(start + perRow, totalItemCount);
+            if (start >= totalItemCount) break;
+            rows.push({ from: start, to: end });
+        }
+        const rowWidths = rows.map(r => {
+            let w = 0;
+            for (let i = r.from; i < r.to; i++) w += sizes[i].w + GAP_X;
+            return w;
+        });
+        const rowHeights = rows.map(r => {
+            let h = 0;
+            for (let i = r.from; i < r.to; i++) h = Math.max(h, sizes[i].h);
+            return h;
+        });
+        const maxRowWidth = Math.max(...rowWidths);
+        const totalHeight = rowHeights.reduce((a, b) => a + b, 0) + GAP_Y * (rows.length - 1);
+        const widthScale = PAGE_W / maxRowWidth;
+        const heightScale = PAGE_H / totalHeight;
+        const scale = Math.min(widthScale, heightScale);
+        return { rows, scale, maxRowWidth, totalHeight };
+    }
+
+    // 全Nのプランを計算し、max scaleの80%以上維持できる中でN最大（=用紙縦も活用）を採用
+    const candidates = [];
+    for (let N = 1; N <= Math.min(8, totalItemCount); N++) {
+        const p = planForRows(N);
+        candidates.push({ ...p, N });
+    }
+    const maxScale = Math.max(...candidates.map(c => c.scale));
+    console.log('[縦書きレイアウト] N候補:', candidates.map(c => ({N: c.N, scale: c.scale.toFixed(3)})));
+    const acceptable = candidates.filter(c => c.scale >= maxScale * 0.8);
+    // acceptable の中で N が最大のものを採用（用紙縦を埋める方向）
+    let bestPlan = acceptable[0];
+    for (const c of acceptable) {
+        if (c.N > bestPlan.N) bestPlan = c;
+    }
+    console.log('[縦書きレイアウト] 採用:', { N: bestPlan.N, scale: bestPlan.scale.toFixed(3) });
+    const targetScale = Math.max(0.4, Math.min(bestPlan.scale * 0.98, 1.8));
+
+    // ----- HTML生成（N行を明示的に作る） -----
+    let html = `<div class="preview-page" style="--scale: ${targetScale}">`;
+    html += headerHtml;
+    html += `<div class="preview-questions-flow vertical-multi-row">`;
+    for (const row of bestPlan.rows) {
+        html += `<div class="vertical-row">`;
+        for (let i = row.from; i < row.to; i++) {
+            const it = items[i];
+            if (it.kind === 'section') {
+                if (it.depth === 0) {
+                    html += `<div class="vertical-section-column"><div class="vertical-section-marker">${it.sectionNum}</div></div>`;
+                } else {
+                    const markerHtml = formatNumber(it.sectionNum, it.labelFormat || 'circled');
+                    html += `<div class="vertical-section-column vertical-child-marker"><div class="vertical-child-label">${markerHtml}</div></div>`;
+                }
+            } else if (it.kind === 'paragraph-problem') {
+                html += `<div class="vertical-problem-column"><div class="vertical-problem-text">${escapeHtmlExceptUTag(it.text)}</div></div>`;
+            } else if (it.kind === 'cell-problem') {
+                const c = it.cell;
+                html += `<div class="vertical-problem-only-column"><div class="vertical-problem-text">${escapeHtmlExceptUTag(c.field.problemText)}</div></div>`;
+            } else if (it.kind === 'cell-answer') {
+                html += renderAnswerOnlyColumn(it.cell);
+            }
+        }
+        html += `</div>`;
+    }
     html += '</div></div>';
+    return html;
+}
+
+// 解答欄のみの列（ラベル+セル本体+suffixを縦並び）
+function renderAnswerOnlyColumn(cell) {
+    const field = cell.field;
+    const type = field.type;
+    const innerNum = cell.innerNum;
+    const innerLabelFormat = cell.innerLabelFormat || 'circled';
+
+    let html = '<div class="vertical-answer-only-column vertical-cell-group">';
+
+    if (innerNum !== null) {
+        const labelHtml = formatNumber(innerNum, innerLabelFormat);
+        html += `<div class="vertical-cell-label">${labelHtml}</div>`;
+    }
+
+    if (type === 'grid' && field.gridChars) {
+        html += renderVerticalGridPaperHtml(field.gridChars);
+    } else if (type === 'text') {
+        const chars = field.textWidth || 3;
+        const height = chars * 36;
+        html += `<div class="grid-cell-item cell-text" style="min-height: calc(${height}px * var(--scale))">`;
+        if (field.unit) html += `<span class="cell-unit-bottom">${escapeHtml(field.unit)}</span>`;
+        html += '</div>';
+    } else if (type === 'number') {
+        html += '<div class="grid-cell-item cell-number">';
+        if (field.unit) html += `<span class="cell-unit-bottom">${escapeHtml(field.unit)}</span>`;
+        html += '</div>';
+    } else {
+        html += '<div class="grid-cell-item cell-symbol"></div>';
+    }
+
+    if (field.suffixText) {
+        html += `<div class="vertical-suffix-text">${escapeHtml(field.suffixText)}</div>`;
+    }
+
+    html += '</div>';
+    return html;
+}
+
+// 問題文付き 1問を 1列にまとめてレンダリング（問題文を上、解答欄を下）
+function renderProblemCellColumn(cell) {
+    const field = cell.field;
+    const type = field.type;
+    const innerNum = cell.innerNum;
+    const innerLabelFormat = cell.innerLabelFormat || 'circled';
+
+    let html = '<div class="vertical-problem-cell-column vertical-cell-group">';
+
+    // 問題文（縦書き）
+    html += `<div class="vertical-problem-text">${escapeHtmlExceptUTag(field.problemText)}</div>`;
+
+    // ラベル
+    if (innerNum !== null) {
+        const labelHtml = formatNumber(innerNum, innerLabelFormat);
+        html += `<div class="vertical-cell-label">${labelHtml}</div>`;
+    }
+
+    // セル本体
+    if (type === 'grid' && field.gridChars) {
+        html += renderVerticalGridPaperHtml(field.gridChars);
+    } else if (type === 'text') {
+        const chars = field.textWidth || 3;
+        const height = chars * 36;
+        html += `<div class="grid-cell-item cell-text" style="min-height: calc(${height}px * var(--scale))">`;
+        if (field.unit) html += `<span class="cell-unit-bottom">${escapeHtml(field.unit)}</span>`;
+        html += '</div>';
+    } else if (type === 'number') {
+        html += '<div class="grid-cell-item cell-number">';
+        if (field.unit) html += `<span class="cell-unit-bottom">${escapeHtml(field.unit)}</span>`;
+        html += '</div>';
+    } else {
+        html += '<div class="grid-cell-item cell-symbol"></div>';
+    }
+
+    if (field.suffixText) {
+        html += `<div class="vertical-suffix-text">${escapeHtml(field.suffixText)}</div>`;
+    }
+
+    html += '</div>';
     return html;
 }
 
@@ -239,6 +441,14 @@ function renderStackedColumn(cells) {
         const innerLabelFormat = cell.innerLabelFormat || 'circled';
 
         html += '<div class="stacked-cell-wrapper">';
+
+        // 問題文（cellごとに表示、右側に縦書き）
+        if (field.problemText) {
+            html += `<div class="stacked-problem-text">${escapeHtmlExceptUTag(field.problemText)}</div>`;
+        }
+
+        // 解答ユニット（ラベル+セル+suffix）を1つにまとめる
+        html += '<div class="stacked-answer-unit">';
 
         // ラベル
         if (innerNum !== null) {
@@ -281,7 +491,8 @@ function renderStackedColumn(cells) {
             html += `<div class="vertical-suffix-text">${escapeHtml(field.suffixText)}</div>`;
         }
 
-        html += '</div>';
+        html += '</div>'; // stacked-answer-unit
+        html += '</div>'; // stacked-cell-wrapper
     });
 
     html += '</div>';

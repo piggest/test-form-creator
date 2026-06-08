@@ -107,6 +107,34 @@ async function optimizeVerticalModeScale() {
         console.log('[縦書きモード最適化] preview-page が見つかりません');
         return;
     }
+    // vertical-multi-row 構造: JSで計算済みのscaleから、実DOM測定でさらに上げる
+    if (elements.previewContent.querySelector('.vertical-multi-row')) {
+        for (const page of pages) {
+            const flow = page.querySelector('.preview-questions-flow');
+            if (!flow) continue;
+            // ページ内寸 = 190mm * 3.78 - padding（縦書き用紙の縦幅）
+            const pad = parseFloat(getComputedStyle(page).paddingTop) + parseFloat(getComputedStyle(page).paddingBottom);
+            const pageHeight = 190 * 3.78 - pad - 8;
+            const baseScale = parseFloat(getComputedStyle(page).getPropertyValue('--scale')) || 1;
+            let bestScale = baseScale;
+            // baseScale より小さくならないように、上げ方向のみ探索
+            for (let s = Math.max(0.5, baseScale); s <= 1.8; s += 0.05) {
+                page.style.setProperty('--scale', String(s));
+                await new Promise(r => requestAnimationFrame(r));
+                const flowRect = flow.getBoundingClientRect();
+                let maxY = 0;
+                for (const child of flow.children) {
+                    const r = child.getBoundingClientRect();
+                    maxY = Math.max(maxY, r.bottom - flowRect.top);
+                }
+                if (maxY <= pageHeight) bestScale = s;
+                else break;
+            }
+            page.style.setProperty('--scale', String(bestScale));
+            console.log(`[縦書きモード最適化] 微調整後 scale=${bestScale.toFixed(3)} (pageHeight=${pageHeight.toFixed(0)})`);
+        }
+        return;
+    }
 
     // .preview-content の --scale はリセット（各ページ個別設定するため）
     elements.previewContent.style.removeProperty('--scale');
@@ -136,7 +164,12 @@ async function optimizeVerticalModeScale() {
 
         const contentWidth = maxX - minX;
         const contentHeight = maxY - minY;
-        const pageWidth = flowRect.width;
+        // ページ内で flow が使える最大幅 = preview-page の中身幅 - ヘッダー幅
+        const pageRect = page.getBoundingClientRect();
+        const header = page.querySelector('.preview-header');
+        const headerW = header ? header.getBoundingClientRect().width : 0;
+        const pageInnerW = page.clientWidth - parseFloat(getComputedStyle(page).paddingLeft || 0) - parseFloat(getComputedStyle(page).paddingRight || 0);
+        const pageWidth = Math.max(50, pageInnerW - headerW);
 
         console.log(`[縦書きモード最適化] ページ${p + 1} scale=1.0時: コンテンツ=${contentWidth.toFixed(0)}x${contentHeight.toFixed(0)}px, 領域=${pageWidth.toFixed(0)}x${pageHeight.toFixed(0)}px`);
 
@@ -147,54 +180,44 @@ async function optimizeVerticalModeScale() {
 
         const widthScale = pageWidth / contentWidth;
         const heightScale = pageHeight / contentHeight;
-        const fitScale = Math.min(widthScale, heightScale) * 0.95;
+        // flex-wrap で複数行に折り返せるため、高さ主体で scale を決める。
+        // ただしコンテンツが横方向に元から大きすぎる場合は両方を考慮。
+        const fitScale = (widthScale >= 0.8)
+            ? heightScale * 0.95
+            : Math.min(widthScale, heightScale) * 0.95;
 
-        // 収まらない場合は1.0未満も許容（はみ出し防止）
-        // 収まる場合は最大2.5倍まで拡大
-        const targetScale = Math.max(0.4, Math.min(fitScale, 2.5));
+        const targetScale = Math.max(0.4, Math.min(fitScale, 1.6));
 
         console.log(`[縦書きモード最適化] ページ${p + 1} 幅スケール=${widthScale.toFixed(3)}, 高さスケール=${heightScale.toFixed(3)}, 目標=${targetScale.toFixed(3)}`);
 
-        // 二分探索で最適スケールを見つける
-        // 拡大方向(targetScale > 1)と縮小方向(targetScale < 1)で範囲を変える
-        let low, high;
-        if (targetScale >= 1.0) {
-            low = 1.0;
-            high = targetScale;
-        } else {
-            low = targetScale * 0.9;
-            high = 1.0;
-        }
-        let bestScale = targetScale;
+        // scale=1 時の column サイズを計測
+        const columnRects = [...questionsFlow.children].map(c => c.getBoundingClientRect());
+        const numCols = columnRects.length;
+        const cellW = numCols > 0 ? Math.max(...columnRects.map(r => r.width)) : 1;
+        const cellH = numCols > 0 ? Math.max(...columnRects.map(r => r.height)) : 1;
 
-        for (let iteration = 0; iteration < 8; iteration++) {
-            const testScale = (low + high) / 2;
-            page.style.setProperty('--scale', String(testScale));
-            await new Promise(resolve => requestAnimationFrame(resolve));
-
-            let newMaxX = -Infinity, newMaxY = -Infinity;
-            const newFlowRect = questionsFlow.getBoundingClientRect();
-            for (const child of questionsFlow.children) {
-                const rect = child.getBoundingClientRect();
-                newMaxX = Math.max(newMaxX, rect.right - newFlowRect.left);
-                newMaxY = Math.max(newMaxY, rect.bottom - newFlowRect.top);
+        // N行モードで scale を計算し、最大のを採用
+        let bestScale = 0.5;
+        let bestN = 1;
+        for (let N = 1; N <= numCols; N++) {
+            const cellsPerRow = Math.ceil(numCols / N);
+            // N行モード: scale*cellW*cellsPerRow <= pageWidth、scale*cellH*N <= pageHeight
+            const widthScale = pageWidth / (cellsPerRow * cellW);
+            const heightScale = pageHeight / (N * cellH);
+            const sc = Math.min(widthScale, heightScale);
+            if (sc > bestScale) {
+                bestScale = sc;
+                bestN = N;
             }
-
-            const fits = newMaxX <= newFlowRect.width * 1.01 && newMaxY <= pageHeight * 1.01;
-            console.log(`[縦書きモード最適化] ページ${p + 1} 反復${iteration + 1}: scale=${testScale.toFixed(3)}, 収まる=${fits}`);
-
-            if (fits) {
-                bestScale = testScale;
-                low = testScale;
-            } else {
-                high = testScale;
-            }
-
-            if (high - low < 0.02) break;
         }
+        // スケール上限と下限
+        bestScale = Math.max(0.4, Math.min(bestScale * 0.97, 1.6));
+
+        page.style.setProperty('--scale', String(bestScale));
+        await new Promise(resolve => requestAnimationFrame(resolve));
 
         perPageScales.push(bestScale);
-        console.log(`[縦書きモード最適化] ページ${p + 1} 候補スケール: ${bestScale.toFixed(3)}`);
+        console.log(`[縦書きモード最適化] ページ${p + 1} 候補スケール: ${bestScale.toFixed(3)} (${bestN}行)`);
     }
 
     // 全ページ共通スケールとして最小値を採用（最も厳しいページに合わせる）
