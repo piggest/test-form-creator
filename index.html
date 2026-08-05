@@ -109,6 +109,14 @@
                 <h4 class="settings-subheading">他のデッキ</h4>
                 <div id="deck-others"></div>
             </section>
+            <!-- バックアップ -->
+            <section class="deck-section">
+                <h3 class="settings-heading">バックアップ</h3>
+                <div class="deck-actions">
+                    <button class="io-btn primary" id="backupBtn">バックアップと復元</button>
+                </div>
+                <p class="backup-note" id="backupUsage"></p>
+            </section>
             <section class="support-section">
                 <span class="support-text">気に入ったら</span><a class="support-link" href="https://buymeacoffee.com/piggest" target="_blank" rel="noopener">☕ Buy Me a Coffee</a>
             </section>
@@ -278,6 +286,7 @@
     </div>
 
     <!-- JavaScript -->
+    <script src="js/storage-guard.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/state.js"></script>
     <script src="js/deck.js"></script>
