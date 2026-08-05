@@ -105,8 +105,8 @@ function loadFromJson(e) {
             saveToStorage();
             decks.push(newDeck);
             activeDeckId = newDeck.id;
-            localStorage.setItem(DECKS_KEY, JSON.stringify(decks));
-            localStorage.setItem(ACTIVE_DECK_KEY, activeDeckId);
+            StorageGuard.set(DECKS_KEY, JSON.stringify(decks));
+            StorageGuard.set(ACTIVE_DECK_KEY, activeDeckId);
             applyDeckData(data);
 
             renderParagraphs();

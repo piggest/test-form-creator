@@ -59,7 +59,7 @@ function bindDeckCardActions() {
                 const newName = prompt('デッキ名を入力', deck.deckName || '');
                 if (newName !== null && newName.trim()) {
                     deck.deckName = newName.trim();
-                    localStorage.setItem(DECKS_KEY, JSON.stringify(decks));
+                    StorageGuard.set(DECKS_KEY, JSON.stringify(decks));
                     renderDeckList();
                     updateDeckBanner();
                 }
@@ -74,7 +74,7 @@ function bindDeckCardActions() {
                     data: JSON.parse(JSON.stringify(deck.data))
                 };
                 decks.push(copy);
-                localStorage.setItem(DECKS_KEY, JSON.stringify(decks));
+                StorageGuard.set(DECKS_KEY, JSON.stringify(decks));
                 renderDeckList();
             } else if (action === 'delete') {
                 if (decks.length <= 1) {
@@ -85,11 +85,11 @@ function bindDeckCardActions() {
                 decks = decks.filter(d => d.id !== id);
                 if (id === activeDeckId) {
                     activeDeckId = decks[0].id;
-                    localStorage.setItem(ACTIVE_DECK_KEY, activeDeckId);
+                    StorageGuard.set(ACTIVE_DECK_KEY, activeDeckId);
                     applyDeckData(decks[0].data);
                     renderParagraphs();
                 }
-                localStorage.setItem(DECKS_KEY, JSON.stringify(decks));
+                StorageGuard.set(DECKS_KEY, JSON.stringify(decks));
                 renderDeckList();
                 updateDeckBanner();
             }
@@ -104,7 +104,7 @@ function switchDeck(id) {
     // 切替前に現在のフォーム状態をアクティブデッキへ保存
     saveToStorage();
     activeDeckId = id;
-    localStorage.setItem(ACTIVE_DECK_KEY, id);
+    StorageGuard.set(ACTIVE_DECK_KEY, id);
     applyDeckData(deck.data);
     renderParagraphs();
     renderDeckList();
@@ -135,8 +135,8 @@ function createDeck() {
     saveToStorage();
     decks.push(newDeck);
     activeDeckId = newDeck.id;
-    localStorage.setItem(DECKS_KEY, JSON.stringify(decks));
-    localStorage.setItem(ACTIVE_DECK_KEY, activeDeckId);
+    StorageGuard.set(DECKS_KEY, JSON.stringify(decks));
+    StorageGuard.set(ACTIVE_DECK_KEY, activeDeckId);
     applyDeckData(newDeck.data);
     renderParagraphs();
     renderDeckList();
@@ -221,8 +221,8 @@ async function pasteDeckFromClipboard() {
     saveToStorage();
     decks.push(newDeck);
     activeDeckId = newDeck.id;
-    localStorage.setItem(DECKS_KEY, JSON.stringify(decks));
-    localStorage.setItem(ACTIVE_DECK_KEY, activeDeckId);
+    StorageGuard.set(DECKS_KEY, JSON.stringify(decks));
+    StorageGuard.set(ACTIVE_DECK_KEY, activeDeckId);
     applyDeckData(data);
     renderParagraphs();
     renderDeckList();

@@ -2797,6 +2797,13 @@ body {
     margin-bottom: 24px;
 }
 
+.backup-note {
+    font-size: 0.85rem;
+    color: #718096;
+    margin: 0;
+    line-height: 1.6;
+}
+
 .deck-actions {
     display: flex;
     gap: 8px;

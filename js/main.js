@@ -109,11 +109,36 @@ function init() {
         renderPreview();
     });
 
+    // バックアップを開く
+    if (elements.backupBtn) {
+        elements.backupBtn.addEventListener('click', () => StorageGuard.openDialog());
+    }
+
+    // ストレージ保護を先に起動する。
+    // Why: アプリが何か書き込む前の状態を1世代として確保したいので loadFromStorage より前に置く。
+    StorageGuard.init({
+        app: 'test-form-creator',
+        watchKeys: [DECKS_KEY, ACTIVE_DECK_KEY],
+        exportCurrent: buildTabSnapshot
+    });
+
     // ストレージから復元して描画
     loadFromStorage();
     renderParagraphs();
     updateDeckBanner();
     renderDeckList();
+    updateBackupUsage();
+}
+
+// 保存領域の使用量を設定タブに表示する
+function updateBackupUsage() {
+    if (!elements.backupUsage || typeof StorageGuard === 'undefined') return;
+    const u = StorageGuard.usage();
+    const size = u.bytes < 1024 * 1024
+        ? (u.bytes / 1024).toFixed(1) + ' KB'
+        : (u.bytes / 1024 / 1024).toFixed(2) + ' MB';
+    elements.backupUsage.textContent =
+        `保存済み ${u.keyCount} 項目 / ${size}。英単語クイズ・漢字クイズと保存領域を共有してるので、書き出すと全ツール分が1ファイルに入る。`;
 }
 
 // 各タブのスクロール位置を保存
@@ -142,6 +167,7 @@ function switchTab(name) {
         renderPreview();
     } else if (name === 'settings') {
         renderDeckList();
+        updateBackupUsage();
     }
 
     currentTab = name;

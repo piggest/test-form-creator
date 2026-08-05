@@ -70,7 +70,9 @@ const elements = {
     fileInput: document.getElementById('fileInput'),
     printBtn: document.getElementById('printBtn'),
     showAnswers: document.getElementById('showAnswers'),
-    answerValue: document.getElementById('answerValue')
+    answerValue: document.getElementById('answerValue'),
+    backupBtn: document.getElementById('backupBtn'),
+    backupUsage: document.getElementById('backupUsage')
 };
 
 // 旧形式から新形式へのマイグレーション
@@ -357,6 +359,27 @@ function getActiveDeck() {
     return decks.find(d => d.id === activeDeckId) || decks[0];
 }
 
+// このタブがメモリに持っている内容をバックアップ形式で返す。
+// Why: 他タブがデータを更新した場合、このタブの編集内容は localStorage に無く救えないため、
+// 書き込みを止めたうえでファイルに逃がせるようにしておく。
+function buildTabSnapshot() {
+    const active = getActiveDeck();
+    if (active) {
+        active.data = buildDeckDataFromForm();
+    }
+    const data = {};
+    data[DECKS_KEY] = JSON.stringify(decks);
+    if (activeDeckId) data[ACTIVE_DECK_KEY] = activeDeckId;
+    return {
+        format: 'piggest-storage-backup',
+        version: 1,
+        createdAt: new Date().toISOString(),
+        origin: location.origin,
+        app: 'test-form-creator',
+        data: data
+    };
+}
+
 // ローカルストレージから復元
 function loadFromStorage() {
     try {
@@ -379,13 +402,13 @@ function loadFromStorage() {
                 deckName: data.title || 'マイテスト',
                 data: data
             }];
-            localStorage.setItem(DECKS_KEY, JSON.stringify(decks));
+            StorageGuard.set(DECKS_KEY, JSON.stringify(decks));
         }
 
         activeDeckId = localStorage.getItem(ACTIVE_DECK_KEY);
         const active = getActiveDeck();
         activeDeckId = active.id;
-        localStorage.setItem(ACTIVE_DECK_KEY, activeDeckId);
+        StorageGuard.set(ACTIVE_DECK_KEY, activeDeckId);
 
         applyDeckData(active.data);
     } catch (e) {
@@ -403,7 +426,7 @@ function saveToStorage() {
         if (!active.deckName || active.deckName === '') {
             active.deckName = active.data.title || 'マイテスト';
         }
-        localStorage.setItem(DECKS_KEY, JSON.stringify(decks));
+        StorageGuard.set(DECKS_KEY, JSON.stringify(decks));
     } catch (e) {
         console.error('Failed to save to storage:', e);
     }
